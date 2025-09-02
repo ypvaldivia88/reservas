@@ -22,6 +22,7 @@ export interface ReservaFormData {
   telefono: string;
   forma: string;
   largo: string;
+  colores: string;
   decoracion: string;
 }
 
