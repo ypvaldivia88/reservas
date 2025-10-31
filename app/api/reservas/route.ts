@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { Reserva, ApiResponse, FORMAS_UNAS } from "@/lib/types";
+import { Reserva, ApiResponse, FORMAS_UNAS, User } from "@/lib/types";
 
 // Función de validación
 function validarReserva(data: any): { isValid: boolean; errors: string[] } {
@@ -85,19 +85,56 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       );
     }
 
-    // Preparar datos para inserción
+    const client = await clientPromise;
+    const db = client.db("nailsalon");
+    
+    // Normalizar teléfono para búsqueda consistente
+    const telefonoNormalizado = data.telefono.trim();
+    const nombreNormalizado = data.nombre.trim();
+
+    // Buscar cliente existente por teléfono
+    let cliente = await db.collection<User>("users").findOne({ 
+      telefono: telefonoNormalizado,
+      role: 'cliente'
+    });
+
+    if (cliente) {
+      // Si el teléfono existe pero el nombre es diferente, verificar para evitar duplicados
+      if (cliente.nombre !== nombreNormalizado) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Teléfono ya registrado con otro nombre',
+            message: `Este teléfono está registrado con el nombre: ${cliente.nombre}. Por favor verifica tus datos.`
+          },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Registrar nuevo cliente si el teléfono no existe
+      const nuevoCliente: Omit<User, '_id'> = {
+        nombre: nombreNormalizado,
+        telefono: telefonoNormalizado,
+        role: 'cliente',
+        fechaCreacion: new Date()
+      };
+      
+      const resultCliente = await db.collection<User>("users").insertOne(nuevoCliente);
+      cliente = { ...nuevoCliente, _id: resultCliente.insertedId.toString() };
+      console.log('✨ Nuevo cliente registrado:', nombreNormalizado);
+    }
+
+    // Preparar datos para inserción de reserva
     const nuevaReserva: Omit<Reserva, '_id'> = {
-      nombre: data.nombre.trim(),
-      telefono: data.telefono.trim(),
+      clienteId: cliente?._id?.toString(),
+      nombre: nombreNormalizado,
+      telefono: telefonoNormalizado,
       forma: data.forma,
       largo: Number(data.largo),
       decoracion: data.decoracion?.trim() || '',
       fechaCreacion: new Date(),
       estado: 'pendiente'
     };
-
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
     
     const result = await db.collection<Reserva>("reservas").insertOne(nuevaReserva);
 
