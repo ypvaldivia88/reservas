@@ -47,11 +47,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       );
     }
 
-    if (data.newPassword.length < 4) {
+    if (data.newPassword.length < 8) {
       return NextResponse.json(
         {
           success: false,
-          error: 'La nueva contraseña debe tener al menos 4 caracteres'
+          error: 'La nueva contraseña debe tener al menos 8 caracteres'
         },
         { status: 400 }
       );

@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const SALT_ROUNDS = 10;
 
@@ -12,7 +13,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return bcrypt.compare(password, hashedPassword);
 }
 
-// Generate a simple session token
+// Generate a cryptographically secure session token
 export function generateSessionToken(): string {
-  return Buffer.from(`${Date.now()}-${Math.random()}`).toString('base64');
+  return randomBytes(32).toString('base64url');
 }

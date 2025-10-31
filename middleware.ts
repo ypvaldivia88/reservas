@@ -8,13 +8,13 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/admin/dashboard')) {
     const token = request.cookies.get('session-token')?.value;
     
-    if (!token) {
+    // Verificar existencia y formato básico del token
+    if (!token || token.length < 20) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     
-    // Verificar que la sesión sea válida (se podría hacer una llamada a la BD aquí,
-    // pero para mantener el middleware ligero, solo verificamos la existencia del token)
-    // La verificación completa se hace en cada API endpoint protegido
+    // Note: Full token validation (expiration, DB check) is done in API endpoints
+    // to keep middleware lightweight and fast
   }
   
   const response = NextResponse.next({

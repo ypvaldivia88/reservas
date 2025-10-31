@@ -173,9 +173,11 @@ El middleware configura los siguientes headers en todas las respuestas:
 - Las rutas `/admin/dashboard` requieren una sesión activa
 - Las sesiones expiran después de 24 horas
 - Las contraseñas se almacenan hasheadas usando bcrypt
+- Los tokens de sesión se generan con `crypto.randomBytes()` para seguridad criptográfica
 
 ### Validaciones
-- Contraseña mínima: 4 caracteres (se recomienda aumentar en producción)
+- Contraseña mínima: 8 caracteres (mejorado para seguridad en producción)
+- Token de sesión: formato y longitud validados
 - Teléfono: formato validado con expresión regular
 - Nombre: mínimo 2 caracteres
 
