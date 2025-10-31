@@ -99,6 +99,16 @@ npm run format       # Formatear código con Prettier
 - ✅ Campo opcional para decoración
 - ✅ Feedback visual en tiempo real
 
+### Panel de Administración
+- ✅ Ver lista completa de reservas
+- ✅ Filtrar reservas por estado (pendiente, confirmada, cancelada, completada)
+- ✅ Confirmar o cancelar reservas
+- ✅ Editar información de la reserva (fecha, hora, detalles)
+- ✅ Eliminar reservas
+- ✅ Estadísticas en tiempo real
+
+**Acceso:** `/admin`
+
 ### API Endpoints
 
 #### `GET /api/reservas`
@@ -117,6 +127,24 @@ Crea una nueva reserva con validación completa.
   "decoracion": "Francés con brillos"
 }
 ```
+
+#### `GET /api/reservas/[id]`
+Obtiene una reserva específica por ID.
+
+#### `PATCH /api/reservas/[id]`
+Actualiza una reserva existente (estado, fecha, hora, detalles).
+
+**Body ejemplo:**
+```json
+{
+  "estado": "confirmada",
+  "fechaCita": "2025-11-15",
+  "horaCita": "14:00"
+}
+```
+
+#### `DELETE /api/reservas/[id]`
+Elimina una reserva específica.
 
 ## 🔒 Seguridad
 
