@@ -92,7 +92,17 @@ export async function PATCH(
     }
 
     if (data.fechaCita) {
-      updateData.fechaCita = new Date(data.fechaCita);
+      const fecha = new Date(data.fechaCita);
+      if (isNaN(fecha.getTime())) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Fecha de cita inválida'
+          },
+          { status: 400 }
+        );
+      }
+      updateData.fechaCita = fecha;
     }
 
     if (data.horaCita) {

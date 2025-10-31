@@ -32,6 +32,11 @@ export default function AdminPage() {
   };
 
   const actualizarEstado = async (id: string, estado: string) => {
+    if (!id) {
+      setMensaje("ID de reserva inválido");
+      return;
+    }
+
     try {
       const res = await fetch(`/api/reservas/${id}`, {
         method: "PATCH",
@@ -55,6 +60,11 @@ export default function AdminPage() {
   };
 
   const eliminarReserva = async (id: string) => {
+    if (!id) {
+      setMensaje("ID de reserva inválido");
+      return;
+    }
+
     if (!confirm("¿Estás seguro de eliminar esta reserva?")) return;
 
     try {
@@ -80,8 +90,8 @@ export default function AdminPage() {
   const abrirEdicion = (reserva: Reserva) => {
     setEditando({
       ...reserva,
-      fechaCita: reserva.fechaCita || new Date(),
-      horaCita: reserva.horaCita || "10:00",
+      fechaCita: reserva.fechaCita || undefined,
+      horaCita: reserva.horaCita || "",
     });
     setShowEditModal(true);
   };
@@ -378,7 +388,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {reserva.estado === "pendiente" && (
+                    {reserva.estado === "pendiente" && reserva._id && (
                       <>
                         <button
                           onClick={() =>
@@ -398,7 +408,7 @@ export default function AdminPage() {
                         </button>
                       </>
                     )}
-                    {reserva.estado === "confirmada" && (
+                    {reserva.estado === "confirmada" && reserva._id && (
                       <button
                         onClick={() =>
                           actualizarEstado(reserva._id!, "completada")
@@ -408,18 +418,22 @@ export default function AdminPage() {
                         🎉 Completar
                       </button>
                     )}
-                    <button
-                      onClick={() => abrirEdicion(reserva)}
-                      className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      onClick={() => eliminarReserva(reserva._id!)}
-                      className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      🗑️ Eliminar
-                    </button>
+                    {reserva._id && (
+                      <>
+                        <button
+                          onClick={() => abrirEdicion(reserva)}
+                          className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => eliminarReserva(reserva._id!)}
+                          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
