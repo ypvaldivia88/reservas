@@ -33,7 +33,7 @@ export default function Header({ isHomePage = true }: HeaderProps) {
             href="/"
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
-            <div className="relative w-14 h-12 flex-shrink-0 overflow-hidden">
+            <div className="relative w-12 h-12 flex-shrink-0 overflow-hidden">
               <Image src="/logo-small.png" alt="Nail Studio Logo" fill />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -58,12 +58,12 @@ export default function Header({ isHomePage = true }: HeaderProps) {
             >
               Reservar Cita
             </Link>
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
           </nav>
 
           {/* Mobile Menu Button and Theme Toggle */}
           <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

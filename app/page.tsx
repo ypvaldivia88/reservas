@@ -270,15 +270,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-                <div className="relative w-14 h-12 flex-shrink-0 overflow-hidden">
-                  <Image src="/logo-small.png" alt="Nail Studio Logo" fill />
+              <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
+                <div className="relative w-36 h-36 flex-shrink-0 overflow-hidden">
+                  <Image src="/logo.png" alt="Nail Studio Logo" fill />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold">Oh`Diosa Nails</h3>
               </div>
-              <p className="text-gray-400 text-sm sm:text-base">
-                Tu salón de confianza para el cuidado profesional de uñas
-              </p>
             </div>
 
             <div>
