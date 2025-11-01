@@ -8,8 +8,8 @@ export interface Reserva {
   largo: number;
   decoracion?: string;
   fechaCreacion?: Date;
-  fechaCita?: Date;
-  horaCita?: string;
+  fechaCita: string; // Formato YYYY-MM-DD
+  horaCita: string; // Formato HH:mm
   estado?: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
 }
 
@@ -27,6 +27,8 @@ export interface ReservaFormData {
   largo: string;
   colores: string;
   decoracion: string;
+  fechaCita: string;
+  horaCita: string;
 }
 
 export type FormaUna = 'coffin' | 'almond' | 'stiletto' | 'square';
@@ -56,3 +58,49 @@ export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
+
+// Tipos para disponibilidad y horarios
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+export interface TimeSlot {
+  time: string; // Formato HH:mm (24h), ej: "08:30", "14:00"
+  available: boolean;
+}
+
+export interface DaySchedule {
+  dayOfWeek: DayOfWeek;
+  isWorkingDay: boolean;
+  slots: TimeSlot[];
+}
+
+export interface Schedule {
+  _id?: string;
+  name: string; // "default" para el horario por defecto
+  description?: string;
+  schedule: DaySchedule[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface AvailabilityOverride {
+  _id?: string;
+  date: string; // Formato YYYY-MM-DD
+  slots: TimeSlot[];
+  isWorkingDay: boolean;
+  reason?: string; // ej: "Feriado", "Evento especial"
+  createdAt?: Date;
+}
+
+// Horarios por defecto del negocio
+export const DEFAULT_WORKING_DAYS: DayOfWeek[] = ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+export const DEFAULT_TIME_SLOTS = ['08:30', '10:30', '14:00', '16:00'];
+
+export const DAY_NAMES: Record<DayOfWeek, string> = {
+  monday: 'Lunes',
+  tuesday: 'Martes',
+  wednesday: 'Miércoles',
+  thursday: 'Jueves',
+  friday: 'Viernes',
+  saturday: 'Sábado',
+  sunday: 'Domingo'
+};

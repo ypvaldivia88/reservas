@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
+import AdminNav from "@/components/AdminNav";
 
 export default function AdminDashboard() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
@@ -121,6 +122,8 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      <AdminNav />
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Cambiar Contraseña Form */}
