@@ -12,8 +12,13 @@ export default function Home() {
       <Header isHomePage={true} />
 
       {/* Hero Section - Mobile First */}
-      <section className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-[url('/main.avif')] bg-center bg-cover bg-no-repeat">
+        {/* overlay to improve text contrast */}
+        <div
+          className="absolute inset-0 bg-black/75 dark:bg-black/75"
+          aria-hidden
+        />
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
             {/* Mobile: text-3xl, SM: text-4xl, MD: text-5xl, LG: text-6xl, XL: text-7xl */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight">
@@ -88,39 +93,57 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {[
               {
+                icon: "✨",
+                title: "Gel/Softgel",
+                desc: "Tratamiento relajante y nutritivo",
+                fondo: "gel.png",
+              },
+              {
                 icon: "💅",
                 title: "Manicure Clásico",
                 desc: "Cuidado completo de manos y uñas",
+                fondo: "manicure.png",
               },
               {
                 icon: "🎨",
                 title: "Nail Art",
                 desc: "Diseños personalizados y únicos",
-              },
-              {
-                icon: "✨",
-                title: "Gel/Softgel",
-                desc: "Extensiones duraderas y naturales",
+                fondo: "nailart.png",
               },
               {
                 icon: "🌟",
                 title: "Spa de Pies",
                 desc: "Tratamiento relajante y nutritivo",
+                fondo: "spa.png",
               },
             ].map((service, index) => (
               <div
                 key={index}
-                className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 text-center card-hover"
+                className="relative rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 text-center overflow-hidden"
+                style={{
+                  backgroundImage: `url('/servicios/${service.fondo}')`,
+                  backgroundPosition: "center",
+                  backgroundSize: "cover",
+                  backgroundRepeat: "no-repeat",
+                  backgroundColor: "#fff",
+                }}
               >
-                <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">
-                  {service.icon}
+                {/* overlay to improve text contrast */}
+                <div
+                  className="absolute inset-0 bg-black/40 dark:bg-black/50"
+                  aria-hidden
+                />
+                <div className="p-4 sm:p-6 relative z-10">
+                  <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">
+                    {service.icon}
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-white/90">
+                    {service.desc}
+                  </p>
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                  {service.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                  {service.desc}
-                </p>
               </div>
             ))}
           </div>
@@ -299,8 +322,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div>
-              <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
-                <div className="relative w-36 h-36 flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-start sm:justify-center space-x-2 mb-3 sm:mb-4">
+                <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden">
                   <Image src="/logo.png" alt="Nail Studio Logo" fill />
                 </div>
               </div>
