@@ -8,6 +8,8 @@ export interface Reserva {
   largo: number;
   decoracion?: string;
   fechaCreacion?: Date;
+  fechaCita?: Date;
+  horaCita?: string;
   estado?: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
 }
 
