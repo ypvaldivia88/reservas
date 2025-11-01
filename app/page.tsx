@@ -32,13 +32,30 @@ export default function Home() {
             <div className="flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 md:space-x-4 lg:space-x-6 justify-center items-center px-4 sm:px-6">
               <Link
                 href="/reserva"
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-violet-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-center"
+                className="w-full sm:w-72 bg-gradient-to-r from-blue-600 to-violet-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-center"
               >
                 ✨ Reservar Cita
               </Link>
-              <button className="w-full sm:w-auto border-2 border-blue-400 dark:border-blue-500 text-blue-700 dark:text-blue-400 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300 text-center">
-                📞 Llamar Ahora
-              </button>
+              <a
+                href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-72 border-2 border-green-400 dark:border-green-500 text-green-700 dark:text-green-400 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300 text-center"
+              >
+                <svg
+                  className="w-5 h-5 inline-block mr-2 mb-1 align-middle text-white dark:text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.09 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.74 3.03a2 2 0 0 1-.45 2.11L9.91 10.09a16 16 0 0 0 6 6l1.22-1.22a2 2 0 0 1 2.11-.45c.96.37 1.98.62 3.03.74A2 2 0 0 1 22 16.92z" />
+                </svg>{" "}
+                Llamar / WhatsApp
+              </a>
             </div>
           </div>
         </div>
@@ -217,7 +234,13 @@ export default function Home() {
                       Dirección
                     </p>
                     <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                      Calle Cuba #9A, Olivos 1, SSP.
+                      <a
+                        href="https://maps.app.goo.gl/nBPRvXugQ7N1BECY7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Calle Cuba #9A, Olivos 1, SSP.
+                      </a>
                     </p>
                   </div>
                 </div>
@@ -228,7 +251,13 @@ export default function Home() {
                       Teléfono
                     </p>
                     <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                      +5 (363) 233-073
+                      <a
+                        href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        +5 (363) 233-073
+                      </a>
                     </p>
                   </div>
                 </div>
