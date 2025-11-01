@@ -33,17 +33,8 @@ export default function Header({ isHomePage = true }: HeaderProps) {
             href="/"
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center">
-              {/* <span className="text-white font-bold text-sm sm:text-lg">
-                💅
-              </span> */}
-              <Image
-                src="/logo.png"
-                alt="Nail Studio Logo"
-                width={48}
-                height={48}
-                className="sm:w-10 sm:h-10"
-              />
+            <div className="relative w-14 h-12 flex-shrink-0 overflow-hidden">
+              <Image src="/logo-small.png" alt="Nail Studio Logo" fill />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Oh`Diosa Nails

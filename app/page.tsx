@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import StatsSection from "@/components/StatsSection";
 import ProcessSection from "@/components/ProcessSection";
@@ -216,7 +217,7 @@ export default function Home() {
                       Dirección
                     </p>
                     <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                      Calle Principal 123, Centro
+                      Calle Cuba #9A, Olivos 1, SSP.
                     </p>
                   </div>
                 </div>
@@ -227,7 +228,7 @@ export default function Home() {
                       Teléfono
                     </p>
                     <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                      +1 (555) 123-4567
+                      +5 (363) 233-073
                     </p>
                   </div>
                 </div>
@@ -238,10 +239,7 @@ export default function Home() {
                       Horarios
                     </p>
                     <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                      Lun - Sáb: 9:00 AM - 7:00 PM
-                    </p>
-                    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                      Dom: 10:00 AM - 5:00 PM
+                      Mart - Sáb: 8:30 AM - 6:00 PM
                     </p>
                   </div>
                 </div>
@@ -273,12 +271,10 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm sm:text-base">
-                    💅
-                  </span>
+                <div className="relative w-14 h-12 flex-shrink-0 overflow-hidden">
+                  <Image src="/logo-small.png" alt="Nail Studio Logo" fill />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold">Nail Studio</h3>
+                <h3 className="text-lg sm:text-xl font-bold">Oh`Diosa Nails</h3>
               </div>
               <p className="text-gray-400 text-sm sm:text-base">
                 Tu salón de confianza para el cuidado profesional de uñas
