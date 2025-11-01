@@ -81,12 +81,12 @@ export default function Home() {
               },
               {
                 icon: "✨",
-                title: "Gel/Acrílico",
+                title: "Gel/Softgel",
                 desc: "Extensiones duraderas y naturales",
               },
               {
                 icon: "🌟",
-                title: "Spa de Manos",
+                title: "Spa de Pies",
                 desc: "Tratamiento relajante y nutritivo",
               },
             ].map((service, index) => (
@@ -337,7 +337,10 @@ export default function Home() {
 
           <div className="border-t border-gray-800 dark:border-gray-700 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-400 text-xs sm:text-sm">
             <p>&copy; 2025 Nail Studio. Todos los derechos reservados.</p>
-            <Link href="/admin" className="text-gray-600 hover:text-gray-400 mt-2 inline-block">
+            <Link
+              href="/admin"
+              className="text-gray-600 hover:text-gray-400 mt-2 inline-block"
+            >
               Admin
             </Link>
           </div>

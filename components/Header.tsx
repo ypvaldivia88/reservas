@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 
 interface HeaderProps {
@@ -10,27 +11,42 @@ interface HeaderProps {
 export default function Header({ isHomePage = true }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navLinks = isHomePage ? [
-    { href: "#servicios", label: "Servicios" },
-    { href: "#galeria", label: "Galería" },
-    { href: "#contacto", label: "Contacto" }
-  ] : [
-    { href: "/", label: "Inicio" },
-    { href: "/#servicios", label: "Servicios" },
-    { href: "/#contacto", label: "Contacto" }
-  ];
+  const navLinks =
+    isHomePage ?
+      [
+        { href: "#servicios", label: "Servicios" },
+        { href: "#galeria", label: "Galería" },
+        { href: "#contacto", label: "Contacto" },
+      ]
+    : [
+        { href: "/", label: "Inicio" },
+        { href: "/#servicios", label: "Servicios" },
+        { href: "/#contacto", label: "Contacto" },
+      ];
 
   return (
     <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          >
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm sm:text-lg">💅</span>
+              {/* <span className="text-white font-bold text-sm sm:text-lg">
+                💅
+              </span> */}
+              <Image
+                src="/logo.png"
+                alt="Nail Studio Logo"
+                width={48}
+                height={48}
+                className="sm:w-10 sm:h-10"
+              />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-              Nail Studio
+              Oh`Diosa Nails
             </h1>
           </Link>
 
@@ -62,23 +78,44 @@ export default function Header({ isHomePage = true }: HeaderProps) {
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle mobile menu"
             >
-              {isMobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              {isMobileMenuOpen ?
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              : <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
-              )}
+              }
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        <div className={`md:hidden transition-all duration-300 overflow-hidden ${
-          isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}>
+        <div
+          className={`md:hidden transition-all duration-300 overflow-hidden ${
+            isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
           <div className="py-4 space-y-4 border-t border-gray-200 dark:border-gray-700">
             {navLinks.map((link) => (
               <Link
