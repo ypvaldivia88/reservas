@@ -102,7 +102,7 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      updateData.fechaCita = fecha;
+      updateData.fechaCita = data.fechaCita; // Store as string in YYYY-MM-DD format
     }
 
     if (data.horaCita) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { Reserva, ApiResponse, FORMAS_UNAS, User } from "@/lib/types";
+import { dateUtils } from "@/lib/utils";
 
 // Función de validación
 function validarReserva(data: any): { isValid: boolean; errors: string[] } {
@@ -21,6 +22,18 @@ function validarReserva(data: any): { isValid: boolean; errors: string[] } {
   const largo = Number(data.largo);
   if (!largo || largo < 1 || largo > 8) {
     errors.push('El largo debe ser un número entre 1 y 8');
+  }
+
+  // Validar fecha de cita
+  if (!data.fechaCita || typeof data.fechaCita !== 'string') {
+    errors.push('La fecha de cita es requerida');
+  } else if (!dateUtils.isFutureDate(data.fechaCita)) {
+    errors.push('La fecha de cita no puede ser en el pasado');
+  }
+
+  // Validar hora de cita
+  if (!data.horaCita || typeof data.horaCita !== 'string' || !dateUtils.isValidTimeFormat(data.horaCita)) {
+    errors.push('La hora de cita es requerida y debe tener formato HH:mm');
   }
 
   return { isValid: errors.length === 0, errors };
@@ -88,6 +101,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const client = await clientPromise;
     const db = client.db("nailsalon");
     
+    // Validar que la fecha/hora esté disponible
+    const existingReserva = await db.collection<Reserva>("reservas").findOne({
+      fechaCita: data.fechaCita,
+      horaCita: data.horaCita,
+      estado: { $in: ['pendiente', 'confirmada'] }
+    });
+
+    if (existingReserva) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Horario no disponible',
+          message: 'Este horario ya está reservado. Por favor selecciona otro horario.'
+        },
+        { status: 400 }
+      );
+    }
+    
     // Normalizar teléfono para búsqueda consistente
     const telefonoNormalizado = data.telefono.trim();
     const nombreNormalizado = data.nombre.trim();
@@ -133,6 +164,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       largo: Number(data.largo),
       decoracion: data.decoracion?.trim() || '',
       fechaCreacion: new Date(),
+      fechaCita: data.fechaCita,
+      horaCita: data.horaCita,
       estado: 'pendiente'
     };
     

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { ReservaFormData, FORMAS_UNAS, LARGOS_UNAS, ApiResponse } from "@/lib/types";
+import CalendarPicker from "./CalendarPicker";
 
 interface FormErrors {
   nombre?: string;
@@ -8,6 +9,8 @@ interface FormErrors {
   forma?: string;
   largo?: string;
   colores?: string;
+  fechaCita?: string;
+  horaCita?: string;
 }
 
 export default function ReservaForm() {
@@ -18,6 +21,8 @@ export default function ReservaForm() {
     largo: "",
     colores: "",
     decoracion: "",
+    fechaCita: "",
+    horaCita: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -42,6 +47,12 @@ export default function ReservaForm() {
           break;
         case "largo":
           if (!value) return "Selecciona un largo";
+          break;
+        case "fechaCita":
+          if (!value) return "Selecciona una fecha";
+          break;
+        case "horaCita":
+          if (!value) return "Selecciona un horario";
           break;
       }
     },
@@ -119,6 +130,8 @@ export default function ReservaForm() {
           largo: "",
           colores: "",
           decoracion: "",
+          fechaCita: "",
+          horaCita: "",
         });
         setErrors({});
       } else {
@@ -226,6 +239,41 @@ export default function ReservaForm() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Selección de Fecha y Hora */}
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white border-b border-blue-100 dark:border-blue-800 pb-2">
+              📅 Fecha y Hora de tu Cita
+            </h3>
+
+            <CalendarPicker
+              selectedDate={form.fechaCita}
+              selectedTime={form.horaCita}
+              onDateSelect={(date) => {
+                setForm(prev => ({ ...prev, fechaCita: date }));
+                setErrors(prev => ({ ...prev, fechaCita: undefined }));
+              }}
+              onTimeSelect={(time) => {
+                setForm(prev => ({ ...prev, horaCita: time }));
+                setErrors(prev => ({ ...prev, horaCita: undefined }));
+              }}
+            />
+
+            {(errors.fechaCita || errors.horaCita) && (
+              <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                {errors.fechaCita && (
+                  <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
+                    <span className="mr-1">⚠️</span> {errors.fechaCita}
+                  </p>
+                )}
+                {errors.horaCita && (
+                  <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center mt-1">
+                    <span className="mr-1">⚠️</span> {errors.horaCita}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Preferencias de Diseño - Mobile First */}
