@@ -93,33 +93,29 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {[
               {
-                icon: "✨",
-                title: "Gel/Softgel",
-                desc: "Tratamiento relajante y nutritivo",
+                title: "Gel / Softgel",
+                desc: "Gel ligero y flexible, ideal para acabado natural y cómodo.",
                 fondo: "gel.png",
               },
               {
-                icon: "💅",
-                title: "Manicure Clásico",
-                desc: "Cuidado completo de manos y uñas",
-                fondo: "manicure.png",
+                title: "Base Rubber / Gel Builder",
+                desc: "Gel reforzado para uñas débiles, perfecto para mayor resistencia y durabilidad.",
+                fondo: "rubber.png",
               },
               {
-                icon: "🎨",
-                title: "Nail Art",
-                desc: "Diseños personalizados y únicos",
-                fondo: "nailart.png",
+                title: "Gel Dipping",
+                desc: "Sistema sin monómero con polvo aclírico, uñas fuertes y acabado elegante.",
+                fondo: "dipping.png",
               },
               {
-                icon: "🌟",
-                title: "Spa de Pies",
-                desc: "Tratamiento relajante y nutritivo",
-                fondo: "spa.png",
+                title: "Pedicure",
+                desc: "Un servicio completo para pies suaves, saludables y bien cuidados.",
+                fondo: "pedicure.png",
               },
             ].map((service, index) => (
               <div
                 key={index}
-                className="relative rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 text-center overflow-hidden"
+                className="group relative rounded-2xl overflow-hidden transition-transform duration-500 transform-gpu will-change-transform hover:scale-105 hover:-translate-y-2 hover:rotate-1 hover:shadow-2xl cursor-pointer"
                 style={{
                   backgroundImage: `url('/servicios/${service.fondo}')`,
                   backgroundPosition: "center",
@@ -128,19 +124,31 @@ export default function Home() {
                   backgroundColor: "#fff",
                 }}
               >
+                {/* decorative sparkle that appears on hover */}
+                <svg
+                  className="absolute top-3 right-3 w-8 h-8 text-white opacity-0 translate-y-2 group-hover:opacity-90 group-hover:translate-y-0 transition-all duration-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+                </svg>
+
                 {/* overlay to improve text contrast */}
                 <div
-                  className="absolute inset-0 bg-black/40 dark:bg-black/50"
+                  className="absolute inset-0 bg-black/30 group-hover:bg-black/45 transition-colors duration-300"
                   aria-hidden
                 />
-                <div className="p-4 sm:p-6 relative z-10">
-                  <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">
-                    {service.icon}
-                  </div>
+
+                <div className="p-4 sm:p-6 relative z-10 h-56 flex flex-col justify-center items-center text-center">
                   <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
                     {service.title}
                   </h3>
-                  <p className="text-sm sm:text-base text-white/90">
+                  <p className="text-sm sm:text-base text-white/90 mb-4">
                     {service.desc}
                   </p>
                 </div>
