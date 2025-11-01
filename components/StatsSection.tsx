@@ -1,9 +1,9 @@
 export default function StatsSection() {
   const stats = [
-    { number: "500+", label: "Clientas Felices", icon: "😊" },
-    { number: "3+", label: "Años de Experiencia", icon: "⭐" },
-    { number: "15", label: "Servicios Disponibles", icon: "💅" },
-    { number: "98%", label: "Satisfacción Garantizada", icon: "💯" }
+    { number: "100+", label: "Clientas Felices", icon: "😊" },
+    { number: "4+", label: "Años de Experiencia", icon: "⭐" },
+    { number: "6+", label: "Servicios Disponibles", icon: "💅" },
+    { number: "98%", label: "Satisfacción Garantizada", icon: "💯" },
   ];
 
   return (

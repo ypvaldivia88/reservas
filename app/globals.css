@@ -127,3 +127,20 @@ html {
     line-height: 1.75rem;
   }
 }
+/* ocultar scrollbar nativo pero mantener la capacidad de scroll/drag */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE/Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+/* opcional: cursor de agarre más claro mientras se arrastra */
+.grabbing {
+  cursor: grabbing !important;
+}
