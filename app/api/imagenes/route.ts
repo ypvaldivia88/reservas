@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
           descripcion: imagen.descripcion,
           base64Data: imagen.base64Data,
           mimeType: imagen.mimeType,
-          tamaño: imagen.tamaño,
+          size: imagen.size,
           fechaCreacion: imagen.fechaCreacion,
           fechaActualizacion: imagen.fechaActualizacion,
         },
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       descripcion: img.descripcion,
       base64Data: img.base64Data,
       mimeType: img.mimeType,
-      tamaño: img.tamaño,
+      size: img.size,
       fechaCreacion: img.fechaCreacion,
       fechaActualizacion: img.fechaActualizacion,
     }));
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { nombre, descripcion, base64Data, mimeType, tamaño } = body;
+    const { nombre, descripcion, base64Data, mimeType, size } = body;
 
     // Validación
     if (!nombre || !base64Data || !mimeType) {
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       descripcion: descripcion || '',
       base64Data,
       mimeType,
-      tamaño: tamaño || 0,
+      size: size || 0,
       fechaCreacion: now,
       fechaActualizacion: now,
     };
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { _id, nombre, descripcion, base64Data, mimeType, tamaño } = body;
+    const { _id, nombre, descripcion, base64Data, mimeType, size } = body;
 
     if (!_id) {
       return NextResponse.json<ApiResponse>(
@@ -138,7 +138,7 @@ export async function PATCH(request: NextRequest) {
     if (descripcion !== undefined) updateData.descripcion = descripcion;
     if (base64Data) updateData.base64Data = base64Data;
     if (mimeType) updateData.mimeType = mimeType;
-    if (tamaño !== undefined) updateData.tamaño = tamaño;
+    if (size !== undefined) updateData.size = size;
 
     const result = await db
       .collection('imagenes')

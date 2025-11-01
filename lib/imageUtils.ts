@@ -41,6 +41,11 @@ export async function resizeImage(
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
+    if (!ctx) {
+      reject(new Error('Failed to get canvas context'));
+      return;
+    }
+
     img.onload = () => {
       let width = img.width;
       let height = img.height;
@@ -61,7 +66,7 @@ export async function resizeImage(
       canvas.width = width;
       canvas.height = height;
 
-      ctx?.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
 
       canvas.toBlob(
         (blob) => {
@@ -89,7 +94,7 @@ export async function resizeImage(
 export async function preprocessImage(file: File): Promise<{
   base64Data: string;
   mimeType: string;
-  tamaño: number;
+  size: number;
 }> {
   // Redimensionar primero
   const resizedBlob = await resizeImage(file);
@@ -105,7 +110,7 @@ export async function preprocessImage(file: File): Promise<{
   return {
     base64Data,
     mimeType: file.type,
-    tamaño: resizedBlob.size,
+    size: resizedBlob.size,
   };
 }
 

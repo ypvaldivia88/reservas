@@ -188,7 +188,7 @@ export default function CategoriasAdmin() {
                   {imagen ? (
                     <img
                       src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
-                      alt={categoria.nombre}
+                      alt={`Category image for ${categoria.nombre}`}
                       className="w-full h-full object-cover"
                     />
                   ) : (

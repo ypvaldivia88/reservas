@@ -64,7 +64,7 @@ export interface ImageData {
   descripcion?: string;
   base64Data: string; // Imagen codificada en base64
   mimeType: string; // image/jpeg, image/png, etc.
-  tamaño?: number; // Tamaño en bytes
+  size?: number; // Tamaño en bytes
   fechaCreacion?: Date;
   fechaActualizacion?: Date;
 }

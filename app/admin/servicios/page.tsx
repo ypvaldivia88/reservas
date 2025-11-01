@@ -194,7 +194,7 @@ export default function ServiciosAdmin() {
                   {imagen ? (
                     <img
                       src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
-                      alt={servicio.nombre}
+                      alt={`Service image for ${servicio.nombre}`}
                       className="w-full h-full object-cover"
                     />
                   ) : (

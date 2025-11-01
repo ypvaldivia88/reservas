@@ -58,7 +58,7 @@ export default function ImagenesAdmin() {
     setMessage("");
 
     try {
-      let imageData: { base64Data: string; mimeType: string; tamaño: number } | null = null;
+      let imageData: { base64Data: string; mimeType: string; size: number } | null = null;
 
       if (uploadedFile) {
         imageData = await preprocessImage(uploadedFile);
@@ -197,7 +197,7 @@ export default function ImagenesAdmin() {
               <div className="aspect-square bg-gray-200 dark:bg-gray-700">
                 <img
                   src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
-                  alt={imagen.nombre}
+                  alt={`Image: ${imagen.nombre}`}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -211,7 +211,7 @@ export default function ImagenesAdmin() {
                   </p>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                  {Math.round((imagen.tamaño || 0) / 1024)} KB
+                  {Math.round((imagen.size || 0) / 1024)} KB
                 </p>
                 <div className="flex space-x-2">
                   <button

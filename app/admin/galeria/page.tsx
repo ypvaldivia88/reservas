@@ -220,7 +220,7 @@ export default function GaleriaAdmin() {
                   {imagen ? (
                     <img
                       src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
-                      alt={item.titulo}
+                      alt={`Gallery image: ${item.titulo}`}
                       className="w-full h-full object-cover"
                     />
                   ) : (
