@@ -10,6 +10,10 @@ Una aplicación moderna para gestionar reservas de un salón de uñas, construid
 - 📱 **Design responsive** para móviles y desktop
 - ⚡ **API REST** con manejo de errores completo
 - 🗄️ **Base de datos MongoDB** con conexión optimizada
+- 👤 **Autenticación de administrador** con login seguro
+- 🔐 **Cambio de contraseña** para administradores
+- 👥 **Registro automático de clientes** al hacer reservas
+- 📊 **Panel de administración** con estadísticas y gestión de reservas
 
 ## 🚀 Tecnologías
 
@@ -17,6 +21,7 @@ Una aplicación moderna para gestionar reservas de un salón de uñas, construid
 - **Styling**: Tailwind CSS 4
 - **Backend**: Next.js API Routes
 - **Base de datos**: MongoDB
+- **Autenticación**: bcryptjs para hashing de contraseñas
 - **Validación**: Custom hooks y utilidades
 
 ## 📋 Requisitos previos
@@ -63,18 +68,26 @@ Una aplicación moderna para gestionar reservas de un salón de uñas, construid
 ```
 reservas/
 ├── app/
-│   ├── api/reservas/          # API endpoints
-│   ├── reserva/               # Página de reservas
-│   ├── layout.tsx             # Layout principal
-│   └── page.tsx               # Página de inicio
+│   ├── admin/                  # Panel de administración
+│   │   ├── dashboard/          # Dashboard del admin
+│   │   └── page.tsx            # Login de admin
+│   ├── api/
+│   │   ├── auth/               # Endpoints de autenticación
+│   │   ├── clientes/           # Endpoints de clientes
+│   │   └── reservas/           # Endpoints de reservas
+│   ├── reserva/                # Página de reservas
+│   ├── layout.tsx              # Layout principal
+│   └── page.tsx                # Página de inicio
 ├── components/
-│   └── ReservaForm.tsx        # Componente de formulario
+│   ├── AdminInitializer.tsx    # Inicialización del admin
+│   └── ReservaForm.tsx         # Componente de formulario
 ├── lib/
-│   ├── hooks/                 # Custom hooks
-│   ├── mongodb.ts             # Configuración DB
-│   ├── types.ts               # Tipos TypeScript
-│   └── utils.ts               # Utilidades
-└── middleware.ts              # Middleware de seguridad
+│   ├── hooks/                  # Custom hooks
+│   ├── auth.ts                 # Utilidades de autenticación
+│   ├── mongodb.ts              # Configuración DB
+│   ├── types.ts                # Tipos TypeScript
+│   └── utils.ts                # Utilidades
+└── middleware.ts               # Middleware de seguridad
 ```
 
 ## 🔧 Scripts disponibles
@@ -91,6 +104,14 @@ npm run format       # Formatear código con Prettier
 
 ## 🎯 Funcionalidades
 
+### Autenticación y Usuarios
+- ✅ Login de administrador con credenciales seguras
+- ✅ Cambio de contraseña para administradores
+- ✅ Registro automático de clientes al hacer reservas
+- ✅ Validación de unicidad por teléfono
+- ✅ Protección de rutas administrativas
+- ✅ Sesiones con cookies seguras (24 horas)
+
 ### Reservas
 - ✅ Crear nueva reserva
 - ✅ Validación de campos requeridos
@@ -98,6 +119,25 @@ npm run format       # Formatear código con Prettier
 - ✅ Selección de largo (1-8)
 - ✅ Campo opcional para decoración
 - ✅ Feedback visual en tiempo real
+- ✅ Vinculación automática con cliente
+
+### Panel de Administración
+- ✅ Estadísticas de reservas y clientes
+- ✅ Visualización de todas las reservas
+- ✅ Lista de clientes registrados
+- ✅ Gestión de contraseña
+- ✅ Interfaz responsive
+
+## 🔐 Acceso Administrativo
+
+### Credenciales por defecto
+- **Usuario:** `admin`
+- **Contraseña:** `admin`
+- **URL:** `/admin`
+
+⚠️ **IMPORTANTE:** Cambiar la contraseña inmediatamente después del primer inicio de sesión.
+
+Para más detalles sobre el sistema de autenticación, consulta [AUTENTICACION.md](./AUTENTICACION.md).
 
 ### Panel de Administración
 - ✅ Ver lista completa de reservas

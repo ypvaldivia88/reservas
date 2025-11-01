@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Agregar headers de seguridad
   const requestHeaders = new Headers(request.headers);
+  
+  // Proteger rutas de admin
+  if (request.nextUrl.pathname.startsWith('/admin/dashboard')) {
+    const token = request.cookies.get('session-token')?.value;
+    
+    // Verificar existencia y formato básico del token
+    if (!token || token.length < 20) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    
+    // Note: Full token validation (expiration, DB check) is done in API endpoints
+    // to keep middleware lightweight and fast
+  }
   
   const response = NextResponse.next({
     request: {
