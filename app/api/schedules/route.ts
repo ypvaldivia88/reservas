@@ -1,28 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { Schedule, DaySchedule, ApiResponse, DEFAULT_WORKING_DAYS, DEFAULT_TIME_SLOTS, DayOfWeek } from "@/lib/types";
-
-// Función para crear el horario por defecto
-export function createDefaultSchedule(): Omit<Schedule, '_id'> {
-  const allDays: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  
-  const schedule: DaySchedule[] = allDays.map(dayOfWeek => {
-    const isWorkingDay = DEFAULT_WORKING_DAYS.includes(dayOfWeek);
-    return {
-      dayOfWeek,
-      isWorkingDay,
-      slots: isWorkingDay ? DEFAULT_TIME_SLOTS.map(time => ({ time, available: true })) : []
-    };
-  });
-
-  return {
-    name: 'default',
-    description: 'Horario por defecto: Martes a Sábado, 8:30 AM - 6:00 PM con descanso de almuerzo',
-    schedule,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
-}
+import { Schedule, ApiResponse } from "@/lib/types";
+import { scheduleUtils } from "@/lib/utils";
 
 // GET: Obtiene el horario por defecto o uno específico
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<Schedule>>> {
@@ -37,9 +16,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     // Si no existe el horario por defecto, crearlo
     if (!schedule && name === 'default') {
-      const defaultSchedule = createDefaultSchedule();
-      const result = await db.collection<Schedule>("schedules").insertOne(defaultSchedule);
-      schedule = { ...defaultSchedule, _id: result.insertedId.toString() };
+      const defaultSchedule = scheduleUtils.createDefaultSchedule();
+      const result = await db.collection("schedules").insertOne(defaultSchedule);
+      schedule = { ...defaultSchedule, _id: result.insertedId.toString() } as any;
       console.log('✨ Horario por defecto creado');
     }
 

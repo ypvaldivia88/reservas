@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { Reserva, ApiResponse, FORMAS_UNAS, User } from "@/lib/types";
+import { dateUtils } from "@/lib/utils";
 
 // Función de validación
 function validarReserva(data: any): { isValid: boolean; errors: string[] } {
@@ -26,17 +27,12 @@ function validarReserva(data: any): { isValid: boolean; errors: string[] } {
   // Validar fecha de cita
   if (!data.fechaCita || typeof data.fechaCita !== 'string') {
     errors.push('La fecha de cita es requerida');
-  } else {
-    const fechaCita = new Date(data.fechaCita);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    if (fechaCita < hoy) {
-      errors.push('La fecha de cita no puede ser en el pasado');
-    }
+  } else if (!dateUtils.isFutureDate(data.fechaCita)) {
+    errors.push('La fecha de cita no puede ser en el pasado');
   }
 
   // Validar hora de cita
-  if (!data.horaCita || typeof data.horaCita !== 'string' || !/^\d{2}:\d{2}$/.test(data.horaCita)) {
+  if (!data.horaCita || typeof data.horaCita !== 'string' || !dateUtils.isValidTimeFormat(data.horaCita)) {
     errors.push('La hora de cita es requerida y debe tener formato HH:mm');
   }
 

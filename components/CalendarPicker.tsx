@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { DAY_NAMES, DayOfWeek } from "@/lib/types";
+import { dateUtils } from "@/lib/utils";
 
 interface AvailableSlot {
   date: string;
@@ -36,7 +37,7 @@ export default function CalendarPicker({
       endDate.setDate(0);
 
       const res = await fetch(
-        `/api/availability?startDate=${startDate.toISOString().split("T")[0]}&endDate=${endDate.toISOString().split("T")[0]}`
+        `/api/availability?startDate=${dateUtils.formatToYYYYMMDD(startDate)}&endDate=${dateUtils.formatToYYYYMMDD(endDate)}`
       );
 
       if (res.ok) {
@@ -80,10 +81,8 @@ export default function CalendarPicker({
   };
 
   const getDateString = (day: number) => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const date = new Date(year, month, day);
-    return date.toISOString().split("T")[0];
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return dateUtils.formatToYYYYMMDD(date);
   };
 
   const getAvailabilityForDate = (day: number) => {
@@ -173,7 +172,7 @@ export default function CalendarPicker({
               }
 
               const dateString = getDateString(day);
-              const dateObj = new Date(dateString + "T00:00:00");
+              const dateObj = dateUtils.parseDate(dateString);
               const avail = getAvailabilityForDate(day);
               const isToday = dateObj.getTime() === today.getTime();
               const isPast = dateObj < today;
@@ -208,7 +207,7 @@ export default function CalendarPicker({
       {selectedDate && selectedDateAvailability && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
           <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-            Horarios disponibles para {new Date(selectedDate + "T00:00:00").toLocaleDateString("es-ES", { 
+            Horarios disponibles para {dateUtils.parseDate(selectedDate).toLocaleDateString("es-ES", { 
               weekday: "long", 
               year: "numeric", 
               month: "long", 

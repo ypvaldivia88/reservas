@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { AvailabilityOverride, Schedule, Reserva, ApiResponse, TimeSlot, DayOfWeek } from "@/lib/types";
 import { Db } from "mongodb";
+import { dateUtils, scheduleUtils } from "@/lib/utils";
 
 // Función helper para obtener el día de la semana de una fecha
 function getDayOfWeek(dateString: string): DayOfWeek {
-  const date = new Date(dateString + 'T00:00:00');
+  const date = dateUtils.parseDate(dateString);
   const days: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   return days[date.getDay()];
 }
@@ -77,10 +78,19 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     
     if (!schedule) {
       // Crear horario por defecto si no existe
-      const { createDefaultSchedule } = await import("../schedules/route");
-      const defaultSchedule = createDefaultSchedule();
-      const result = await db.collection<Schedule>("schedules").insertOne(defaultSchedule);
-      schedule = { ...defaultSchedule, _id: result.insertedId.toString() };
+      const defaultSchedule = scheduleUtils.createDefaultSchedule();
+      const result = await db.collection("schedules").insertOne(defaultSchedule);
+      schedule = { ...defaultSchedule, _id: result.insertedId.toString() } as any;
+    }
+
+    if (!schedule) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No se pudo crear el horario por defecto'
+        },
+        { status: 500 }
+      );
     }
 
     // Calcular rango de fechas
