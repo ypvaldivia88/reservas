@@ -59,6 +59,54 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+// Tipos para imágenes y galerías
+export interface ImageData {
+  _id?: string;
+  nombre: string;
+  descripcion?: string;
+  base64Data: string; // Imagen codificada en base64
+  mimeType: string; // image/jpeg, image/png, etc.
+  size?: number; // Tamaño en bytes
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
+}
+
+export interface Servicio {
+  _id?: string;
+  nombre: string;
+  descripcion: string;
+  precio?: number;
+  duracion?: number; // en minutos
+  imagenId?: string; // Referencia a ImageData
+  activo: boolean;
+  orden?: number; // Para ordenar en la UI
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
+}
+
+export interface Categoria {
+  _id?: string;
+  nombre: string;
+  descripcion?: string;
+  imagenId?: string; // Referencia a ImageData
+  activo: boolean;
+  orden?: number;
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
+}
+
+export interface GaleriaItem {
+  _id?: string;
+  titulo: string;
+  descripcion?: string;
+  imagenId: string; // Referencia a ImageData
+  categoriaId?: string; // Opcional: puede estar vinculado a una categoría
+  servicioId?: string; // Opcional: puede estar vinculado a un servicio
+  destacado: boolean;
+  orden?: number;
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
+}
 // Tipos para disponibilidad y horarios
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
