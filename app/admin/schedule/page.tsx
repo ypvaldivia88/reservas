@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Schedule, DaySchedule, TimeSlot, DayOfWeek, DAY_NAMES } from "@/lib/types";
+import { Schedule, DaySchedule, TimeSlot, DayOfWeek, DAY_NAMES, AvailabilityOverride } from "@/lib/types";
 import AdminNav from "@/components/AdminNav";
 
 export default function AdminSchedulePage() {
@@ -10,10 +10,19 @@ export default function AdminSchedulePage() {
   const [message, setMessage] = useState("");
   const [editingDay, setEditingDay] = useState<DayOfWeek | null>(null);
   const [editingSlots, setEditingSlots] = useState<string>("");
+  const [specialDays, setSpecialDays] = useState<AvailabilityOverride[]>([]);
+  const [showAddSpecialDay, setShowAddSpecialDay] = useState(false);
+  const [newSpecialDay, setNewSpecialDay] = useState({
+    date: "",
+    reason: "",
+    isWorkingDay: false,
+    slots: ""
+  });
   const router = useRouter();
 
   useEffect(() => {
     loadSchedule();
+    loadSpecialDays();
   }, []);
 
   const loadSchedule = async () => {
@@ -29,6 +38,20 @@ export default function AdminSchedulePage() {
       console.error("Error cargando horario:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSpecialDays = async () => {
+    try {
+      const res = await fetch("/api/special-days");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setSpecialDays(data.data || []);
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando días especiales:", error);
     }
   };
 
@@ -108,6 +131,78 @@ export default function AdminSchedulePage() {
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
+  };
+
+  const handleAddSpecialDay = async () => {
+    if (!newSpecialDay.date) {
+      setMessage("❌ La fecha es requerida");
+      return;
+    }
+
+    try {
+      const slotsArray = newSpecialDay.isWorkingDay && newSpecialDay.slots
+        ? newSpecialDay.slots.split(",").map(t => t.trim()).filter(t => /^\d{2}:\d{2}$/.test(t))
+        : [];
+
+      const res = await fetch("/api/special-days", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: newSpecialDay.date,
+          reason: newSpecialDay.reason,
+          isWorkingDay: newSpecialDay.isWorkingDay,
+          slots: slotsArray.map(time => ({ time, available: true }))
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMessage("✅ Día especial creado exitosamente");
+        setShowAddSpecialDay(false);
+        setNewSpecialDay({ date: "", reason: "", isWorkingDay: false, slots: "" });
+        await loadSpecialDays();
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("❌ " + (data.error || "Error al crear día especial"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setMessage("❌ Error de conexión");
+    }
+  };
+
+  const handleDeleteSpecialDay = async (date: string) => {
+    if (!confirm("¿Estás seguro de eliminar este día especial?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/special-days?date=${date}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMessage("✅ Día especial eliminado exitosamente");
+        await loadSpecialDays();
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("❌ Error al eliminar día especial");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setMessage("❌ Error de conexión");
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString + 'T00:00:00');
+    return new Intl.DateTimeFormat('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(date);
   };
 
   if (loading) {
@@ -278,17 +373,151 @@ export default function AdminSchedulePage() {
 
         {/* Gestión de fechas especiales */}
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            📌 Gestión de Fechas Especiales
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Próximamente: Podrás configurar horarios especiales para días específicos (feriados, eventos, etc.)
-          </p>
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Esta funcionalidad estará disponible pronto
-            </p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              📌 Gestión de Días Especiales
+            </h2>
+            <button
+              onClick={() => setShowAddSpecialDay(!showAddSpecialDay)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {showAddSpecialDay ? "Cancelar" : "+ Agregar Día Especial"}
+            </button>
           </div>
+
+          <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+            Configura horarios especiales para días específicos (feriados, eventos, cierres temporales, etc.)
+          </p>
+
+          {/* Formulario para agregar día especial */}
+          {showAddSpecialDay && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Fecha *
+                  </label>
+                  <input
+                    type="date"
+                    value={newSpecialDay.date}
+                    onChange={(e) => setNewSpecialDay({ ...newSpecialDay, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Motivo
+                  </label>
+                  <input
+                    type="text"
+                    value={newSpecialDay.reason}
+                    onChange={(e) => setNewSpecialDay({ ...newSpecialDay, reason: e.target.value })}
+                    placeholder="Ej: Feriado, Evento especial"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newSpecialDay.isWorkingDay}
+                    onChange={(e) => setNewSpecialDay({ ...newSpecialDay, isWorkingDay: e.target.checked, slots: e.target.checked ? newSpecialDay.slots : "" })}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Día laborable (con horarios especiales)
+                  </span>
+                </label>
+              </div>
+
+              {newSpecialDay.isWorkingDay && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Horarios disponibles
+                  </label>
+                  <input
+                    type="text"
+                    value={newSpecialDay.slots}
+                    onChange={(e) => setNewSpecialDay({ ...newSpecialDay, slots: e.target.value })}
+                    placeholder="08:30, 10:30, 14:00"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Separa los horarios con comas en formato 24h (HH:mm)
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleAddSpecialDay}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Guardar Día Especial
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de días especiales */}
+          {specialDays.length === 0 ? (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                No hay días especiales configurados
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {specialDays.map((day) => (
+                <div
+                  key={day._id || day.date}
+                  className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex justify-between items-start"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {formatDate(day.date)}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        day.isWorkingDay 
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                      }`}>
+                        {day.isWorkingDay ? "Día laborable" : "Cerrado"}
+                      </span>
+                    </div>
+                    {day.reason && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {day.reason}
+                      </p>
+                    )}
+                    {day.isWorkingDay && day.slots && day.slots.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {day.slots.map((slot, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                          >
+                            {slot.time}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteSpecialDay(day.date)}
+                    className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    title="Eliminar"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
