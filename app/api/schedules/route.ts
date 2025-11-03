@@ -86,6 +86,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       { upsert: true, returnDocument: 'after' }
     );
 
+    if (!result) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Error al actualizar el horario'
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       data: result as Schedule,
