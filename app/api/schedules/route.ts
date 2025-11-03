@@ -59,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       return NextResponse.json(
         {
           success: false,
-          error: 'Datos de horario inválidos'
+          error: "Datos de horario inválidos",
         },
         { status: 400 }
       );
@@ -67,30 +67,29 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     const client = await clientPromise;
     const db = client.db("nailsalon");
-    
-    const scheduleData: Omit<Schedule, '_id'> = {
-      name: data.name || 'default',
-      description: data.description || '',
+
+    const scheduleData = {
+      name: data.name || "default",
+      description: data.description || "",
       schedule: data.schedule,
       updatedAt: new Date(),
-      createdAt: new Date()
     };
 
     // Actualizar o insertar
     const result = await db.collection<Schedule>("schedules").findOneAndUpdate(
       { name: scheduleData.name },
-      { 
-        $set: { ...scheduleData, updatedAt: new Date() },
-        $setOnInsert: { createdAt: new Date() }
+      {
+        $set: scheduleData,
+        $setOnInsert: { createdAt: new Date() },
       },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, returnDocument: "after" }
     );
 
     if (!result) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Error al actualizar el horario'
+          error: "Error al actualizar el horario",
         },
         { status: 500 }
       );
@@ -99,15 +98,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     return NextResponse.json({
       success: true,
       data: result as Schedule,
-      message: 'Horario actualizado exitosamente'
+      message: "Horario actualizado exitosamente",
     });
-
   } catch (error) {
-    console.error('Error en POST /api/schedules:', error);
+    console.error("Error en POST /api/schedules:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Error interno del servidor'
+        error: "Error interno del servidor",
       },
       { status: 500 }
     );
