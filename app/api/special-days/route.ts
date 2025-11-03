@@ -109,7 +109,14 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<ApiResp
     const client = await clientPromise;
     const db = client.db("nailsalon");
 
-    await db.collection<AvailabilityOverride>("availability_overrides").deleteOne({ date });
+    const result = await db.collection<AvailabilityOverride>("availability_overrides").deleteOne({ date });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({
+        success: false,
+        message: 'No se encontró el día especial para eliminar'
+      }, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,

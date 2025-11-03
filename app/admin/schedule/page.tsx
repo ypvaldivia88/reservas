@@ -93,7 +93,13 @@ export default function AdminSchedulePage() {
     const dayIndex = updatedSchedule.schedule.findIndex(d => d.dayOfWeek === editingDay);
     
     if (dayIndex >= 0) {
-      const times = editingSlots.split(",").map(t => t.trim()).filter(t => /^\d{2}:\d{2}$/.test(t));
+      const times = editingSlots.split(",").map(t => t.trim()).filter(isValidTime);
+      
+      if (editingSlots.trim() && times.length === 0) {
+        setMessage("❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)");
+        return;
+      }
+      
       updatedSchedule.schedule[dayIndex].slots = times.map(time => ({ time, available: true }));
       
       await saveSchedule(updatedSchedule);
@@ -133,6 +139,12 @@ export default function AdminSchedulePage() {
     }
   };
 
+  const isValidTime = (time: string): boolean => {
+    if (!/^\d{2}:\d{2}$/.test(time)) return false;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+  };
+
   const handleAddSpecialDay = async () => {
     if (!newSpecialDay.date) {
       setMessage("❌ La fecha es requerida");
@@ -141,8 +153,13 @@ export default function AdminSchedulePage() {
 
     try {
       const slotsArray = newSpecialDay.isWorkingDay && newSpecialDay.slots
-        ? newSpecialDay.slots.split(",").map(t => t.trim()).filter(t => /^\d{2}:\d{2}$/.test(t))
+        ? newSpecialDay.slots.split(",").map(t => t.trim()).filter(isValidTime)
         : [];
+
+      if (newSpecialDay.isWorkingDay && newSpecialDay.slots && slotsArray.length === 0) {
+        setMessage("❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)");
+        return;
+      }
 
       const res = await fetch("/api/special-days", {
         method: "POST",
@@ -196,7 +213,9 @@ export default function AdminSchedulePage() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString + 'T00:00:00');
+    // Parse date string (YYYY-MM-DD) correctly to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return new Intl.DateTimeFormat('es-ES', {
       weekday: 'long',
       year: 'numeric',
