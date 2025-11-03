@@ -105,18 +105,20 @@ export default function AdminDashboard() {
                 Panel Administrador
               </h1>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button
                 onClick={() => setShowChangePassword(!showChangePassword)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 sm:px-4 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px] whitespace-nowrap"
               >
-                🔑 Cambiar Contraseña
+                <span className="hidden sm:inline">🔑 Cambiar Contraseña</span>
+                <span className="sm:hidden">🔑 Contraseña</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 py-2 sm:px-6 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px] whitespace-nowrap"
               >
-                🚪 Cerrar Sesión
+                <span className="hidden sm:inline">🚪 Cerrar Sesión</span>
+                <span className="sm:hidden">🚪 Salir</span>
               </button>
             </div>
           </div>

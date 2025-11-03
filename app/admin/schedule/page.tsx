@@ -111,10 +111,17 @@ export default function AdminSchedulePage() {
 
   const saveSchedule = async (updatedSchedule: Schedule) => {
     try {
+      // Only send the necessary fields to avoid serialization issues
+      const schedulePayload = {
+        name: updatedSchedule.name || 'default',
+        description: updatedSchedule.description || '',
+        schedule: updatedSchedule.schedule
+      };
+
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedSchedule)
+        body: JSON.stringify(schedulePayload)
       });
 
       const data = await res.json();
