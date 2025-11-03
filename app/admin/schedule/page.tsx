@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Schedule, DaySchedule, TimeSlot, DayOfWeek, DAY_NAMES, AvailabilityOverride } from "@/lib/types";
 import AdminNav from "@/components/AdminNav";
+import TimePickerInput from "@/components/TimePickerInput";
 
 export default function AdminSchedulePage() {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
@@ -251,9 +252,10 @@ export default function AdminSchedulePage() {
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="px-4 py-2 sm:px-6 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px]"
             >
-              🚪 Cerrar Sesión
+              <span className="hidden sm:inline">🚪 Cerrar Sesión</span>
+              <span className="sm:hidden">🚪 Salir</span>
             </button>
           </div>
         </div>
@@ -275,8 +277,8 @@ export default function AdminSchedulePage() {
           <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <li>• Activa/desactiva días hábiles con el interruptor</li>
             <li>• Haz clic en &quot;Editar Horarios&quot; para personalizar los slots de tiempo</li>
-            <li>• Los horarios deben estar en formato 24h (HH:mm), ej: 08:30, 14:00</li>
-            <li>• Separa múltiples horarios con comas</li>
+            <li>• Usa el selector de hora para agregar horarios fácilmente desde tu móvil</li>
+            <li>• Los horarios se agregan ordenados automáticamente</li>
             <li>• Por defecto: Martes a Sábado, 8:30am, 10:30am, 2:00pm, 4:00pm</li>
           </ul>
         </div>
@@ -332,29 +334,30 @@ export default function AdminSchedulePage() {
                     </td>
                     <td className="px-6 py-4">
                       {editingDay === day.dayOfWeek ? (
-                        <div className="flex space-x-2">
-                          <input
-                            type="text"
+                        <div className="space-y-3">
+                          <TimePickerInput
                             value={editingSlots}
-                            onChange={(e) => setEditingSlots(e.target.value)}
-                            placeholder="08:30, 10:30, 14:00, 16:00"
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            onChange={setEditingSlots}
+                            placeholder="Seleccione un horario"
+                            className="w-full"
                           />
-                          <button
-                            onClick={handleSaveSlots}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingDay(null);
-                              setEditingSlots("");
-                            }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
-                          >
-                            Cancelar
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveSlots}
+                              className="flex-1 sm:flex-none px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium touch-manipulation min-h-[44px]"
+                            >
+                              ✓ Guardar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingDay(null);
+                                setEditingSlots("");
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium touch-manipulation min-h-[44px]"
+                            >
+                              ✕ Cancelar
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex flex-wrap gap-2">
@@ -377,7 +380,7 @@ export default function AdminSchedulePage() {
                       {day.isWorkingDay && editingDay !== day.dayOfWeek && (
                         <button
                           onClick={() => handleEditSlots(day.dayOfWeek)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium touch-manipulation min-h-[44px] px-2"
                         >
                           ✏️ Editar Horarios
                         </button>
@@ -392,15 +395,15 @@ export default function AdminSchedulePage() {
 
         {/* Gestión de fechas especiales */}
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               📌 Gestión de Días Especiales
             </h2>
             <button
               onClick={() => setShowAddSpecialDay(!showAddSpecialDay)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px]"
             >
-              {showAddSpecialDay ? "Cancelar" : "+ Agregar Día Especial"}
+              {showAddSpecialDay ? "❌ Cancelar" : "+ Agregar Día Especial"}
             </button>
           </div>
 
@@ -454,28 +457,24 @@ export default function AdminSchedulePage() {
 
               {newSpecialDay.isWorkingDay && (
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Horarios disponibles
                   </label>
-                  <input
-                    type="text"
+                  <TimePickerInput
                     value={newSpecialDay.slots}
-                    onChange={(e) => setNewSpecialDay({ ...newSpecialDay, slots: e.target.value })}
-                    placeholder="08:30, 10:30, 14:00"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    onChange={(value) => setNewSpecialDay({ ...newSpecialDay, slots: value })}
+                    placeholder="Seleccione horarios"
+                    className="w-full"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Separa los horarios con comas en formato 24h (HH:mm)
-                  </p>
                 </div>
               )}
 
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={handleAddSpecialDay}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium touch-manipulation min-h-[44px]"
                 >
-                  Guardar Día Especial
+                  💾 Guardar Día Especial
                 </button>
               </div>
             </div>
@@ -528,8 +527,9 @@ export default function AdminSchedulePage() {
                   </div>
                   <button
                     onClick={() => handleDeleteSpecialDay(day.date)}
-                    className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Eliminar"
+                    aria-label="Eliminar día especial"
                   >
                     🗑️
                   </button>
