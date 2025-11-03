@@ -24,7 +24,9 @@ export default function TimePickerInput({ value, onChange, placeholder, classNam
 
   const addTime = () => {
     if (newTime && !times.includes(newTime)) {
-      const updatedTimes = [...times, newTime].sort();
+      // Ensure time is in HH:mm format (pad with zeros if needed)
+      const formattedTime = newTime.padStart(5, '0');
+      const updatedTimes = [...times, formattedTime].sort();
       setTimes(updatedTimes);
       onChange(updatedTimes.join(", "));
       setNewTime("");
