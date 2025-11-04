@@ -1,89 +1,72 @@
-// WhatsApp notification service using Twilio
-import twilio from 'twilio';
+// WhatsApp notification service using WhatsApp Web/App links
+// This allows the client to send a message directly from their own WhatsApp
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM; // Format: whatsapp:+14155238886
-const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER || '+5363233073';
+const adminPhone = '+5363233073'; // Admin WhatsApp number (without spaces)
 
-// Initialize Twilio client only if credentials are available
-let client: ReturnType<typeof twilio> | null = null;
-
-if (accountSid && authToken) {
-  try {
-    client = twilio(accountSid, authToken);
-  } catch (error) {
-    console.error('Error initializing Twilio client:', error);
-  }
-}
-
-export interface WhatsAppNotification {
-  type: 'new_reservation' | 'new_client';
-  data: {
-    nombre: string;
-    telefono: string;
-    fechaCita?: string;
-    horaCita?: string;
-    forma?: string;
-    largo?: number;
-  };
+export interface ReservaDetails {
+  nombre: string;
+  telefono: string;
+  fechaCita: string;
+  horaCita: string;
+  forma: string;
+  largo: number;
+  decoracion?: string;
 }
 
 /**
- * Send WhatsApp notification to admin
+ * Generate WhatsApp link for the client to send notification to admin
+ * @param reserva - Reservation details
+ * @param reservaId - ID of the reservation for direct admin link
+ * @returns WhatsApp URL
  */
-export async function sendAdminNotification(notification: WhatsAppNotification): Promise<{ success: boolean; error?: string }> {
-  // If Twilio is not configured, log and return success (graceful degradation)
-  if (!client || !whatsappFrom) {
-    console.log('⚠️ WhatsApp notifications not configured. Notification would have been sent:', notification);
-    return { success: true }; // Return success to not break the flow
-  }
+export function generateWhatsAppNotificationLink(
+  reserva: ReservaDetails,
+  reservaId: string
+): string {
+  // Build the admin edit link
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const adminLink = `${baseUrl}/admin/dashboard?reserva=${reservaId}`;
+  
+  // Build the message
+  const message = `🆕 *Nueva Reserva de Uñas*
 
-  try {
-    let message = '';
-    
-    if (notification.type === 'new_reservation') {
-      message = `🆕 Nueva Reserva
-      
-👤 Cliente: ${notification.data.nombre}
-📞 Teléfono: ${notification.data.telefono}
-📅 Fecha: ${notification.data.fechaCita}
-🕐 Hora: ${notification.data.horaCita}
-💅 Forma: ${notification.data.forma}
-📏 Largo: ${notification.data.largo}
+👤 *Cliente:* ${reserva.nombre}
+📞 *Teléfono:* ${reserva.telefono}
+📅 *Fecha:* ${reserva.fechaCita}
+🕐 *Hora:* ${reserva.horaCita}
+💅 *Forma:* ${reserva.forma}
+📏 *Largo:* ${reserva.largo}
+${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
 
-Por favor, revisa el panel de administración para más detalles.`;
-    } else if (notification.type === 'new_client') {
-      message = `🆕 Nuevo Cliente Registrado
-      
-👤 Nombre: ${notification.data.nombre}
-📞 Teléfono: ${notification.data.telefono}
+🔗 *Gestionar reserva:*
+${adminLink}
 
-El cliente se ha registrado en el sistema.`;
-    }
+_Click en el link para confirmar, editar o cancelar la reserva._`;
 
-    const result = await client.messages.create({
-      from: whatsappFrom,
-      to: `whatsapp:${adminPhone}`,
-      body: message,
-    });
-
-    console.log('✅ WhatsApp notification sent successfully:', result.sid);
-    return { success: true };
-
-  } catch (error) {
-    console.error('❌ Error sending WhatsApp notification:', error);
-    // Return success anyway to not break the reservation/registration flow
-    return { 
-      success: true, // Don't fail the main operation
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
+  // Encode the message for URL
+  const encodedMessage = encodeURIComponent(message);
+  
+  // Generate WhatsApp link
+  // Use api.whatsapp.com for better compatibility with mobile and desktop
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${adminPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  
+  return whatsappLink;
 }
 
 /**
- * Check if WhatsApp notifications are configured
+ * Open WhatsApp with the notification message
+ * @param reserva - Reservation details
+ * @param reservaId - ID of the reservation
  */
-export function isWhatsAppConfigured(): boolean {
-  return !!(client && whatsappFrom);
+export function openWhatsAppNotification(
+  reserva: ReservaDetails,
+  reservaId: string
+): void {
+  const whatsappLink = generateWhatsAppNotificationLink(reserva, reservaId);
+  
+  // Open in new window/tab
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
 }
+

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { Reserva, ApiResponse, FORMAS_UNAS, User } from "@/lib/types";
 import { dateUtils } from "@/lib/utils";
-import { sendAdminNotification } from "@/lib/whatsapp";
 
 // Función de validación
 function validarReserva(data: any): { isValid: boolean; errors: string[] } {
@@ -154,15 +153,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       const resultCliente = await db.collection<User>("users").insertOne(nuevoCliente);
       cliente = { ...nuevoCliente, _id: resultCliente.insertedId.toString() };
       console.log('✨ Nuevo cliente registrado:', nombreNormalizado);
-      
-      // Enviar notificación de nuevo cliente
-      sendAdminNotification({
-        type: 'new_client',
-        data: {
-          nombre: nombreNormalizado,
-          telefono: telefonoNormalizado
-        }
-      }).catch(err => console.error('Error enviando notificación de nuevo cliente:', err));
     }
 
     // Preparar datos para inserción de reserva
@@ -180,19 +170,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     };
     
     const result = await db.collection<Reserva>("reservas").insertOne(nuevaReserva);
-
-    // Enviar notificación de nueva reserva
-    sendAdminNotification({
-      type: 'new_reservation',
-      data: {
-        nombre: nombreNormalizado,
-        telefono: telefonoNormalizado,
-        fechaCita: data.fechaCita,
-        horaCita: data.horaCita,
-        forma: data.forma,
-        largo: Number(data.largo)
-      }
-    }).catch(err => console.error('Error enviando notificación de reserva:', err));
 
     return NextResponse.json({
       success: true,
