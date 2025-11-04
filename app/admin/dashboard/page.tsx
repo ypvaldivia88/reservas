@@ -1,13 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
 import AdminNav from "@/components/AdminNav";
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic';
-
-export default function AdminDashboard() {
+// Componente interno que usa useSearchParams
+function DashboardContent() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [clientes, setClientes] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,16 +13,16 @@ export default function AdminDashboard() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
-  
+
   // Modal states for Reservas
   const [editingReserva, setEditingReserva] = useState<Reserva | null>(null);
   const [deletingReserva, setDeletingReserva] = useState<Reserva | null>(null);
-  
+
   // Modal states for Clientes
   const [creatingCliente, setCreatingCliente] = useState(false);
   const [editingCliente, setEditingCliente] = useState<User | null>(null);
   const [deletingCliente, setDeletingCliente] = useState<User | null>(null);
-  
+
   const [actionMessage, setActionMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,13 +33,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check if there's a reserva parameter in the URL
-    const reservaId = searchParams.get('reserva');
+    const reservaId = searchParams.get("reserva");
     if (reservaId && reservas.length > 0) {
       // Find and open the reservation for editing
-      const reserva = reservas.find(r => r._id === reservaId);
+      const reserva = reservas.find((r) => r._id === reservaId);
       if (reserva) {
         setEditingReserva(reserva);
-        setActionMessage("📱 Reserva abierta desde WhatsApp. Puedes confirmar, editar o descartar.");
+        setActionMessage(
+          "📱 Reserva abierta desde WhatsApp. Puedes confirmar, editar o descartar."
+        );
         setTimeout(() => setActionMessage(""), 5000);
       }
     }
@@ -101,7 +101,9 @@ export default function AdminDashboard() {
         setNewPassword("");
         setTimeout(() => setShowChangePassword(false), 2000);
       } else {
-        setPasswordMessage("❌ " + (data.error || "Error al cambiar contraseña"));
+        setPasswordMessage(
+          "❌ " + (data.error || "Error al cambiar contraseña")
+        );
       }
     } catch (error) {
       console.error("Error:", error);
@@ -186,7 +188,9 @@ export default function AdminDashboard() {
         loadData();
         setTimeout(() => setActionMessage(""), 3000);
       } else {
-        setActionMessage("❌ " + (data.error || data.message || "Error al crear cliente"));
+        setActionMessage(
+          "❌ " + (data.error || data.message || "Error al crear cliente")
+        );
         setTimeout(() => setActionMessage(""), 3000);
       }
     } catch (error) {
@@ -239,7 +243,9 @@ export default function AdminDashboard() {
         loadData();
         setTimeout(() => setActionMessage(""), 3000);
       } else {
-        setActionMessage("❌ " + (data.error || data.message || "Error al eliminar cliente"));
+        setActionMessage(
+          "❌ " + (data.error || data.message || "Error al eliminar cliente")
+        );
         setTimeout(() => setActionMessage(""), 3000);
       }
     } catch (error) {
@@ -336,9 +342,7 @@ export default function AdminDashboard() {
                   required
                 />
               </div>
-              {passwordMessage && (
-                <p className="text-sm">{passwordMessage}</p>
-              )}
+              {passwordMessage && <p className="text-sm">{passwordMessage}</p>}
               <button
                 type="submit"
                 className="px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
@@ -354,8 +358,12 @@ export default function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Total Reservas</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{reservas.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Total Reservas
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {reservas.length}
+                </p>
               </div>
               <div className="text-4xl">📅</div>
             </div>
@@ -363,8 +371,12 @@ export default function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Total Clientes</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{clientes.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Total Clientes
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {clientes.length}
+                </p>
               </div>
               <div className="text-4xl">👥</div>
             </div>
@@ -372,7 +384,9 @@ export default function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Pendientes</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Pendientes
+                </p>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">
                   {reservas.filter((r) => r.estado === "pendiente").length}
                 </p>
@@ -492,11 +506,11 @@ export default function AdminDashboard() {
                     <td className="px-4 py-3 text-sm">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          reserva.estado === "pendiente"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                            : reserva.estado === "confirmada"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                          reserva.estado === "pendiente" ?
+                            "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                          : reserva.estado === "confirmada" ?
+                            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                         }`}
                       >
                         {reserva.estado}
@@ -572,9 +586,9 @@ export default function AdminDashboard() {
                       {cliente.telefono}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                      {cliente.fechaCreacion
-                        ? new Date(cliente.fechaCreacion).toLocaleDateString()
-                        : "-"}
+                      {cliente.fechaCreacion ?
+                        new Date(cliente.fechaCreacion).toLocaleDateString()
+                      : "-"}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex gap-2">
@@ -623,7 +637,10 @@ export default function AdminDashboard() {
                     type="text"
                     value={editingReserva.nombre}
                     onChange={(e) =>
-                      setEditingReserva({ ...editingReserva, nombre: e.target.value })
+                      setEditingReserva({
+                        ...editingReserva,
+                        nombre: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
@@ -637,7 +654,10 @@ export default function AdminDashboard() {
                     type="tel"
                     value={editingReserva.telefono}
                     onChange={(e) =>
-                      setEditingReserva({ ...editingReserva, telefono: e.target.value })
+                      setEditingReserva({
+                        ...editingReserva,
+                        telefono: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
@@ -652,7 +672,11 @@ export default function AdminDashboard() {
                     onChange={(e) =>
                       setEditingReserva({
                         ...editingReserva,
-                        forma: e.target.value as "coffin" | "almond" | "stiletto" | "square",
+                        forma: e.target.value as
+                          | "coffin"
+                          | "almond"
+                          | "stiletto"
+                          | "square",
                       })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -690,7 +714,10 @@ export default function AdminDashboard() {
                     type="date"
                     value={editingReserva.fechaCita}
                     onChange={(e) =>
-                      setEditingReserva({ ...editingReserva, fechaCita: e.target.value })
+                      setEditingReserva({
+                        ...editingReserva,
+                        fechaCita: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
@@ -704,7 +731,10 @@ export default function AdminDashboard() {
                     type="time"
                     value={editingReserva.horaCita}
                     onChange={(e) =>
-                      setEditingReserva({ ...editingReserva, horaCita: e.target.value })
+                      setEditingReserva({
+                        ...editingReserva,
+                        horaCita: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
@@ -719,7 +749,11 @@ export default function AdminDashboard() {
                     onChange={(e) =>
                       setEditingReserva({
                         ...editingReserva,
-                        estado: e.target.value as "pendiente" | "confirmada" | "cancelada" | "completada",
+                        estado: e.target.value as
+                          | "pendiente"
+                          | "confirmada"
+                          | "cancelada"
+                          | "completada",
                       })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -737,16 +771,19 @@ export default function AdminDashboard() {
                   <textarea
                     value={editingReserva.decoracion || ""}
                     onChange={(e) =>
-                      setEditingReserva({ ...editingReserva, decoracion: e.target.value })
+                      setEditingReserva({
+                        ...editingReserva,
+                        decoracion: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows={3}
                   />
                 </div>
               </div>
-              
+
               {/* Quick Action Buttons */}
-              {editingReserva.estado === 'pendiente' && (
+              {editingReserva.estado === "pendiente" && (
                 <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-4">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Acciones Rápidas:
@@ -755,7 +792,10 @@ export default function AdminDashboard() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleUpdateReserva({ ...editingReserva, estado: 'confirmada' });
+                        handleUpdateReserva({
+                          ...editingReserva,
+                          estado: "confirmada",
+                        });
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
@@ -764,7 +804,10 @@ export default function AdminDashboard() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleUpdateReserva({ ...editingReserva, estado: 'cancelada' });
+                        handleUpdateReserva({
+                          ...editingReserva,
+                          estado: "cancelada",
+                        });
                       }}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                     >
@@ -773,7 +816,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
@@ -802,8 +845,9 @@ export default function AdminDashboard() {
               Confirmar Eliminación
             </h3>
             <p className="text-gray-700 dark:text-gray-300 mb-6">
-              ¿Estás seguro de que deseas eliminar la reserva de <strong>{deletingReserva.nombre}</strong>?
-              Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar la reserva de{" "}
+              <strong>{deletingReserva.nombre}</strong>? Esta acción no se puede
+              deshacer.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -907,7 +951,10 @@ export default function AdminDashboard() {
                   type="text"
                   value={editingCliente.nombre}
                   onChange={(e) =>
-                    setEditingCliente({ ...editingCliente, nombre: e.target.value })
+                    setEditingCliente({
+                      ...editingCliente,
+                      nombre: e.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
@@ -922,7 +969,10 @@ export default function AdminDashboard() {
                   type="tel"
                   value={editingCliente.telefono}
                   onChange={(e) =>
-                    setEditingCliente({ ...editingCliente, telefono: e.target.value })
+                    setEditingCliente({
+                      ...editingCliente,
+                      telefono: e.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
@@ -956,8 +1006,9 @@ export default function AdminDashboard() {
               Confirmar Eliminación
             </h3>
             <p className="text-gray-700 dark:text-gray-300 mb-6">
-              ¿Estás seguro de que deseas eliminar al cliente <strong>{deletingCliente.nombre}</strong>?
-              Esta acción no se puede deshacer. No se puede eliminar un cliente con reservas activas.
+              ¿Estás seguro de que deseas eliminar al cliente{" "}
+              <strong>{deletingCliente.nombre}</strong>? Esta acción no se puede
+              deshacer. No se puede eliminar un cliente con reservas activas.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -977,5 +1028,25 @@ export default function AdminDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+// Componente exportado que envuelve DashboardContent en Suspense
+export default function AdminDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+            <p className="text-gray-700 dark:text-gray-300">
+              Cargando dashboard...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

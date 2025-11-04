@@ -4,9 +4,6 @@ import { useRouter } from "next/navigation";
 import { Servicio, ImageData } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic';
-
 export default function ServiciosAdmin() {
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
