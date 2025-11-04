@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nail Studio - Salón de Manicure Profesional",
+  title: "Oh`Diosa - Salón de Manicure Profesional",
   description:
     "El mejor salón de manicure y cuidado de uñas. Diseños únicos, productos premium y profesionales expertas. Reserva tu cita hoy.",
   keywords: [
@@ -27,11 +27,11 @@ export const metadata: Metadata = {
     "cuidado",
     "diseños",
   ],
-  authors: [{ name: "Nail Studio" }],
-  creator: "Nail Studio",
-  publisher: "Nail Studio",
+  authors: [{ name: "Oh`Diosa Salón" }],
+  creator: "Oh`Diosa Salón",
+  publisher: "Oh`Diosa Salón",
   openGraph: {
-    title: "Nail Studio - Salón de Manicure Profesional",
+    title: "Oh`Diosa - Salón de Manicure Profesional",
     description:
       "El mejor salón de manicure y cuidado de uñas. Diseños únicos, productos premium y profesionales expertas.",
     type: "website",

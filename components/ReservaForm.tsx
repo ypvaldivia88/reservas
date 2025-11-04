@@ -1,8 +1,21 @@
 "use client";
+import Image from "next/image";
 import { useState, useCallback, useEffect } from "react";
-import { ReservaFormData, FORMAS_UNAS, LARGOS_UNAS, ApiResponse, Reserva, User } from "@/lib/types";
+import {
+  ReservaFormData,
+  FORMAS_UNAS,
+  LARGOS_UNAS,
+  ApiResponse,
+  Reserva,
+  User,
+} from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
-import { openWhatsAppNotification, openConsultExpertWhatsApp, openSendReferenceWhatsApp, openCustomDesignWhatsApp } from "@/lib/whatsapp";
+import {
+  openWhatsAppNotification,
+  openConsultExpertWhatsApp,
+  openSendReferenceWhatsApp,
+  openCustomDesignWhatsApp,
+} from "@/lib/whatsapp";
 
 interface FormErrors {
   nombre?: string;
@@ -17,31 +30,31 @@ interface FormErrors {
 export default function ReservaForm() {
   // Constants
   const WHATSAPP_OPEN_DELAY_MS = 1000;
-  
+
   // Predefined colors
   const PREDEFINED_COLORS = [
-    { name: 'Rosa', color: '#FFB6C1' },
-    { name: 'Rojo', color: '#DC143C' },
-    { name: 'Nude', color: '#E8C4B4' },
-    { name: 'Dorado', color: '#FFD700' },
-    { name: 'Plata', color: '#C0C0C0' },
-    { name: 'Negro', color: '#000000' },
-    { name: 'Blanco', color: '#FFFFFF' },
-    { name: 'Azul', color: '#4169E1' },
-    { name: 'Morado', color: '#9370DB' },
-    { name: 'Verde', color: '#32CD32' },
+    { name: "Rosa", color: "#FFB6C1" },
+    { name: "Rojo", color: "#DC143C" },
+    { name: "Nude", color: "#E8C4B4" },
+    { name: "Dorado", color: "#FFD700" },
+    { name: "Plata", color: "#C0C0C0" },
+    { name: "Negro", color: "#000000" },
+    { name: "Blanco", color: "#FFFFFF" },
+    { name: "Azul", color: "#4169E1" },
+    { name: "Morado", color: "#9370DB" },
+    { name: "Verde", color: "#32CD32" },
   ];
-  
+
   // Predefined decorations
   const PREDEFINED_DECORATIONS = [
-    '💅 Francés clásico',
-    '✨ Glitter',
-    '🌈 Degradado',
-    '💎 Piedras/Cristales',
-    '🌸 Flores',
-    '⭐ Diseño abstracto',
-    '🎨 Nail art personalizado',
-    '🦋 Mariposas',
+    "💅 Francés clásico",
+    "✨ Glitter",
+    "🌈 Degradado",
+    "💎 Piedras/Cristales",
+    "🌸 Flores",
+    "⭐ Diseño abstracto",
+    "🎨 Nail art personalizado",
+    "🦋 Mariposas",
   ];
 
   const [form, setForm] = useState<ReservaFormData>({
@@ -62,10 +75,13 @@ export default function ReservaForm() {
   const [customColor, setCustomColor] = useState("");
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
   const [customDecoration, setCustomDecoration] = useState("");
-  
+
   // Client lookup state
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
-  const [clientInfo, setClientInfo] = useState<{ cliente: User; reservasActivas: Reserva[] } | null>(null);
+  const [clientInfo, setClientInfo] = useState<{
+    cliente: User;
+    reservasActivas: Reserva[];
+  } | null>(null);
   const [showClientInfo, setShowClientInfo] = useState(false);
 
   const validateField = useCallback(
@@ -97,60 +113,69 @@ export default function ReservaForm() {
     },
     []
   );
-  
+
   // Check client by phone number
-  const checkClientByPhone = useCallback(async (telefono: string) => {
-    if (!telefono.trim() || !/^\+?[\d\s\-()]{8,15}$/.test(telefono)) {
-      return;
-    }
-    
-    setIsCheckingPhone(true);
-    setClientInfo(null);
-    setShowClientInfo(false);
-    
-    try {
-      const res = await fetch(`/api/clientes/check-phone?telefono=${encodeURIComponent(telefono.trim())}`);
-      const data: ApiResponse<{ exists: boolean; cliente?: User; reservasActivas?: Reserva[] }> = await res.json();
-      
-      if (data.success && data.data?.exists && data.data.cliente) {
-        const clientData = data.data;
-        if (clientData.cliente) {
-          const cliente = clientData.cliente;
-          setClientInfo({
-            cliente,
-            reservasActivas: clientData.reservasActivas || []
-          });
-          setShowClientInfo(true);
-          
-          // Auto-fill name if client exists
-          if (cliente.nombre && !form.nombre) {
-            setForm(prev => ({ ...prev, nombre: cliente.nombre }));
+  const checkClientByPhone = useCallback(
+    async (telefono: string) => {
+      if (!telefono.trim() || !/^\+?[\d\s\-()]{8,15}$/.test(telefono)) {
+        return;
+      }
+
+      setIsCheckingPhone(true);
+      setClientInfo(null);
+      setShowClientInfo(false);
+
+      try {
+        const res = await fetch(
+          `/api/clientes/check-phone?telefono=${encodeURIComponent(telefono.trim())}`
+        );
+        const data: ApiResponse<{
+          exists: boolean;
+          cliente?: User;
+          reservasActivas?: Reserva[];
+        }> = await res.json();
+
+        if (data.success && data.data?.exists && data.data.cliente) {
+          const clientData = data.data;
+          if (clientData.cliente) {
+            const cliente = clientData.cliente;
+            setClientInfo({
+              cliente,
+              reservasActivas: clientData.reservasActivas || [],
+            });
+            setShowClientInfo(true);
+
+            // Auto-fill name if client exists
+            if (cliente.nombre && !form.nombre) {
+              setForm((prev) => ({ ...prev, nombre: cliente.nombre }));
+            }
           }
         }
+      } catch (error) {
+        console.error("Error checking client:", error);
+      } finally {
+        setIsCheckingPhone(false);
       }
-    } catch (error) {
-      console.error('Error checking client:', error);
-    } finally {
-      setIsCheckingPhone(false);
-    }
-  }, [form.nombre]);
-  
+    },
+    [form.nombre]
+  );
+
   // Update colores field when selectedColors changes
   useEffect(() => {
     const allColors = [...selectedColors];
     if (customColor.trim()) {
       allColors.push(customColor.trim());
     }
-    setForm(prev => ({ ...prev, colores: allColors.join(', ') }));
+    setForm((prev) => ({ ...prev, colores: allColors.join(", ") }));
   }, [selectedColors, customColor]);
-  
+
   // Update decoracion field when selectedDecorations changes
   useEffect(() => {
     const allDecorations = [...selectedDecorations];
     if (customDecoration.trim()) {
       allDecorations.push(customDecoration.trim());
     }
-    setForm(prev => ({ ...prev, decoracion: allDecorations.join(', ') }));
+    setForm((prev) => ({ ...prev, decoracion: allDecorations.join(", ") }));
   }, [selectedDecorations, customDecoration]);
 
   const handleChange = useCallback(
@@ -172,9 +197,9 @@ export default function ReservaForm() {
 
       // Limpiar mensaje anterior
       if (mensaje) setMensaje("");
-      
+
       // Check client when phone is entered
-      if (name === 'telefono' && value.trim().length >= 8) {
+      if (name === "telefono" && value.trim().length >= 8) {
         checkClientByPhone(value);
       }
     },
@@ -199,25 +224,25 @@ export default function ReservaForm() {
     setErrors(newErrors);
     return isValid;
   }, [form, validateField]);
-  
+
   // Handlers for color selection
   const toggleColor = useCallback((colorName: string) => {
-    setSelectedColors(prev => 
-      prev.includes(colorName) 
-        ? prev.filter(c => c !== colorName)
-        : [...prev, colorName]
+    setSelectedColors((prev) =>
+      prev.includes(colorName) ?
+        prev.filter((c) => c !== colorName)
+      : [...prev, colorName]
     );
   }, []);
-  
+
   // Handlers for decoration selection
   const toggleDecoration = useCallback((decoration: string) => {
-    setSelectedDecorations(prev => 
-      prev.includes(decoration)
-        ? prev.filter(d => d !== decoration)
-        : [...prev, decoration]
+    setSelectedDecorations((prev) =>
+      prev.includes(decoration) ?
+        prev.filter((d) => d !== decoration)
+      : [...prev, decoration]
     );
   }, []);
-  
+
   // WhatsApp button handlers
   const handleConsultExpert = useCallback(() => {
     if (!form.nombre.trim()) {
@@ -230,7 +255,7 @@ export default function ReservaForm() {
     }
     openConsultExpertWhatsApp(form.nombre, form.telefono);
   }, [form.nombre, form.telefono]);
-  
+
   const handleSendReference = useCallback(() => {
     if (!form.nombre.trim()) {
       setMensaje("Por favor ingresa tu nombre antes de enviar referencia");
@@ -242,7 +267,7 @@ export default function ReservaForm() {
     }
     openSendReferenceWhatsApp(form.nombre, form.telefono);
   }, [form.nombre, form.telefono]);
-  
+
   const handleCustomDesign = useCallback(() => {
     if (!form.nombre.trim()) {
       setMensaje("Por favor ingresa tu nombre antes de consultar diseño");
@@ -276,10 +301,12 @@ export default function ReservaForm() {
       const data: ApiResponse<{ insertedId: string }> = await res.json();
 
       if (data.success && data.data?.insertedId) {
-        setMensaje("¡Reserva registrada exitosamente! Abriendo WhatsApp para notificar al admin...");
-        
+        setMensaje(
+          "¡Reserva registrada exitosamente! Abriendo WhatsApp para notificar al admin..."
+        );
+
         const reservaId = data.data.insertedId;
-        
+
         // Open WhatsApp with notification after a short delay to show success message
         setTimeout(() => {
           openWhatsAppNotification(
@@ -424,7 +451,7 @@ export default function ReservaForm() {
                 )}
               </div>
             </div>
-            
+
             {/* Client info display */}
             {showClientInfo && clientInfo && (
               <div className="mt-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
@@ -433,25 +460,37 @@ export default function ReservaForm() {
                     <p className="text-sm sm:text-base font-medium text-blue-900 dark:text-blue-200 mb-2">
                       👋 ¡Bienvenido de nuevo, {clientInfo.cliente.nombre}!
                     </p>
-                    {clientInfo.reservasActivas.length > 0 ? (
+                    {clientInfo.reservasActivas.length > 0 ?
                       <div>
                         <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 mb-2">
-                          📅 Tienes {clientInfo.reservasActivas.length} reserva{clientInfo.reservasActivas.length > 1 ? 's' : ''} activa{clientInfo.reservasActivas.length > 1 ? 's' : ''}:
+                          📅 Tienes {clientInfo.reservasActivas.length} reserva
+                          {clientInfo.reservasActivas.length > 1 ?
+                            "s"
+                          : ""}{" "}
+                          activa
+                          {clientInfo.reservasActivas.length > 1 ? "s" : ""}:
                         </p>
                         <div className="space-y-2">
                           {clientInfo.reservasActivas.map((reserva, index) => (
-                            <div key={reserva._id} className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-2 rounded border border-blue-200 dark:border-blue-700">
+                            <div
+                              key={reserva._id}
+                              className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-2 rounded border border-blue-200 dark:border-blue-700"
+                            >
                               <div className="flex items-center justify-between">
                                 <div>
                                   <span className="font-medium text-gray-900 dark:text-white">
                                     {reserva.fechaCita} a las {reserva.horaCita}
                                   </span>
-                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                                    reserva.estado === 'confirmada' 
-                                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                                      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                                  }`}>
-                                    {reserva.estado === 'confirmada' ? '✓ Confirmada' : '⏳ Pendiente'}
+                                  <span
+                                    className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                                      reserva.estado === "confirmada" ?
+                                        "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                                      : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
+                                    }`}
+                                  >
+                                    {reserva.estado === "confirmada" ?
+                                      "✓ Confirmada"
+                                    : "⏳ Pendiente"}
                                   </span>
                                 </div>
                               </div>
@@ -459,11 +498,10 @@ export default function ReservaForm() {
                           ))}
                         </div>
                       </div>
-                    ) : (
-                      <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300">
+                    : <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300">
                         No tienes reservas activas en este momento.
                       </p>
-                    )}
+                    }
                   </div>
                   <button
                     type="button"
@@ -487,12 +525,12 @@ export default function ReservaForm() {
               selectedDate={form.fechaCita}
               selectedTime={form.horaCita}
               onDateSelect={(date) => {
-                setForm(prev => ({ ...prev, fechaCita: date }));
-                setErrors(prev => ({ ...prev, fechaCita: undefined }));
+                setForm((prev) => ({ ...prev, fechaCita: date }));
+                setErrors((prev) => ({ ...prev, fechaCita: undefined }));
               }}
               onTimeSelect={(time) => {
-                setForm(prev => ({ ...prev, horaCita: time }));
-                setErrors(prev => ({ ...prev, horaCita: undefined }));
+                setForm((prev) => ({ ...prev, horaCita: time }));
+                setErrors((prev) => ({ ...prev, horaCita: undefined }));
               }}
             />
 
@@ -571,12 +609,10 @@ export default function ReservaForm() {
             </div>
 
             <div>
-              <label
-                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2"
-              >
+              <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                 Colores Preferidos
               </label>
-              
+
               {/* Color badges */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {PREDEFINED_COLORS.map((colorOption) => (
@@ -585,9 +621,9 @@ export default function ReservaForm() {
                     type="button"
                     onClick={() => toggleColor(colorOption.name)}
                     className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                      selectedColors.includes(colorOption.name)
-                        ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
-                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500'
+                      selectedColors.includes(colorOption.name) ?
+                        "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+                      : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500"
                     }`}
                   >
                     <span
@@ -595,11 +631,13 @@ export default function ReservaForm() {
                       style={{ backgroundColor: colorOption.color }}
                     />
                     {colorOption.name}
-                    {selectedColors.includes(colorOption.name) && <span>✓</span>}
+                    {selectedColors.includes(colorOption.name) && (
+                      <span>✓</span>
+                    )}
                   </button>
                 ))}
               </div>
-              
+
               {/* Custom color input */}
               <div className="relative">
                 <input
@@ -610,11 +648,14 @@ export default function ReservaForm() {
                   className="w-full px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 />
               </div>
-              
+
               {/* Display selected colors */}
               {(selectedColors.length > 0 || customColor.trim()) && (
                 <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Seleccionados: {[...selectedColors, customColor.trim()].filter(Boolean).join(', ')}
+                  Seleccionados:{" "}
+                  {[...selectedColors, customColor.trim()]
+                    .filter(Boolean)
+                    .join(", ")}
                 </p>
               )}
             </div>
@@ -622,11 +663,23 @@ export default function ReservaForm() {
             <div>
               <label
                 htmlFor="largo"
-                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4"
               >
                 Largo Deseado *
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+
+              {/* Imagen de referencia */}
+              <div className="relative mb-4 rounded-xl overflow-hidden h-80 sm:h-64 md:h-80 shadow-md border border-gray-200 dark:border-gray-600">
+                <Image
+                  src="/images/medidas.png"
+                  alt="Guía de longitudes de uñas"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              {/* Números encima del slider */}
+              <div className="flex justify-between px-1 mb-2">
                 {LARGOS_UNAS.map((n) => (
                   <button
                     key={n}
@@ -636,37 +689,61 @@ export default function ReservaForm() {
                         target: { name: "largo", value: n.toString() },
                       } as any)
                     }
-                    className={`p-2 sm:p-3 border-2 rounded-lg sm:rounded-xl text-center transition-all duration-200 ${
+                    className={`text-xs font-semibold transition-all ${
                       form.largo === n.toString() ?
-                        "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
-                      : "border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-25 dark:hover:bg-blue-900/10 text-gray-900 dark:text-white"
+                        "text-blue-600 dark:text-blue-400 scale-125"
+                      : "text-gray-500 dark:text-gray-400 hover:text-blue-500"
                     }`}
                   >
-                    <div className="font-bold text-base sm:text-lg">{n}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                      {n <= 3 ?
-                        "Corto"
-                      : n <= 5 ?
-                        "Medio"
-                      : "Largo"}
-                    </div>
+                    {n}
                   </button>
                 ))}
               </div>
+
+              {/* Slider */}
+              <input
+                type="range"
+                min="1"
+                max="8"
+                step="1"
+                value={form.largo || "1"}
+                onChange={(e) =>
+                  handleChange({
+                    target: { name: "largo", value: e.target.value },
+                  } as any)
+                }
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500"
+              />
+
+              {form.largo && (
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
+                    <span className="mr-2">✨</span>
+                    Seleccionaste:{" "}
+                    <strong className="ml-1">#{form.largo}</strong> -
+                    <span className="ml-1">
+                      {parseInt(form.largo) <= 3 ?
+                        "Corto (Natural y práctico)"
+                      : parseInt(form.largo) <= 5 ?
+                        "Medio (Equilibrio perfecto)"
+                      : "Largo (Elegante y llamativo)"}
+                    </span>
+                  </p>
+                </div>
+              )}
+
               {errors.largo && (
-                <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
+                <p className="mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
                   <span className="mr-1">⚠️</span> {errors.largo}
                 </p>
               )}
             </div>
 
             <div>
-              <label
-                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2"
-              >
+              <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                 Decoración Especial (Opcional)
               </label>
-              
+
               {/* Decoration options */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {PREDEFINED_DECORATIONS.map((decoration) => (
@@ -675,17 +752,19 @@ export default function ReservaForm() {
                     type="button"
                     onClick={() => toggleDecoration(decoration)}
                     className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      selectedDecorations.includes(decoration)
-                        ? 'border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200'
-                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-violet-300 dark:hover:border-violet-500'
+                      selectedDecorations.includes(decoration) ?
+                        "border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200"
+                      : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-violet-300 dark:hover:border-violet-500"
                     }`}
                   >
                     {decoration}
-                    {selectedDecorations.includes(decoration) && <span className="ml-1">✓</span>}
+                    {selectedDecorations.includes(decoration) && (
+                      <span className="ml-1">✓</span>
+                    )}
                   </button>
                 ))}
               </div>
-              
+
               {/* Custom decoration input */}
               <div className="relative">
                 <textarea
@@ -699,56 +778,21 @@ export default function ReservaForm() {
                   🎨
                 </span>
               </div>
-              
+
               {/* Display selected decorations */}
               {(selectedDecorations.length > 0 || customDecoration.trim()) && (
                 <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Seleccionado: {[...selectedDecorations, customDecoration.trim()].filter(Boolean).join(', ')}
+                  Seleccionado:{" "}
+                  {[...selectedDecorations, customDecoration.trim()]
+                    .filter(Boolean)
+                    .join(", ")}
                 </p>
               )}
-              
+
               <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 💡 Si no tienes una idea específica, nuestras profesionales te
                 ayudarán a elegir el diseño perfecto
               </p>
-            </div>
-          </div>
-          
-          {/* WhatsApp Action Buttons */}
-          <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white border-b border-blue-100 dark:border-blue-800 pb-2">
-              💬 ¿Necesitas ayuda?
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Contáctanos directamente por WhatsApp para consultas personalizadas
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={handleConsultExpert}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-lg"
-              >
-                <span>👩‍🔬</span>
-                <span>Consultar con experta</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleSendReference}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-lg"
-              >
-                <span>📸</span>
-                <span>Enviar referencia</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleCustomDesign}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-lg"
-              >
-                <span>✨</span>
-                <span>Diseño Personalizado</span>
-              </button>
             </div>
           </div>
 

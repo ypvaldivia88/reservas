@@ -35,7 +35,12 @@ export default function Header({ isHomePage = true }: HeaderProps) {
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
             <div className="relative w-12 h-12 flex-shrink-0 overflow-hidden">
-              <Image src="/logo-small.png" alt="Nail Studio Logo" fill />
+              <Image
+                src="/logo-small.png"
+                alt="Oh`Diosa Salón Logo"
+                height={72}
+                width={72}
+              />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Oh`Diosa Nails

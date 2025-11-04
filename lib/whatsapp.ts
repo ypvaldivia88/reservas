@@ -175,17 +175,27 @@ export function generateConsultExpertWhatsAppLink(
   clientName: string,
   clientPhone: string
 ): string {
-  const message = `👋 Hola, soy *${clientName}*.
+  // Check if client info is provided
+  const hasClientInfo = clientName?.trim() && clientPhone?.trim();
+
+  const message =
+    hasClientInfo ?
+      `👋 Hola, soy *${clientName}*.
 
 Quisiera consultar con una experta sobre diseños de uñas y opciones disponibles.
 
 Mi número de contacto es: ${clientPhone}
 
+¡Gracias! 💅✨`
+    : `👋 Hola!
+
+Quisiera consultar con una experta sobre diseños de uñas y opciones disponibles.
+
 ¡Gracias! 💅✨`;
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
-  
+
   return whatsappLink;
 }
 

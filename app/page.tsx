@@ -321,7 +321,12 @@ export default function Home() {
             <div>
               <div className="flex items-center justify-start sm:justify-center space-x-2 mb-3 sm:mb-4">
                 <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden">
-                  <Image src="/logo.png" alt="Nail Studio Logo" fill />
+                  <Image
+                    src="/logo.png"
+                    alt="Oh`Diosa Salón Logo"
+                    height={72}
+                    width={72}
+                  />
                 </div>
               </div>
             </div>
@@ -377,7 +382,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-800 dark:border-gray-700 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-400 text-xs sm:text-sm">
-            <p>&copy; 2025 Nail Studio. Todos los derechos reservados.</p>
+            <p>&copy; 2025 Oh`Diosa Salón. Todos los derechos reservados.</p>
             <Link
               href="/admin"
               className="text-gray-600 hover:text-gray-400 mt-2 inline-block"

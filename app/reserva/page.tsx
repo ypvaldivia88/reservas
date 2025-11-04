@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Image from "next/image";
 import ReservaForm from "@/components/ReservaForm";
 import NailShapeGuide from "@/components/NailShapeGuide";
 import DynamicInspirationGallery from "@/components/DynamicInspirationGallery";
@@ -132,15 +132,21 @@ export default function ReservaPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
-            <div className="flex items-center space-x-3">
-              <span className="text-xl sm:text-2xl">📞</span>
-              <div className="text-left">
-                <p className="font-semibold text-sm sm:text-base">Llámanos</p>
-                <p className="opacity-90 text-sm sm:text-base">
-                  +1 (555) 123-4567
-                </p>
+            <a
+              href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-xl sm:text-2xl">📞</span>
+                <div className="text-left">
+                  <p className="font-semibold text-sm sm:text-base">Llámanos</p>
+                  <p className="opacity-90 text-sm sm:text-base">
+                    +5 (363) 233-073
+                  </p>
+                </div>
               </div>
-            </div>
+            </a>
 
             <div className="flex items-center space-x-3">
               <span className="text-xl sm:text-2xl">💬</span>
@@ -157,7 +163,7 @@ export default function ReservaPage() {
               <div className="text-left">
                 <p className="font-semibold text-sm sm:text-base">Horarios</p>
                 <p className="opacity-90 text-sm sm:text-base">
-                  Lun-Sáb: 9AM-7PM
+                  Mar-Dom: 8:30AM-6:00PM
                 </p>
               </div>
             </div>
@@ -169,18 +175,18 @@ export default function ReservaPage() {
       <footer className="bg-gray-900 dark:bg-gray-950 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm sm:text-base">
-                💅
-              </span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold">Nail Studio</h3>
+            <Image
+              src="/logo.png"
+              alt="Oh`Diosa Salón Logo"
+              height={72}
+              width={72}
+            />
           </div>
           <p className="text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base">
             Tu salón de confianza para el cuidado profesional de uñas
           </p>
           <p className="text-gray-500 text-xs sm:text-sm">
-            &copy; 2025 Nail Studio. Todos los derechos reservados.
+            &copy; 2025 Oh`Diosa Salón. Todos los derechos reservados.
           </p>
         </div>
       </footer>

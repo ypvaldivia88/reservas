@@ -1,33 +1,53 @@
+"use client";
+
+import { openConsultExpertWhatsApp } from "@/lib/whatsapp";
+
 export default function NailShapeGuide() {
   const shapes = [
     {
       name: "Coffin",
       description: "Elegante y moderna con punta suave",
       icon: "⚰️",
-      characteristics: ["Alarga los dedos", "Ideal para nail art", "Muy trendy"],
-      difficulty: "Media"
+      characteristics: [
+        "Alarga los dedos",
+        "Ideal para nail art",
+        "Muy trendy",
+      ],
+      difficulty: "Media",
     },
     {
-      name: "Almond", 
+      name: "Almond",
       description: "Ovalada puntiaguda que estiliza",
       icon: "🌰",
-      characteristics: ["Muy favorecedora", "Clásica y elegante", "Fácil mantenimiento"],
-      difficulty: "Fácil"
+      characteristics: [
+        "Muy favorecedora",
+        "Clásica y elegante",
+        "Fácil mantenimiento",
+      ],
+      difficulty: "Fácil",
     },
     {
       name: "Stiletto",
       description: "Dramática y llamativa",
-      icon: "🔺", 
-      characteristics: ["Muy puntiaguda", "Para ocasiones especiales", "Requiere cuidado"],
-      difficulty: "Difícil"
+      icon: "🔺",
+      characteristics: [
+        "Muy puntiaguda",
+        "Para ocasiones especiales",
+        "Requiere cuidado",
+      ],
+      difficulty: "Difícil",
     },
     {
       name: "Square",
-      description: "Práctica y resistente", 
+      description: "Práctica y resistente",
       icon: "⬜",
-      characteristics: ["Muy duradera", "Perfecta para el día a día", "Fácil de mantener"],
-      difficulty: "Fácil"
-    }
+      characteristics: [
+        "Muy duradera",
+        "Perfecta para el día a día",
+        "Fácil de mantener",
+      ],
+      difficulty: "Fácil",
+    },
   ];
 
   const getDifficultyColor = (difficulty: string) => {
@@ -41,6 +61,11 @@ export default function NailShapeGuide() {
       default:
         return "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700";
     }
+  };
+
+  const handleConsultExpert = () => {
+    // Opción 1: Abrir WhatsApp directamente sin solicitar datos
+    openConsultExpertWhatsApp("", "");
   };
 
   return (
@@ -109,7 +134,10 @@ export default function NailShapeGuide() {
               Nuestras profesionales están aquí para aconsejarte sobre la forma
               que mejor se adapte a tu estilo de vida y gustos personales.
             </p>
-            <button className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base">
+            <button
+              onClick={handleConsultExpert}
+              className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base"
+            >
               Consultar con Experta
             </button>
           </div>
