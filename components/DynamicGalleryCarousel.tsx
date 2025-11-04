@@ -96,7 +96,8 @@ export default function DynamicGalleryCarousel() {
   const endDrag = (e?: React.PointerEvent | PointerEvent) => {
     if (e && carouselRef.current && "pointerId" in e && e.pointerId != null) {
       try {
-        carouselRef.current.releasePointerCapture((e as any).pointerId);
+        const pointerId = (e as React.PointerEvent).pointerId;
+        carouselRef.current.releasePointerCapture(pointerId);
       } catch {}
     }
     isDraggingRef.current = false;

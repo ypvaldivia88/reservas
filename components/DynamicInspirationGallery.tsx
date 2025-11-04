@@ -3,6 +3,61 @@ import { useEffect, useState } from "react";
 import { GaleriaItem, ImageData, Categoria } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
 
+// Helper function to get image URL from ImageData
+const getImageUrl = (imagen: ImageData | undefined): string => {
+  return imagen ? base64ToDataURL(imagen.base64Data, imagen.mimeType) : "";
+};
+
+// Reusable badge component for destacado items
+const DestacadoBadge = () => (
+  <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
+    <span className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
+      ⭐ Popular
+    </span>
+  </div>
+);
+
+// Reusable button component for gallery items
+const SelectDesignButton = () => (
+  <button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300">
+    Elegir este diseño
+  </button>
+);
+
+// Gallery item card component
+const GalleryItemCard = ({ item }: { item: GaleriaItem & { imagen?: ImageData } }) => {
+  const imageUrl = getImageUrl(item.imagen);
+
+  return (
+    <div className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700">
+      {/* Destacado badge */}
+      {item.destacado && <DestacadoBadge />}
+
+      {/* Image preview */}
+      <div className="aspect-square">
+        <img
+          src={imageUrl}
+          alt={item.titulo}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      {/* Design info */}
+      <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
+          {item.titulo}
+        </h4>
+        {item.descripcion && (
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
+            {item.descripcion}
+          </p>
+        )}
+        <SelectDesignButton />
+      </div>
+    </div>
+  );
+};
+
 export default function DynamicInspirationGallery() {
   const [galleryItems, setGalleryItems] = useState<(GaleriaItem & { imagen?: ImageData })[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -103,52 +158,9 @@ export default function DynamicInspirationGallery() {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                  {group.items.map((item) => {
-                    const imageUrl = item.imagen
-                      ? base64ToDataURL(item.imagen.base64Data, item.imagen.mimeType)
-                      : "";
-
-                    return (
-                      <div
-                        key={item._id}
-                        className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                      >
-                        {/* Destacado badge */}
-                        {item.destacado && (
-                          <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
-                            <span className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
-                              ⭐ Popular
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Image preview */}
-                        <div className="aspect-square">
-                          <img
-                            src={imageUrl}
-                            alt={item.titulo}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </div>
-
-                        {/* Design info */}
-                        <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50">
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
-                            {item.titulo}
-                          </h4>
-                          {item.descripcion && (
-                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-                              {item.descripcion}
-                            </p>
-                          )}
-
-                          <button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300">
-                            Elegir este diseño
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {group.items.map((item) => (
+                    <GalleryItemCard key={item._id} item={item} />
+                  ))}
                 </div>
               </div>
             ))}
@@ -161,52 +173,9 @@ export default function DynamicInspirationGallery() {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                  {itemsWithoutCategory.map((item) => {
-                    const imageUrl = item.imagen
-                      ? base64ToDataURL(item.imagen.base64Data, item.imagen.mimeType)
-                      : "";
-
-                    return (
-                      <div
-                        key={item._id}
-                        className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                      >
-                        {/* Destacado badge */}
-                        {item.destacado && (
-                          <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
-                            <span className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
-                              ⭐ Popular
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Image preview */}
-                        <div className="aspect-square">
-                          <img
-                            src={imageUrl}
-                            alt={item.titulo}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </div>
-
-                        {/* Design info */}
-                        <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50">
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
-                            {item.titulo}
-                          </h4>
-                          {item.descripcion && (
-                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-                              {item.descripcion}
-                            </p>
-                          )}
-
-                          <button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300">
-                            Elegir este diseño
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {itemsWithoutCategory.map((item) => (
+                    <GalleryItemCard key={item._id} item={item} />
+                  ))}
                 </div>
               </div>
             )}
