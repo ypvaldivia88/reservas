@@ -4,7 +4,7 @@ import TestimonialCarousel from "@/components/TestimonialCarousel";
 import StatsSection from "@/components/StatsSection";
 import ProcessSection from "@/components/ProcessSection";
 import Header from "@/components/Header";
-import GalleryCarousel from "@/components/GalleryCarousel";
+import DynamicGalleryCarousel from "@/components/DynamicGalleryCarousel";
 
 export default function Home() {
   return (
@@ -223,8 +223,9 @@ export default function Home() {
           {/*
             Carousel: muestra 4 por vista (desktop), desplazable horizontalmente,
             animaciones al pasar el mouse y lightbox/tap para ver la foto.
+            Ahora usando datos dinámicos de la base de datos.
           */}
-          <GalleryCarousel />
+          <DynamicGalleryCarousel />
         </div>
       </section>
 

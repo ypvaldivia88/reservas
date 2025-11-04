@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ReservaForm from "@/components/ReservaForm";
 import NailShapeGuide from "@/components/NailShapeGuide";
-import InspirationGallery from "@/components/InspirationGallery";
+import DynamicInspirationGallery from "@/components/DynamicInspirationGallery";
 import Header from "@/components/Header";
 
 export default function ReservaPage() {
@@ -71,8 +71,8 @@ export default function ReservaPage() {
       {/* Nail Shape Guide */}
       <NailShapeGuide />
 
-      {/* Inspiration Gallery */}
-      <InspirationGallery />
+      {/* Inspiration Gallery - Now using dynamic data from database */}
+      <DynamicInspirationGallery />
 
       {/* Benefits Section - Mobile First */}
       <section className="py-12 sm:py-16 bg-white/50 dark:bg-gray-800/30">
