@@ -168,7 +168,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = await getDatabase();
-    const updateData: any = {
+    const updateData: Partial<ImageData> & { fechaActualizacion: Date } = {
       fechaActualizacion: new Date(),
     };
 

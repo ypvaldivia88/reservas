@@ -937,14 +937,13 @@ export default function ContenidoAdmin() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Descripción *
+                    Descripción
                   </label>
                   <textarea
                     value={servicioForm.descripcion}
                     onChange={(e) => setServicioForm({ ...servicioForm, descripcion: e.target.value })}
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows={2}
-                    required
                   />
                 </div>
                 <div className="flex space-x-3">
