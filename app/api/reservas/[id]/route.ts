@@ -132,6 +132,13 @@ export async function PATCH(
       updateData.decoracion = data.decoracion.trim();
     }
 
+    if (data.costo !== undefined) {
+      const costo = Number(data.costo);
+      if (!isNaN(costo) && costo >= 0) {
+        updateData.costo = costo;
+      }
+    }
+
     const client = await clientPromise;
     const db = client.db("nailsalon");
     

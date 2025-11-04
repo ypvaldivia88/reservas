@@ -71,3 +71,88 @@ export function openWhatsAppNotification(
   }
 }
 
+/**
+ * Generate WhatsApp link to notify client about reservation confirmation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ * @returns WhatsApp URL
+ */
+export function generateConfirmationWhatsAppLink(
+  clientPhone: string,
+  reserva: ReservaDetails
+): string {
+  const message = `✅ *Reserva Confirmada*
+
+Hola ${reserva.nombre}, tu reserva ha sido confirmada.
+
+📅 *Fecha:* ${reserva.fechaCita}
+🕐 *Hora:* ${reserva.horaCita}
+💅 *Forma:* ${reserva.forma}
+📏 *Largo:* ${reserva.largo}
+${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
+
+¡Te esperamos! 💖`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${clientPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to notify client about reservation confirmation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ */
+export function openConfirmationWhatsApp(
+  clientPhone: string,
+  reserva: ReservaDetails
+): void {
+  const whatsappLink = generateConfirmationWhatsAppLink(clientPhone, reserva);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
+/**
+ * Generate WhatsApp link to notify client about reservation cancellation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ * @returns WhatsApp URL
+ */
+export function generateCancellationWhatsAppLink(
+  clientPhone: string,
+  reserva: ReservaDetails
+): string {
+  const message = `❌ *Reserva Cancelada*
+
+Hola ${reserva.nombre}, lamentamos informarte que tu reserva ha sido cancelada.
+
+📅 *Fecha:* ${reserva.fechaCita}
+🕐 *Hora:* ${reserva.horaCita}
+
+Si deseas hacer una nueva reserva, no dudes en contactarnos.`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${clientPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to notify client about reservation cancellation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ */
+export function openCancellationWhatsApp(
+  clientPhone: string,
+  reserva: ReservaDetails
+): void {
+  const whatsappLink = generateCancellationWhatsAppLink(clientPhone, reserva);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+

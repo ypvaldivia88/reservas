@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
 import AdminNav from "@/components/AdminNav";
+import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
 
 // Componente interno que usa useSearchParams
 function DashboardContent() {
@@ -112,7 +113,7 @@ function DashboardContent() {
   };
 
   // CRUD Handlers for Reservas
-  const handleUpdateReserva = async (reserva: Reserva) => {
+  const handleUpdateReserva = async (reserva: Reserva, openWhatsApp: boolean = false) => {
     try {
       const res = await fetch(`/api/reservas/${reserva._id}`, {
         method: "PATCH",
@@ -126,6 +127,7 @@ function DashboardContent() {
           fechaCita: reserva.fechaCita,
           horaCita: reserva.horaCita,
           estado: reserva.estado,
+          costo: reserva.costo,
         }),
       });
 
@@ -135,6 +137,34 @@ function DashboardContent() {
         setActionMessage("✅ Reserva actualizada exitosamente");
         setEditingReserva(null);
         loadData();
+        
+        // Open WhatsApp if requested (for confirm/cancel actions)
+        if (openWhatsApp) {
+          setTimeout(() => {
+            if (reserva.estado === "confirmada") {
+              openConfirmationWhatsApp(reserva.telefono, {
+                nombre: reserva.nombre,
+                telefono: reserva.telefono,
+                fechaCita: reserva.fechaCita,
+                horaCita: reserva.horaCita,
+                forma: reserva.forma,
+                largo: reserva.largo,
+                decoracion: reserva.decoracion,
+              });
+            } else if (reserva.estado === "cancelada") {
+              openCancellationWhatsApp(reserva.telefono, {
+                nombre: reserva.nombre,
+                telefono: reserva.telefono,
+                fechaCita: reserva.fechaCita,
+                horaCita: reserva.horaCita,
+                forma: reserva.forma,
+                largo: reserva.largo,
+                decoracion: reserva.decoracion,
+              });
+            }
+          }, 500);
+        }
+        
         setTimeout(() => setActionMessage(""), 3000);
       } else {
         setActionMessage("❌ " + (data.error || "Error al actualizar reserva"));
@@ -489,7 +519,8 @@ function DashboardContent() {
                 {reservas.map((reserva) => (
                   <tr
                     key={reserva._id}
-                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    onClick={() => setEditingReserva(reserva)}
+                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                       {reserva.nombre}
@@ -519,17 +550,61 @@ function DashboardContent() {
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                       {reserva.fechaCita} {reserva.horaCita}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td 
+                      className="px-4 py-3 text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditingReserva(reserva)}
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
-                        >
-                          ✏️ Editar
-                        </button>
+                        {reserva.estado === "pendiente" && (
+                          <>
+                            <button
+                              onClick={() => {
+                                handleUpdateReserva({
+                                  ...reserva,
+                                  estado: "confirmada",
+                                }, true);
+                              }}
+                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+                            >
+                              ✅ Confirmar
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleUpdateReserva({
+                                  ...reserva,
+                                  estado: "cancelada",
+                                }, true);
+                              }}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                            >
+                              ❌ Cancelar
+                            </button>
+                          </>
+                        )}
+                        {reserva.estado === "confirmada" && (
+                          <>
+                            <button
+                              onClick={() => setEditingReserva(reserva)}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                            >
+                              ✔️ Completar
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleUpdateReserva({
+                                  ...reserva,
+                                  estado: "cancelada",
+                                }, true);
+                              }}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                            >
+                              ❌ Cancelar
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => setDeletingReserva(reserva)}
-                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs"
                         >
                           🗑️ Eliminar
                         </button>
@@ -577,7 +652,8 @@ function DashboardContent() {
                 {clientes.map((cliente) => (
                   <tr
                     key={cliente._id}
-                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    onClick={() => setEditingCliente(cliente)}
+                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                       {cliente.nombre}
@@ -590,14 +666,11 @@ function DashboardContent() {
                         new Date(cliente.fechaCreacion).toLocaleDateString()
                       : "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td 
+                      className="px-4 py-3 text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditingCliente(cliente)}
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
-                        >
-                          ✏️ Editar
-                        </button>
                         <button
                           onClick={() => setDeletingCliente(cliente)}
                           className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
@@ -780,6 +853,27 @@ function DashboardContent() {
                     rows={3}
                   />
                 </div>
+                {(editingReserva.estado === "completada" || editingReserva.estado === "confirmada") && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Costo {editingReserva.estado === "completada" ? "(requerido)" : "(opcional)"}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editingReserva.costo || ""}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          costo: e.target.value ? parseFloat(e.target.value) : undefined,
+                        })
+                      }
+                      className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      required={editingReserva.estado === "completada"}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Quick Action Buttons */}
@@ -795,7 +889,7 @@ function DashboardContent() {
                         handleUpdateReserva({
                           ...editingReserva,
                           estado: "confirmada",
-                        });
+                        }, true);
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
@@ -807,7 +901,46 @@ function DashboardContent() {
                         handleUpdateReserva({
                           ...editingReserva,
                           estado: "cancelada",
-                        });
+                        }, true);
+                      }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                    >
+                      ❌ Cancelar Reserva
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {editingReserva.estado === "confirmada" && (
+                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-4">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Acciones Rápidas:
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!editingReserva.costo) {
+                          setActionMessage("❌ Por favor ingresa el costo antes de completar la reserva");
+                          setTimeout(() => setActionMessage(""), 3000);
+                          return;
+                        }
+                        handleUpdateReserva({
+                          ...editingReserva,
+                          estado: "completada",
+                        }, false);
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      ✔️ Completar Reserva
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleUpdateReserva({
+                          ...editingReserva,
+                          estado: "cancelada",
+                        }, true);
                       }}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                     >
