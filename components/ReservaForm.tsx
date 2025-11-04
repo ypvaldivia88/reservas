@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { ReservaFormData, FORMAS_UNAS, LARGOS_UNAS, ApiResponse } from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
+import { openWhatsAppNotification } from "@/lib/whatsapp";
 
 interface FormErrors {
   nombre?: string;
@@ -14,6 +15,9 @@ interface FormErrors {
 }
 
 export default function ReservaForm() {
+  // Constants
+  const WHATSAPP_OPEN_DELAY_MS = 1000;
+
   const [form, setForm] = useState<ReservaFormData>({
     nombre: "",
     telefono: "",
@@ -119,10 +123,30 @@ export default function ReservaForm() {
         headers: { "Content-Type": "application/json" },
       });
 
-      const data: ApiResponse = await res.json();
+      const data: ApiResponse<{ insertedId: string }> = await res.json();
 
-      if (data.success) {
-        setMensaje("¡Reserva registrada exitosamente!");
+      if (data.success && data.data?.insertedId) {
+        setMensaje("¡Reserva registrada exitosamente! Abriendo WhatsApp para notificar al admin...");
+        
+        const reservaId = data.data.insertedId;
+        
+        // Open WhatsApp with notification after a short delay to show success message
+        setTimeout(() => {
+          openWhatsAppNotification(
+            {
+              nombre: form.nombre,
+              telefono: form.telefono,
+              fechaCita: form.fechaCita,
+              horaCita: form.horaCita,
+              forma: form.forma,
+              largo: parseInt(form.largo),
+              decoracion: form.decoracion,
+            },
+            reservaId
+          );
+        }, WHATSAPP_OPEN_DELAY_MS);
+
+        // Reset form
         setForm({
           nombre: "",
           telefono: "",
