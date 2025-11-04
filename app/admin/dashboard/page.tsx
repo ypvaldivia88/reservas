@@ -426,63 +426,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Gestión de Contenido */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Gestión de Contenido
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button
-              onClick={() => router.push("/admin/imagenes")}
-              className="p-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">🖼️</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Imágenes
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar biblioteca de imágenes
-              </p>
-            </button>
-            <button
-              onClick={() => router.push("/admin/servicios")}
-              className="p-6 bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900/30 dark:to-violet-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">💅</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Servicios
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar servicios ofrecidos
-              </p>
-            </button>
-            <button
-              onClick={() => router.push("/admin/categorias")}
-              className="p-6 bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">📁</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Categorías
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar categorías
-              </p>
-            </button>
-            <button
-              onClick={() => router.push("/admin/galeria")}
-              className="p-6 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">🎨</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Galería
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar galería de trabajos
-              </p>
-            </button>
-          </div>
-        </div>
-
         {/* Reservas Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -550,7 +493,7 @@ function DashboardContent() {
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                       {reserva.fechaCita} {reserva.horaCita}
                     </td>
-                    <td 
+                    <td
                       className="px-4 py-3 text-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -559,10 +502,13 @@ function DashboardContent() {
                           <>
                             <button
                               onClick={() => {
-                                handleUpdateReserva({
-                                  ...reserva,
-                                  estado: "confirmada",
-                                }, true);
+                                handleUpdateReserva(
+                                  {
+                                    ...reserva,
+                                    estado: "confirmada",
+                                  },
+                                  true
+                                );
                               }}
                               className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
                             >
@@ -570,10 +516,13 @@ function DashboardContent() {
                             </button>
                             <button
                               onClick={() => {
-                                handleUpdateReserva({
-                                  ...reserva,
-                                  estado: "cancelada",
-                                }, true);
+                                handleUpdateReserva(
+                                  {
+                                    ...reserva,
+                                    estado: "cancelada",
+                                  },
+                                  true
+                                );
                               }}
                               className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
                             >
@@ -592,10 +541,13 @@ function DashboardContent() {
                             </button>
                             <button
                               onClick={() => {
-                                handleUpdateReserva({
-                                  ...reserva,
-                                  estado: "cancelada",
-                                }, true);
+                                handleUpdateReserva(
+                                  {
+                                    ...reserva,
+                                    estado: "cancelada",
+                                  },
+                                  true
+                                );
                               }}
                               className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
                             >
@@ -615,6 +567,63 @@ function DashboardContent() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Gestión de Contenido */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Gestión de Contenido
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => router.push("/admin/imagenes")}
+              className="p-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg hover:shadow-lg transition-all text-left"
+            >
+              <div className="text-4xl mb-3">🖼️</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                Imágenes
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Gestionar biblioteca de imágenes
+              </p>
+            </button>
+            <button
+              onClick={() => router.push("/admin/servicios")}
+              className="p-6 bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900/30 dark:to-violet-800/30 rounded-lg hover:shadow-lg transition-all text-left"
+            >
+              <div className="text-4xl mb-3">💅</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                Servicios
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Gestionar servicios ofrecidos
+              </p>
+            </button>
+            <button
+              onClick={() => router.push("/admin/categorias")}
+              className="p-6 bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-lg hover:shadow-lg transition-all text-left"
+            >
+              <div className="text-4xl mb-3">📁</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                Categorías
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Gestionar categorías
+              </p>
+            </button>
+            <button
+              onClick={() => router.push("/admin/galeria")}
+              className="p-6 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-lg hover:shadow-lg transition-all text-left"
+            >
+              <div className="text-4xl mb-3">🎨</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                Galería
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Gestionar galería de trabajos
+              </p>
+            </button>
           </div>
         </div>
 
@@ -667,7 +676,7 @@ function DashboardContent() {
                         new Date(cliente.fechaCreacion).toLocaleDateString()
                       : "-"}
                     </td>
-                    <td 
+                    <td
                       className="px-4 py-3 text-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -854,10 +863,14 @@ function DashboardContent() {
                     rows={3}
                   />
                 </div>
-                {(editingReserva.estado === "completada" || editingReserva.estado === "confirmada") && (
+                {(editingReserva.estado === "completada" ||
+                  editingReserva.estado === "confirmada") && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Costo {editingReserva.estado === "completada" ? "(requerido)" : "(opcional)"}
+                      Costo{" "}
+                      {editingReserva.estado === "completada" ?
+                        "(requerido)"
+                      : "(opcional)"}
                     </label>
                     <input
                       type="number"
@@ -867,7 +880,10 @@ function DashboardContent() {
                       onChange={(e) =>
                         setEditingReserva({
                           ...editingReserva,
-                          costo: e.target.value ? parseFloat(e.target.value) : undefined,
+                          costo:
+                            e.target.value ?
+                              parseFloat(e.target.value)
+                            : undefined,
                         })
                       }
                       className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -887,10 +903,13 @@ function DashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleUpdateReserva({
-                          ...editingReserva,
-                          estado: "confirmada",
-                        }, true);
+                        handleUpdateReserva(
+                          {
+                            ...editingReserva,
+                            estado: "confirmada",
+                          },
+                          true
+                        );
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
@@ -899,10 +918,13 @@ function DashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleUpdateReserva({
-                          ...editingReserva,
-                          estado: "cancelada",
-                        }, true);
+                        handleUpdateReserva(
+                          {
+                            ...editingReserva,
+                            estado: "cancelada",
+                          },
+                          true
+                        );
                       }}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                     >
@@ -922,14 +944,19 @@ function DashboardContent() {
                       type="button"
                       onClick={() => {
                         if (editingReserva.costo == null) {
-                          setActionMessage("❌ Por favor ingresa el costo antes de completar la reserva");
+                          setActionMessage(
+                            "❌ Por favor ingresa el costo antes de completar la reserva"
+                          );
                           setTimeout(() => setActionMessage(""), 3000);
                           return;
                         }
-                        handleUpdateReserva({
-                          ...editingReserva,
-                          estado: "completada",
-                        }, false);
+                        handleUpdateReserva(
+                          {
+                            ...editingReserva,
+                            estado: "completada",
+                          },
+                          false
+                        );
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
@@ -938,10 +965,13 @@ function DashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        handleUpdateReserva({
-                          ...editingReserva,
-                          estado: "cancelada",
-                        }, true);
+                        handleUpdateReserva(
+                          {
+                            ...editingReserva,
+                            estado: "cancelada",
+                          },
+                          true
+                        );
                       }}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                     >
