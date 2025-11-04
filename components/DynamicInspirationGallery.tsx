@@ -18,11 +18,15 @@ const DestacadoBadge = () => (
 );
 
 // Reusable button component for gallery items
-// Note: This is a placeholder button for UI purposes - functionality can be added later
+// Note: This is a decorative UI element that appears on hover for visual effect
+// Actual selection functionality would be implemented in a future update
 const SelectDesignButton = () => (
-  <div className="w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 text-center">
+  <span 
+    role="presentation"
+    className="block w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 text-center"
+  >
     Elegir este diseño
-  </div>
+  </span>
 );
 
 // Gallery item card component

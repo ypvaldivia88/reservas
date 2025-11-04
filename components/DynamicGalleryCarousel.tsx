@@ -96,8 +96,7 @@ export default function DynamicGalleryCarousel() {
   const endDrag = (e?: React.PointerEvent | PointerEvent) => {
     if (e && carouselRef.current && "pointerId" in e && e.pointerId != null) {
       try {
-        const pointerId = (e as React.PointerEvent).pointerId;
-        carouselRef.current.releasePointerCapture(pointerId);
+        carouselRef.current.releasePointerCapture(e.pointerId);
       } catch (error) {
         // Silently ignore - pointer may already be released
         console.debug("Failed to release pointer capture:", error);
