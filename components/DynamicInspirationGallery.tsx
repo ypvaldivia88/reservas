@@ -18,15 +18,19 @@ const DestacadoBadge = () => (
 );
 
 // Reusable button component for gallery items
+// Note: This is a placeholder button for UI purposes - functionality can be added later
 const SelectDesignButton = () => (
-  <button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300">
+  <div className="w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 text-center">
     Elegir este diseño
-  </button>
+  </div>
 );
 
 // Gallery item card component
 const GalleryItemCard = ({ item }: { item: GaleriaItem & { imagen?: ImageData } }) => {
   const imageUrl = getImageUrl(item.imagen);
+
+  // Don't render if no valid image
+  if (!imageUrl) return null;
 
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700">
@@ -193,12 +197,22 @@ export default function DynamicInspirationGallery() {
               mente. Trae tu inspiración o déjanos sorprenderte con algo único.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <button className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base">
+              <a
+                href="https://wa.me/+5363233073?text=Hola,%20quiero%20enviar%20una%20referencia%20de%20diseño"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base text-center"
+              >
                 📱 Enviar Referencia por WhatsApp
-              </button>
-              <button className="border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-sm sm:text-base">
+              </a>
+              <a
+                href="https://wa.me/+5363233073?text=Hola,%20quiero%20consultar%20sobre%20un%20diseño%20personalizado"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-sm sm:text-base text-center"
+              >
                 💬 Consultar Diseño Personalizado
-              </button>
+              </a>
             </div>
           </div>
         </div>

@@ -98,7 +98,10 @@ export default function DynamicGalleryCarousel() {
       try {
         const pointerId = (e as React.PointerEvent).pointerId;
         carouselRef.current.releasePointerCapture(pointerId);
-      } catch {}
+      } catch (error) {
+        // Silently ignore - pointer may already be released
+        console.debug("Failed to release pointer capture:", error);
+      }
     }
     isDraggingRef.current = false;
     document.body.style.userSelect = "";
@@ -163,6 +166,9 @@ export default function DynamicGalleryCarousel() {
               const imageUrl = item.imagen
                 ? base64ToDataURL(item.imagen.base64Data, item.imagen.mimeType)
                 : "";
+
+              // Skip items without valid images
+              if (!imageUrl) return null;
 
               return (
                 <div
