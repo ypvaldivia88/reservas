@@ -4,6 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
 import AdminNav from "@/components/AdminNav";
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 export default function AdminDashboard() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [clientes, setClientes] = useState<User[]>([]);

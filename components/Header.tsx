@@ -17,6 +17,7 @@ export default function Header({ isHomePage = true }: HeaderProps) {
         { href: "#servicios", label: "Servicios" },
         { href: "#galeria", label: "Galería" },
         { href: "#contacto", label: "Contacto" },
+        { href: "#admin", label: "Administración" },
       ]
     : [
         { href: "/", label: "Inicio" },

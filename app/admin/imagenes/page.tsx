@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { ImageData } from "@/lib/types";
 import { preprocessImage, base64ToDataURL, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 export default function ImagenesAdmin() {
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);

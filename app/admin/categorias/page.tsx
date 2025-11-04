@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { Categoria, ImageData } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 export default function CategoriasAdmin() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [imagenes, setImagenes] = useState<ImageData[]>([]);

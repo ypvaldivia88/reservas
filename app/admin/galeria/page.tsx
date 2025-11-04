@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { GaleriaItem, ImageData, Categoria, Servicio } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 export default function GaleriaAdmin() {
   const [galeria, setGaleria] = useState<GaleriaItem[]>([]);
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
