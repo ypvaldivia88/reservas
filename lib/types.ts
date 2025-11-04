@@ -11,7 +11,7 @@ export interface Reserva {
   fechaCita: string; // Formato YYYY-MM-DD
   horaCita: string; // Formato HH:mm
   estado?: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
-  costo?: number; // Costo de la reserva al completarla (para estadísticas futuras)
+  costo?: number; // Costo de la reserva al completarla (para estadísticas futuras). Debe ser >= 0
 }
 
 export interface ApiResponse<T = unknown> {

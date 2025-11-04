@@ -586,6 +586,7 @@ function DashboardContent() {
                             <button
                               onClick={() => setEditingReserva(reserva)}
                               className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                              title="Completar reserva (debe agregar el costo)"
                             >
                               ✔️ Completar
                             </button>
@@ -920,7 +921,7 @@ function DashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!editingReserva.costo) {
+                        if (editingReserva.costo === undefined || editingReserva.costo === null) {
                           setActionMessage("❌ Por favor ingresa el costo antes de completar la reserva");
                           setTimeout(() => setActionMessage(""), 3000);
                           return;
