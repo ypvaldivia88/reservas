@@ -1,8 +1,8 @@
 "use client";
-import { useState, useCallback } from "react";
-import { ReservaFormData, FORMAS_UNAS, LARGOS_UNAS, ApiResponse } from "@/lib/types";
+import { useState, useCallback, useEffect } from "react";
+import { ReservaFormData, FORMAS_UNAS, LARGOS_UNAS, ApiResponse, Reserva, User } from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
-import { openWhatsAppNotification } from "@/lib/whatsapp";
+import { openWhatsAppNotification, openConsultExpertWhatsApp, openSendReferenceWhatsApp, openCustomDesignWhatsApp } from "@/lib/whatsapp";
 
 interface FormErrors {
   nombre?: string;
@@ -17,6 +17,32 @@ interface FormErrors {
 export default function ReservaForm() {
   // Constants
   const WHATSAPP_OPEN_DELAY_MS = 1000;
+  
+  // Predefined colors
+  const PREDEFINED_COLORS = [
+    { name: 'Rosa', color: '#FFB6C1' },
+    { name: 'Rojo', color: '#DC143C' },
+    { name: 'Nude', color: '#E8C4B4' },
+    { name: 'Dorado', color: '#FFD700' },
+    { name: 'Plata', color: '#C0C0C0' },
+    { name: 'Negro', color: '#000000' },
+    { name: 'Blanco', color: '#FFFFFF' },
+    { name: 'Azul', color: '#4169E1' },
+    { name: 'Morado', color: '#9370DB' },
+    { name: 'Verde', color: '#32CD32' },
+  ];
+  
+  // Predefined decorations
+  const PREDEFINED_DECORATIONS = [
+    '💅 Francés clásico',
+    '✨ Glitter',
+    '🌈 Degradado',
+    '💎 Piedras/Cristales',
+    '🌸 Flores',
+    '⭐ Diseño abstracto',
+    '🎨 Nail art personalizado',
+    '🦋 Mariposas',
+  ];
 
   const [form, setForm] = useState<ReservaFormData>({
     nombre: "",
@@ -32,6 +58,15 @@ export default function ReservaForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [mensaje, setMensaje] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [customColor, setCustomColor] = useState("");
+  const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
+  const [customDecoration, setCustomDecoration] = useState("");
+  
+  // Client lookup state
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
+  const [clientInfo, setClientInfo] = useState<{ cliente: User; reservasActivas: Reserva[] } | null>(null);
+  const [showClientInfo, setShowClientInfo] = useState(false);
 
   const validateField = useCallback(
     (name: keyof ReservaFormData, value: string): string | undefined => {
@@ -62,6 +97,61 @@ export default function ReservaForm() {
     },
     []
   );
+  
+  // Check client by phone number
+  const checkClientByPhone = useCallback(async (telefono: string) => {
+    if (!telefono.trim() || !/^\+?[\d\s\-()]{8,15}$/.test(telefono)) {
+      return;
+    }
+    
+    setIsCheckingPhone(true);
+    setClientInfo(null);
+    setShowClientInfo(false);
+    
+    try {
+      const res = await fetch(`/api/clientes/check-phone?telefono=${encodeURIComponent(telefono.trim())}`);
+      const data: ApiResponse<{ exists: boolean; cliente?: User; reservasActivas?: Reserva[] }> = await res.json();
+      
+      if (data.success && data.data?.exists && data.data.cliente) {
+        const clientData = data.data;
+        if (clientData.cliente) {
+          const cliente = clientData.cliente;
+          setClientInfo({
+            cliente,
+            reservasActivas: clientData.reservasActivas || []
+          });
+          setShowClientInfo(true);
+          
+          // Auto-fill name if client exists
+          if (cliente.nombre && !form.nombre) {
+            setForm(prev => ({ ...prev, nombre: cliente.nombre }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking client:', error);
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  }, [form.nombre]);
+  
+  // Update colores field when selectedColors changes
+  useEffect(() => {
+    const allColors = [...selectedColors];
+    if (customColor.trim()) {
+      allColors.push(customColor.trim());
+    }
+    setForm(prev => ({ ...prev, colores: allColors.join(', ') }));
+  }, [selectedColors, customColor]);
+  
+  // Update decoracion field when selectedDecorations changes
+  useEffect(() => {
+    const allDecorations = [...selectedDecorations];
+    if (customDecoration.trim()) {
+      allDecorations.push(customDecoration.trim());
+    }
+    setForm(prev => ({ ...prev, decoracion: allDecorations.join(', ') }));
+  }, [selectedDecorations, customDecoration]);
 
   const handleChange = useCallback(
     (
@@ -82,8 +172,13 @@ export default function ReservaForm() {
 
       // Limpiar mensaje anterior
       if (mensaje) setMensaje("");
+      
+      // Check client when phone is entered
+      if (name === 'telefono' && value.trim().length >= 8) {
+        checkClientByPhone(value);
+      }
     },
-    [mensaje, validateField]
+    [mensaje, validateField, checkClientByPhone]
   );
 
   const validateForm = useCallback((): boolean => {
@@ -104,6 +199,61 @@ export default function ReservaForm() {
     setErrors(newErrors);
     return isValid;
   }, [form, validateField]);
+  
+  // Handlers for color selection
+  const toggleColor = useCallback((colorName: string) => {
+    setSelectedColors(prev => 
+      prev.includes(colorName) 
+        ? prev.filter(c => c !== colorName)
+        : [...prev, colorName]
+    );
+  }, []);
+  
+  // Handlers for decoration selection
+  const toggleDecoration = useCallback((decoration: string) => {
+    setSelectedDecorations(prev => 
+      prev.includes(decoration)
+        ? prev.filter(d => d !== decoration)
+        : [...prev, decoration]
+    );
+  }, []);
+  
+  // WhatsApp button handlers
+  const handleConsultExpert = useCallback(() => {
+    if (!form.nombre.trim()) {
+      setMensaje("Por favor ingresa tu nombre antes de consultar");
+      return;
+    }
+    if (!form.telefono.trim()) {
+      setMensaje("Por favor ingresa tu teléfono antes de consultar");
+      return;
+    }
+    openConsultExpertWhatsApp(form.nombre, form.telefono);
+  }, [form.nombre, form.telefono]);
+  
+  const handleSendReference = useCallback(() => {
+    if (!form.nombre.trim()) {
+      setMensaje("Por favor ingresa tu nombre antes de enviar referencia");
+      return;
+    }
+    if (!form.telefono.trim()) {
+      setMensaje("Por favor ingresa tu teléfono antes de enviar referencia");
+      return;
+    }
+    openSendReferenceWhatsApp(form.nombre, form.telefono);
+  }, [form.nombre, form.telefono]);
+  
+  const handleCustomDesign = useCallback(() => {
+    if (!form.nombre.trim()) {
+      setMensaje("Por favor ingresa tu nombre antes de consultar diseño");
+      return;
+    }
+    if (!form.telefono.trim()) {
+      setMensaje("Por favor ingresa tu teléfono antes de consultar diseño");
+      return;
+    }
+    openCustomDesignWhatsApp(form.nombre, form.telefono);
+  }, [form.nombre, form.telefono]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +308,12 @@ export default function ReservaForm() {
           horaCita: "",
         });
         setErrors({});
+        setSelectedColors([]);
+        setCustomColor("");
+        setSelectedDecorations([]);
+        setCustomDecoration("");
+        setClientInfo(null);
+        setShowClientInfo(false);
       } else {
         setMensaje(data.message || "Error al guardar la reserva");
       }
@@ -255,6 +411,11 @@ export default function ReservaForm() {
                   <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                     📞
                   </span>
+                  {isCheckingPhone && (
+                    <span className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                    </span>
+                  )}
                 </div>
                 {errors.telefono && (
                   <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
@@ -263,6 +424,57 @@ export default function ReservaForm() {
                 )}
               </div>
             </div>
+            
+            {/* Client info display */}
+            {showClientInfo && clientInfo && (
+              <div className="mt-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm sm:text-base font-medium text-blue-900 dark:text-blue-200 mb-2">
+                      👋 ¡Bienvenido de nuevo, {clientInfo.cliente.nombre}!
+                    </p>
+                    {clientInfo.reservasActivas.length > 0 ? (
+                      <div>
+                        <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 mb-2">
+                          📅 Tienes {clientInfo.reservasActivas.length} reserva{clientInfo.reservasActivas.length > 1 ? 's' : ''} activa{clientInfo.reservasActivas.length > 1 ? 's' : ''}:
+                        </p>
+                        <div className="space-y-2">
+                          {clientInfo.reservasActivas.map((reserva, index) => (
+                            <div key={reserva._id} className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-2 rounded border border-blue-200 dark:border-blue-700">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="font-medium text-gray-900 dark:text-white">
+                                    {reserva.fechaCita} a las {reserva.horaCita}
+                                  </span>
+                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                                    reserva.estado === 'confirmada' 
+                                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                                  }`}>
+                                    {reserva.estado === 'confirmada' ? '✓ Confirmada' : '⏳ Pendiente'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300">
+                        No tienes reservas activas en este momento.
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowClientInfo(false)}
+                    className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Selección de Fecha y Hora */}
@@ -360,27 +572,49 @@ export default function ReservaForm() {
 
             <div>
               <label
-                htmlFor="colores"
-                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2"
               >
                 Colores Preferidos
               </label>
-              <input
-                type="text"
-                id="colores"
-                name="colores"
-                value={form.colores}
-                onChange={handleChange}
-                placeholder="🎨 Ej: Rosa pastel, dorado, nude..."
-                className={`w-full px-3 py-2 sm:px-4 sm:py-3 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                  errors.colores ?
-                    "border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
-                  : "border-gray-200 dark:border-gray-600 focus:border-blue-300 dark:focus:border-blue-500"
-                }`}
-              />
-              {errors.colores && (
-                <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm mt-1">
-                  {errors.colores}
+              
+              {/* Color badges */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {PREDEFINED_COLORS.map((colorOption) => (
+                  <button
+                    key={colorOption.name}
+                    type="button"
+                    onClick={() => toggleColor(colorOption.name)}
+                    className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                      selectedColors.includes(colorOption.name)
+                        ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500'
+                    }`}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
+                      style={{ backgroundColor: colorOption.color }}
+                    />
+                    {colorOption.name}
+                    {selectedColors.includes(colorOption.name) && <span>✓</span>}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Custom color input */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={customColor}
+                  onChange={(e) => setCustomColor(e.target.value)}
+                  placeholder="🎨 O escribe otro color personalizado..."
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                />
+              </div>
+              
+              {/* Display selected colors */}
+              {(selectedColors.length > 0 || customColor.trim()) && (
+                <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  Seleccionados: {[...selectedColors, customColor.trim()].filter(Boolean).join(', ')}
                 </p>
               )}
             </div>
@@ -428,29 +662,93 @@ export default function ReservaForm() {
 
             <div>
               <label
-                htmlFor="decoracion"
-                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2"
               >
                 Decoración Especial (Opcional)
               </label>
+              
+              {/* Decoration options */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {PREDEFINED_DECORATIONS.map((decoration) => (
+                  <button
+                    key={decoration}
+                    type="button"
+                    onClick={() => toggleDecoration(decoration)}
+                    className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
+                      selectedDecorations.includes(decoration)
+                        ? 'border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-violet-300 dark:hover:border-violet-500'
+                    }`}
+                  >
+                    {decoration}
+                    {selectedDecorations.includes(decoration) && <span className="ml-1">✓</span>}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Custom decoration input */}
               <div className="relative">
                 <textarea
-                  id="decoracion"
-                  name="decoracion"
-                  rows={3}
-                  placeholder="Describe cualquier diseño específico que tengas en mente: colores, patrones, nail art, etc."
-                  value={form.decoracion}
-                  onChange={handleChange}
+                  rows={2}
+                  value={customDecoration}
+                  onChange={(e) => setCustomDecoration(e.target.value)}
+                  placeholder="O describe tu diseño personalizado aquí..."
                   className="w-full px-3 py-2 sm:px-4 sm:py-3 pl-8 sm:pl-12 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 resize-none transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base"
                 />
-                <span className="absolute left-2 sm:left-4 top-2 sm:top-4 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                <span className="absolute left-2 sm:left-4 top-2 sm:top-3 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                   🎨
                 </span>
               </div>
-              <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              
+              {/* Display selected decorations */}
+              {(selectedDecorations.length > 0 || customDecoration.trim()) && (
+                <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  Seleccionado: {[...selectedDecorations, customDecoration.trim()].filter(Boolean).join(', ')}
+                </p>
+              )}
+              
+              <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 💡 Si no tienes una idea específica, nuestras profesionales te
                 ayudarán a elegir el diseño perfecto
               </p>
+            </div>
+          </div>
+          
+          {/* WhatsApp Action Buttons */}
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white border-b border-blue-100 dark:border-blue-800 pb-2">
+              💬 ¿Necesitas ayuda?
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              Contáctanos directamente por WhatsApp para consultas personalizadas
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={handleConsultExpert}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-lg"
+              >
+                <span>👩‍🔬</span>
+                <span>Consultar con experta</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleSendReference}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-lg"
+              >
+                <span>📸</span>
+                <span>Enviar referencia</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleCustomDesign}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 hover:shadow-lg"
+              >
+                <span>✨</span>
+                <span>Diseño Personalizado</span>
+              </button>
             </div>
           </div>
 

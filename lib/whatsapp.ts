@@ -165,3 +165,127 @@ export function openCancellationWhatsApp(
   }
 }
 
+/**
+ * Generate WhatsApp link to consult with expert
+ * @param clientName - Client's name
+ * @param clientPhone - Client's phone number
+ * @returns WhatsApp URL
+ */
+export function generateConsultExpertWhatsAppLink(
+  clientName: string,
+  clientPhone: string
+): string {
+  const message = `👋 Hola, soy *${clientName}*.
+
+Quisiera consultar con una experta sobre diseños de uñas y opciones disponibles.
+
+Mi número de contacto es: ${clientPhone}
+
+¡Gracias! 💅✨`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to consult with expert
+ * @param clientName - Client's name
+ * @param clientPhone - Client's phone number
+ */
+export function openConsultExpertWhatsApp(
+  clientName: string,
+  clientPhone: string
+): void {
+  const whatsappLink = generateConsultExpertWhatsAppLink(clientName, clientPhone);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
+/**
+ * Generate WhatsApp link to send reference image
+ * @param clientName - Client's name
+ * @param clientPhone - Client's phone number
+ * @returns WhatsApp URL
+ */
+export function generateSendReferenceWhatsAppLink(
+  clientName: string,
+  clientPhone: string
+): string {
+  const message = `👋 Hola, soy *${clientName}*.
+
+Quisiera enviarles una imagen de referencia para el diseño de uñas que me gustaría.
+
+Mi número de contacto es: ${clientPhone}
+
+(Enviaré la imagen a continuación)
+
+¡Gracias! 💅📸`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to send reference image
+ * @param clientName - Client's name
+ * @param clientPhone - Client's phone number
+ */
+export function openSendReferenceWhatsApp(
+  clientName: string,
+  clientPhone: string
+): void {
+  const whatsappLink = generateSendReferenceWhatsAppLink(clientName, clientPhone);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
+/**
+ * Generate WhatsApp link to consult about custom design
+ * @param clientName - Client's name
+ * @param clientPhone - Client's phone number
+ * @returns WhatsApp URL
+ */
+export function generateCustomDesignWhatsAppLink(
+  clientName: string,
+  clientPhone: string
+): string {
+  const message = `👋 Hola, soy *${clientName}*.
+
+Estoy interesada en consultar sobre un diseño personalizado de uñas.
+
+Mi número de contacto es: ${clientPhone}
+
+¿Podemos hablar sobre las opciones disponibles?
+
+¡Gracias! 💅✨🎨`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to consult about custom design
+ * @param clientName - Client's name
+ * @param clientPhone - Client's phone number
+ */
+export function openCustomDesignWhatsApp(
+  clientName: string,
+  clientPhone: string
+): void {
+  const whatsappLink = generateCustomDesignWhatsAppLink(clientName, clientPhone);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
