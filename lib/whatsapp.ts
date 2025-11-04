@@ -1,7 +1,8 @@
 // WhatsApp notification service using WhatsApp Web/App links
 // This allows the client to send a message directly from their own WhatsApp
 
-const adminPhone = '+5363233073'; // Admin WhatsApp number (without spaces)
+// Admin WhatsApp number - can be overridden with environment variable
+const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || '+5363233073';
 
 export interface ReservaDetails {
   nombre: string;

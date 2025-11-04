@@ -15,6 +15,9 @@ interface FormErrors {
 }
 
 export default function ReservaForm() {
+  // Constants
+  const WHATSAPP_OPEN_DELAY_MS = 1000;
+
   const [form, setForm] = useState<ReservaFormData>({
     nombre: "",
     telefono: "",
@@ -127,7 +130,7 @@ export default function ReservaForm() {
         
         const reservaId = data.data.insertedId;
         
-        // Open WhatsApp with notification
+        // Open WhatsApp with notification after a short delay to show success message
         setTimeout(() => {
           openWhatsAppNotification(
             {
@@ -141,7 +144,7 @@ export default function ReservaForm() {
             },
             reservaId
           );
-        }, 1000);
+        }, WHATSAPP_OPEN_DELAY_MS);
 
         // Reset form
         setForm({

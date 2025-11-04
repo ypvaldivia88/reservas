@@ -52,19 +52,34 @@ En el modal de edición, si la reserva está en estado "pendiente", el administr
 
 ### Número de WhatsApp del Administrador
 
-El número está configurado en `lib/whatsapp.ts`:
+El número del administrador se puede configurar de dos maneras:
 
-```typescript
-const adminPhone = '+5363233073';
-```
+1. **Variable de Entorno (Recomendado)**:
+   ```bash
+   # .env.local
+   NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER="+5363233073"
+   ```
 
-Para cambiar el número, simplemente modifica esta constante.
+2. **Valor por defecto en código** (`lib/whatsapp.ts`):
+   ```typescript
+   const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || '+5363233073';
+   ```
+
+Si no se define la variable de entorno, se usará el valor por defecto `+5363233073`.
 
 ### Formato del Número
 
 - Incluir el código de país con `+`
 - Sin espacios ni caracteres especiales
 - Ejemplo: `+5363233073`
+
+### Archivo .env.example
+
+Se incluye un archivo `.env.example` con todas las variables de entorno necesarias:
+```bash
+MONGODB_URI="mongodb+srv://usuario:password@cluster.mongodb.net/nailsalon"
+NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER="+5363233073"
+```
 
 ## Ventajas de Este Enfoque
 
