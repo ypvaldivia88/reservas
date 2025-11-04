@@ -1,51 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { GaleriaItem, ImageData, Categoria } from "@/lib/types";
+import { ImageData, Categoria } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
 
-// Helper function to get image URL from ImageData
-const getImageUrl = (imagen: ImageData | undefined): string => {
-  return imagen ? base64ToDataURL(imagen.base64Data, imagen.mimeType) : "";
-};
-
-// Reusable badge component for destacado items
-const DestacadoBadge = () => (
-  <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
-    <span className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
-      ⭐ Popular
-    </span>
-  </div>
-);
-
-// Reusable button component for gallery items
-// Note: This is a decorative UI element that appears on hover for visual effect
-// Actual selection functionality would be implemented in a future update
-const SelectDesignButton = () => (
-  <span 
-    role="presentation"
-    className="block w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 text-center"
-  >
-    Elegir este diseño
-  </span>
-);
-
 // Gallery item card component
-const GalleryItemCard = ({ item }: { item: GaleriaItem & { imagen?: ImageData } }) => {
-  const imageUrl = getImageUrl(item.imagen);
-
-  // Don't render if no valid image
-  if (!imageUrl) return null;
+const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
+  const imageUrl = base64ToDataURL(imagen.base64Data, imagen.mimeType);
 
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      {/* Destacado badge */}
-      {item.destacado && <DestacadoBadge />}
-
       {/* Image preview */}
       <div className="aspect-square">
         <img
           src={imageUrl}
-          alt={item.titulo}
+          alt={imagen.titulo || imagen.nombre}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
@@ -53,21 +21,26 @@ const GalleryItemCard = ({ item }: { item: GaleriaItem & { imagen?: ImageData } 
       {/* Design info */}
       <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700/50">
         <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
-          {item.titulo}
+          {imagen.titulo || imagen.nombre}
         </h4>
-        {item.descripcion && (
+        {imagen.descripcion && (
           <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-            {item.descripcion}
+            {imagen.descripcion}
           </p>
         )}
-        <SelectDesignButton />
+        <span 
+          role="presentation"
+          className="block w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 text-center"
+        >
+          Elegir este diseño
+        </span>
       </div>
     </div>
   );
 };
 
 export default function DynamicInspirationGallery() {
-  const [galleryItems, setGalleryItems] = useState<(GaleriaItem & { imagen?: ImageData })[]>([]);
+  const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,32 +50,24 @@ export default function DynamicInspirationGallery() {
 
   const loadData = async () => {
     try {
-      // Fetch gallery items, images, and categories in parallel
-      const [galeriaRes, imagenesRes, categoriasRes] = await Promise.all([
-        fetch("/api/galeria"),
+      // Fetch images and categories in parallel
+      const [imagenesRes, categoriasRes] = await Promise.all([
         fetch("/api/imagenes"),
         fetch("/api/categorias"),
       ]);
 
-      if (galeriaRes.ok && imagenesRes.ok && categoriasRes.ok) {
-        const galeriaData = await galeriaRes.json();
+      if (imagenesRes.ok && categoriasRes.ok) {
         const imagenesData = await imagenesRes.json();
         const categoriasData = await categoriasRes.json();
 
-        if (galeriaData.success && imagenesData.success && categoriasData.success) {
+        if (imagenesData.success && categoriasData.success) {
           const imagenes: ImageData[] = imagenesData.data;
-          const galeria: GaleriaItem[] = galeriaData.data;
           const cats: Categoria[] = categoriasData.data;
 
-          // Map gallery items with their images
-          const itemsWithImages = galeria
-            .map((item) => ({
-              ...item,
-              imagen: imagenes.find((img) => img._id === item.imagenId),
-            }))
-            .filter((item) => item.imagen); // Only include items with valid images
+          // Filter images that are marked for inspiration gallery
+          const inspirationImages = imagenes.filter(img => img.enGaleriaInspiracion);
 
-          setGalleryItems(itemsWithImages);
+          setGalleryImages(inspirationImages);
           setCategorias(cats.filter((cat) => cat.activo));
         }
       }
@@ -125,17 +90,21 @@ export default function DynamicInspirationGallery() {
     );
   }
 
-  // Group items by category
-  const itemsByCategory = categorias.map((categoria) => ({
+  // Group images by category
+  const imagesByCategory = categorias.map((categoria) => ({
     categoria,
-    items: galleryItems.filter((item) => item.categoriaId === categoria._id),
+    images: galleryImages.filter((img) => 
+      img.categoriaIds && img.categoriaIds.includes(categoria._id!)
+    ),
   }));
 
-  // Items without category
-  const itemsWithoutCategory = galleryItems.filter((item) => !item.categoriaId);
+  // Images without category
+  const imagesWithoutCategory = galleryImages.filter((img) => 
+    !img.categoriaIds || img.categoriaIds.length === 0
+  );
 
   // Filter out empty categories
-  const nonEmptyCategories = itemsByCategory.filter((group) => group.items.length > 0);
+  const nonEmptyCategories = imagesByCategory.filter((group) => group.images.length > 0);
 
   return (
     <section className="py-12 sm:py-14 lg:py-16 bg-white dark:bg-gray-900">
@@ -150,7 +119,7 @@ export default function DynamicInspirationGallery() {
           </p>
         </div>
 
-        {galleryItems.length === 0 ? (
+        {galleryImages.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400">
               No hay diseños en la galería aún. El administrador puede agregar imágenes desde el panel de control.
@@ -158,7 +127,7 @@ export default function DynamicInspirationGallery() {
           </div>
         ) : (
           <div className="space-y-8 sm:space-y-10 lg:space-y-12">
-            {/* Items grouped by category */}
+            {/* Images grouped by category */}
             {nonEmptyCategories.map((group) => (
               <div key={group.categoria._id}>
                 <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center">
@@ -166,23 +135,23 @@ export default function DynamicInspirationGallery() {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                  {group.items.map((item) => (
-                    <GalleryItemCard key={item._id} item={item} />
+                  {group.images.map((imagen) => (
+                    <GalleryItemCard key={imagen._id} imagen={imagen} />
                   ))}
                 </div>
               </div>
             ))}
 
-            {/* Items without category */}
-            {itemsWithoutCategory.length > 0 && (
+            {/* Images without category */}
+            {imagesWithoutCategory.length > 0 && (
               <div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center">
                   Otros Diseños
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                  {itemsWithoutCategory.map((item) => (
-                    <GalleryItemCard key={item._id} item={item} />
+                  {imagesWithoutCategory.map((imagen) => (
+                    <GalleryItemCard key={imagen._id} imagen={imagen} />
                   ))}
                 </div>
               </div>

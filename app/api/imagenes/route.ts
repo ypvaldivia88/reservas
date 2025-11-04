@@ -26,10 +26,15 @@ export async function GET(request: NextRequest) {
         data: {
           _id: imagen._id.toString(),
           nombre: imagen.nombre,
+          titulo: imagen.titulo,
           descripcion: imagen.descripcion,
           base64Data: imagen.base64Data,
           mimeType: imagen.mimeType,
           size: imagen.size,
+          enGaleriaDashboard: imagen.enGaleriaDashboard || false,
+          enGaleriaInspiracion: imagen.enGaleriaInspiracion || false,
+          categoriaIds: imagen.categoriaIds || [],
+          servicioIds: imagen.servicioIds || [],
           fechaCreacion: imagen.fechaCreacion,
           fechaActualizacion: imagen.fechaActualizacion,
         },
@@ -46,10 +51,15 @@ export async function GET(request: NextRequest) {
     const imagenesData: ImageData[] = imagenes.map((img: any) => ({
       _id: img._id.toString(),
       nombre: img.nombre,
+      titulo: img.titulo,
       descripcion: img.descripcion,
       base64Data: img.base64Data,
       mimeType: img.mimeType,
       size: img.size,
+      enGaleriaDashboard: img.enGaleriaDashboard || false,
+      enGaleriaInspiracion: img.enGaleriaInspiracion || false,
+      categoriaIds: img.categoriaIds || [],
+      servicioIds: img.servicioIds || [],
       fechaCreacion: img.fechaCreacion,
       fechaActualizacion: img.fechaActualizacion,
     }));
@@ -71,7 +81,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { nombre, descripcion, base64Data, mimeType, size } = body;
+    const { 
+      nombre, 
+      titulo, 
+      descripcion, 
+      base64Data, 
+      mimeType, 
+      size,
+      enGaleriaDashboard,
+      enGaleriaInspiracion,
+      categoriaIds,
+      servicioIds
+    } = body;
 
     // Validación
     if (!nombre || !base64Data || !mimeType) {
@@ -89,10 +110,15 @@ export async function POST(request: NextRequest) {
 
     const nuevaImagen = {
       nombre,
+      titulo: titulo || '',
       descripcion: descripcion || '',
       base64Data,
       mimeType,
       size: size || 0,
+      enGaleriaDashboard: enGaleriaDashboard || false,
+      enGaleriaInspiracion: enGaleriaInspiracion || false,
+      categoriaIds: categoriaIds || [],
+      servicioIds: servicioIds || [],
       fechaCreacion: now,
       fechaActualizacion: now,
     };
@@ -120,7 +146,19 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { _id, nombre, descripcion, base64Data, mimeType, size } = body;
+    const { 
+      _id, 
+      nombre, 
+      titulo, 
+      descripcion, 
+      base64Data, 
+      mimeType, 
+      size,
+      enGaleriaDashboard,
+      enGaleriaInspiracion,
+      categoriaIds,
+      servicioIds
+    } = body;
 
     if (!_id) {
       return NextResponse.json<ApiResponse>(
@@ -130,15 +168,20 @@ export async function PATCH(request: NextRequest) {
     }
 
     const db = await getDatabase();
-    const updateData: Partial<ImageData> = {
+    const updateData: Partial<ImageData> & { fechaActualizacion: Date } = {
       fechaActualizacion: new Date(),
     };
 
-    if (nombre) updateData.nombre = nombre;
+    if (nombre !== undefined) updateData.nombre = nombre;
+    if (titulo !== undefined) updateData.titulo = titulo;
     if (descripcion !== undefined) updateData.descripcion = descripcion;
     if (base64Data) updateData.base64Data = base64Data;
     if (mimeType) updateData.mimeType = mimeType;
     if (size !== undefined) updateData.size = size;
+    if (enGaleriaDashboard !== undefined) updateData.enGaleriaDashboard = enGaleriaDashboard;
+    if (enGaleriaInspiracion !== undefined) updateData.enGaleriaInspiracion = enGaleriaInspiracion;
+    if (categoriaIds !== undefined) updateData.categoriaIds = categoriaIds;
+    if (servicioIds !== undefined) updateData.servicioIds = servicioIds;
 
     const result = await db
       .collection('imagenes')

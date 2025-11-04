@@ -68,6 +68,13 @@ export interface ImageData {
   base64Data: string; // Imagen codificada en base64
   mimeType: string; // image/jpeg, image/png, etc.
   size?: number; // Tamaño en bytes
+  titulo?: string; // Título para mostrar en galerías
+  // Gallery assignments
+  enGaleriaDashboard?: boolean; // "Nuestros trabajos" en dashboard
+  enGaleriaInspiracion?: boolean; // "Galería de Inspiración" en reserva
+  // Optional associations for filtering/organization
+  categoriaIds?: string[]; // Referencias a Categorias
+  servicioIds?: string[]; // Referencias a Servicios
   fechaCreacion?: Date;
   fechaActualizacion?: Date;
 }
