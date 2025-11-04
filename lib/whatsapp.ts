@@ -4,6 +4,15 @@
 // Admin WhatsApp number - can be overridden with environment variable
 const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || '+5363233073';
 
+/**
+ * Clean phone number by removing all non-digit characters
+ * @param phone - Phone number to clean
+ * @returns Phone number with only digits
+ */
+function cleanPhoneNumber(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
 export interface ReservaDetails {
   nombre: string;
   telefono: string;
@@ -49,7 +58,7 @@ _Click en el link para confirmar, editar o cancelar la reserva._`;
   
   // Generate WhatsApp link
   // Use api.whatsapp.com for better compatibility with mobile and desktop
-  const whatsappLink = `https://api.whatsapp.com/send?phone=${adminPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
   
   return whatsappLink;
 }
@@ -66,6 +75,91 @@ export function openWhatsAppNotification(
   const whatsappLink = generateWhatsAppNotificationLink(reserva, reservaId);
   
   // Open in new window/tab
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
+/**
+ * Generate WhatsApp link to notify client about reservation confirmation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ * @returns WhatsApp URL
+ */
+export function generateConfirmationWhatsAppLink(
+  clientPhone: string,
+  reserva: ReservaDetails
+): string {
+  const message = `✅ *Reserva Confirmada*
+
+Hola ${reserva.nombre}, tu reserva ha sido confirmada.
+
+📅 *Fecha:* ${reserva.fechaCita}
+🕐 *Hora:* ${reserva.horaCita}
+💅 *Forma:* ${reserva.forma}
+📏 *Largo:* ${reserva.largo}
+${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
+
+¡Te esperamos! 💖`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(clientPhone)}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to notify client about reservation confirmation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ */
+export function openConfirmationWhatsApp(
+  clientPhone: string,
+  reserva: ReservaDetails
+): void {
+  const whatsappLink = generateConfirmationWhatsAppLink(clientPhone, reserva);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
+/**
+ * Generate WhatsApp link to notify client about reservation cancellation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ * @returns WhatsApp URL
+ */
+export function generateCancellationWhatsAppLink(
+  clientPhone: string,
+  reserva: ReservaDetails
+): string {
+  const message = `❌ *Reserva Cancelada*
+
+Hola ${reserva.nombre}, lamentamos informarte que tu reserva ha sido cancelada.
+
+📅 *Fecha:* ${reserva.fechaCita}
+🕐 *Hora:* ${reserva.horaCita}
+
+Si deseas hacer una nueva reserva, no dudes en contactarnos.`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(clientPhone)}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to notify client about reservation cancellation
+ * @param clientPhone - Client's phone number
+ * @param reserva - Reservation details
+ */
+export function openCancellationWhatsApp(
+  clientPhone: string,
+  reserva: ReservaDetails
+): void {
+  const whatsappLink = generateCancellationWhatsAppLink(clientPhone, reserva);
+  
   if (typeof window !== 'undefined') {
     window.open(whatsappLink, '_blank');
   }
