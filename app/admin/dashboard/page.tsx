@@ -921,7 +921,7 @@ function DashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (editingReserva.costo === undefined || editingReserva.costo === null) {
+                        if (editingReserva.costo == null) {
                           setActionMessage("❌ Por favor ingresa el costo antes de completar la reserva");
                           setTimeout(() => setActionMessage(""), 3000);
                           return;

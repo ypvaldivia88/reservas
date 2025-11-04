@@ -4,6 +4,15 @@
 // Admin WhatsApp number - can be overridden with environment variable
 const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || '+5363233073';
 
+/**
+ * Clean phone number by removing all non-digit characters
+ * @param phone - Phone number to clean
+ * @returns Phone number with only digits
+ */
+function cleanPhoneNumber(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
 export interface ReservaDetails {
   nombre: string;
   telefono: string;
@@ -49,7 +58,7 @@ _Click en el link para confirmar, editar o cancelar la reserva._`;
   
   // Generate WhatsApp link
   // Use api.whatsapp.com for better compatibility with mobile and desktop
-  const whatsappLink = `https://api.whatsapp.com/send?phone=${adminPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
   
   return whatsappLink;
 }
@@ -94,7 +103,7 @@ ${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
 ¡Te esperamos! 💖`;
 
   const encodedMessage = encodeURIComponent(message);
-  const whatsappLink = `https://api.whatsapp.com/send?phone=${clientPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(clientPhone)}&text=${encodedMessage}`;
   
   return whatsappLink;
 }
@@ -135,7 +144,7 @@ Hola ${reserva.nombre}, lamentamos informarte que tu reserva ha sido cancelada.
 Si deseas hacer una nueva reserva, no dudes en contactarnos.`;
 
   const encodedMessage = encodeURIComponent(message);
-  const whatsappLink = `https://api.whatsapp.com/send?phone=${clientPhone.replace(/\D/g, '')}&text=${encodedMessage}`;
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(clientPhone)}&text=${encodedMessage}`;
   
   return whatsappLink;
 }
