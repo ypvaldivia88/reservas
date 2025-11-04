@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { GaleriaItem, ImageData } from "@/lib/types";
+import { ImageData } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
 
 export default function DynamicGalleryCarousel() {
-  const [galleryItems, setGalleryItems] = useState<(GaleriaItem & { imagen?: ImageData })[]>([]);
+  const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -22,29 +22,18 @@ export default function DynamicGalleryCarousel() {
 
   const loadGalleryData = async () => {
     try {
-      // Fetch gallery items and images in parallel
-      const [galeriaRes, imagenesRes] = await Promise.all([
-        fetch("/api/galeria"),
-        fetch("/api/imagenes"),
-      ]);
+      const imagenesRes = await fetch("/api/imagenes");
 
-      if (galeriaRes.ok && imagenesRes.ok) {
-        const galeriaData = await galeriaRes.json();
+      if (imagenesRes.ok) {
         const imagenesData = await imagenesRes.json();
 
-        if (galeriaData.success && imagenesData.success) {
+        if (imagenesData.success) {
           const imagenes: ImageData[] = imagenesData.data;
-          const galeria: GaleriaItem[] = galeriaData.data;
+          
+          // Filter images that are marked for dashboard gallery
+          const dashboardImages = imagenes.filter(img => img.enGaleriaDashboard);
 
-          // Map gallery items with their images
-          const itemsWithImages = galeria
-            .map((item) => ({
-              ...item,
-              imagen: imagenes.find((img) => img._id === item.imagenId),
-            }))
-            .filter((item) => item.imagen); // Only include items with valid images
-
-          setGalleryItems(itemsWithImages);
+          setGalleryImages(dashboardImages);
         }
       }
     } catch (error) {
@@ -115,7 +104,7 @@ export default function DynamicGalleryCarousel() {
     );
   }
 
-  if (galleryItems.length === 0) {
+  if (galleryImages.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 dark:text-gray-400">
@@ -161,17 +150,12 @@ export default function DynamicGalleryCarousel() {
             className="flex gap-3 overflow-x-auto hide-scrollbar snap-x snap-mandatory px-2 py-2 touch-pan-x"
             style={{ scrollBehavior: "smooth" }}
           >
-            {galleryItems.map((item) => {
-              const imageUrl = item.imagen
-                ? base64ToDataURL(item.imagen.base64Data, item.imagen.mimeType)
-                : "";
-
-              // Skip items without valid images
-              if (!imageUrl) return null;
+            {galleryImages.map((imagen) => {
+              const imageUrl = base64ToDataURL(imagen.base64Data, imagen.mimeType);
 
               return (
                 <div
-                  key={item._id}
+                  key={imagen._id}
                   role="button"
                   tabIndex={0}
                   onClick={() => {
@@ -195,7 +179,7 @@ export default function DynamicGalleryCarousel() {
                   <div className="relative w-full h-full">
                     <img
                       src={imageUrl}
-                      alt={item.titulo}
+                      alt={imagen.titulo || imagen.nombre}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
                       onDragStart={(e) => e.preventDefault()} // prevent image drag interfering with carousel drag
                     />

@@ -575,56 +575,25 @@ function DashboardContent() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Gestión de Contenido
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button
-              onClick={() => router.push("/admin/imagenes")}
-              className="p-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">🖼️</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Imágenes
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar biblioteca de imágenes
-              </p>
-            </button>
-            <button
-              onClick={() => router.push("/admin/servicios")}
-              className="p-6 bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900/30 dark:to-violet-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">💅</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Servicios
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar servicios ofrecidos
-              </p>
-            </button>
-            <button
-              onClick={() => router.push("/admin/categorias")}
-              className="p-6 bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900/30 dark:to-pink-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">📁</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Categorías
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar categorías
-              </p>
-            </button>
-            <button
-              onClick={() => router.push("/admin/galeria")}
-              className="p-6 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-lg hover:shadow-lg transition-all text-left"
-            >
-              <div className="text-4xl mb-3">🎨</div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Galería
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestionar galería de trabajos
-              </p>
-            </button>
-          </div>
+          <button
+            onClick={() => router.push("/admin/contenido")}
+            className="w-full p-6 bg-gradient-to-br from-blue-100 to-violet-200 dark:from-blue-900/30 dark:to-violet-800/30 rounded-lg hover:shadow-lg transition-all text-left"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-4xl mb-3">🎨</div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  Gestión Unificada de Contenido
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Administra imágenes, galerías, categorías y servicios en un solo lugar
+                </p>
+              </div>
+              <div className="text-2xl text-blue-600 dark:text-blue-400">
+                →
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Clientes Table */}
