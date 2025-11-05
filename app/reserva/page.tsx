@@ -181,7 +181,7 @@ export default function ReservaPage() {
       </section>
 
       {/* Footer - Mobile First */}
-      <footer className="bg-gray-900 dark:bg-gray-950 text-white py-8 sm:py-12">
+      <footer className="bg-gray-800 dark:bg-gray-950 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
             <Image
@@ -191,10 +191,10 @@ export default function ReservaPage() {
               width={72}
             />
           </div>
-          <p className="text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base">
+          <p className="text-gray-300 dark:text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base">
             Tu salón de confianza para el cuidado profesional de uñas
           </p>
-          <p className="text-gray-500 text-xs sm:text-sm">
+          <p className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm">
             &copy; 2025 Oh`Diosa Salón. Todos los derechos reservados.
           </p>
         </div>

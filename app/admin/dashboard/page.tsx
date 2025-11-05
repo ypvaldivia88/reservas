@@ -288,44 +288,48 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-900 to-blue-900 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-gray-100 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-white dark:text-gray-300 font-medium">Cargando dashboard...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300 font-medium">
+            Cargando dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-gray-100 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950">
       {/* Header */}
-      <header className="glass-strong sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl">
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-3 rounded-xl shadow-lg">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
                 <span className="text-2xl">💎</span>
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                   Panel Administrador
                 </h1>
-                <p className="text-blue-200 text-sm">Beauty Salon Management</p>
+                <p className="text-blue-600 dark:text-blue-300 text-sm">
+                  Beauty Salon Management
+                </p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-center">
               <ThemeToggle />
               <button
                 onClick={() => setShowChangePassword(!showChangePassword)}
-                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg hover:from-blue-700 hover:to-blue-500 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 touch-manipulation min-h-[44px] whitespace-nowrap"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 touch-manipulation min-h-[44px] whitespace-nowrap"
               >
                 <span className="hidden sm:inline">🔑 Cambiar Contraseña</span>
                 <span className="sm:hidden">🔑</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-lg transition-all duration-300 text-sm sm:text-base font-medium border border-white/20 hover:border-white/40 touch-manipulation min-h-[44px] whitespace-nowrap"
+                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm sm:text-base font-medium border border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 touch-manipulation min-h-[44px] whitespace-nowrap"
               >
                 <span className="hidden sm:inline">🚪 Cerrar Sesión</span>
                 <span className="sm:hidden">🚪</span>
@@ -340,54 +344,58 @@ function DashboardContent() {
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Global Action Message */}
         {actionMessage && (
-          <div className="mb-6 p-4 glass-strong rounded-xl border-l-4 border-blue-400 shadow-lg animate-fadeInUp">
-            <p className="text-center text-sm font-semibold text-white">{actionMessage}</p>
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-l-4 border-blue-500 dark:border-blue-400 shadow-lg animate-fadeInUp">
+            <p className="text-center text-sm font-semibold text-blue-900 dark:text-white">
+              {actionMessage}
+            </p>
           </div>
         )}
 
         {/* Cambiar Contraseña Form */}
         {showChangePassword && (
-          <div className="glass-strong rounded-2xl shadow-2xl p-8 mb-8 border border-white/20 animate-fadeInUp">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-8 mb-8 border border-gray-200 dark:border-white/20 animate-fadeInUp">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
               <span className="text-3xl">🔒</span>
               Cambiar Contraseña
             </h2>
             <form onSubmit={handleChangePassword} className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-blue-200 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-blue-200 mb-3">
                   Contraseña Actual
                 </label>
                 <input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/10 border-2 border-gray-300 dark:border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/50 transition-all"
                   placeholder="Ingresa tu contraseña actual"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-blue-200 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-blue-200 mb-3">
                   Nueva Contraseña
                 </label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-white/10 border-2 border-gray-300 dark:border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/50 transition-all"
                   placeholder="Mínimo 8 caracteres"
                   minLength={8}
                   required
                 />
               </div>
               {passwordMessage && (
-                <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-                  <p className="text-sm font-medium text-white">{passwordMessage}</p>
+                <div className="p-3 bg-blue-50 dark:bg-white/10 rounded-lg backdrop-blur-sm border border-blue-200 dark:border-white/10">
+                  <p className="text-sm font-medium text-blue-900 dark:text-white">
+                    {passwordMessage}
+                  </p>
                 </div>
               )}
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-500 text-white rounded-xl hover:from-blue-600 hover:to-blue-600 transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
                 Actualizar Contraseña
               </button>
@@ -397,13 +405,13 @@ function DashboardContent() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="group glass-strong rounded-2xl shadow-xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
+          <div className="group bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                <p className="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
                   Total Reservas
                 </p>
-                <p className="text-4xl font-bold text-white">
+                <p className="text-4xl font-bold text-gray-900 dark:text-white">
                   {reservas.length}
                 </p>
               </div>
@@ -412,13 +420,13 @@ function DashboardContent() {
               </div>
             </div>
           </div>
-          <div className="group glass-strong rounded-2xl shadow-xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
+          <div className="group bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                <p className="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
                   Total Clientes
                 </p>
-                <p className="text-4xl font-bold text-white">
+                <p className="text-4xl font-bold text-gray-900 dark:text-white">
                   {clientes.length}
                 </p>
               </div>
@@ -427,13 +435,13 @@ function DashboardContent() {
               </div>
             </div>
           </div>
-          <div className="group glass-strong rounded-2xl shadow-xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
+          <div className="group bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                <p className="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
                   Pendientes
                 </p>
-                <p className="text-4xl font-bold text-white">
+                <p className="text-4xl font-bold text-gray-900 dark:text-white">
                   {reservas.filter((r) => r.estado === "pendiente").length}
                 </p>
               </div>
@@ -445,34 +453,34 @@ function DashboardContent() {
         </div>
 
         {/* Reservas Table */}
-        <div className="glass-strong rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-white/20">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 flex items-center gap-3">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
             <span className="text-3xl">📋</span>
             Reservas Recientes
           </h2>
           <div className="overflow-x-auto -mx-6 sm:-mx-8 px-6 sm:px-8">
             <table className="w-full min-w-full">
               <thead>
-                <tr className="border-b-2 border-white/20">
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                <tr className="border-b-2 border-gray-200 dark:border-white/20">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden sm:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden sm:table-cell">
                     Teléfono
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden md:table-cell">
                     Forma
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden md:table-cell">
                     Largo
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Fecha Cita
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -482,41 +490,45 @@ function DashboardContent() {
                   <tr
                     key={reserva._id}
                     onClick={() => setEditingReserva(reserva)}
-                    className={`border-b border-white/10 hover:bg-white/5 cursor-pointer transition-colors ${
-                      index % 2 === 0 ? 'bg-white/5' : ''
+                    className={`border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors ${
+                      index % 2 === 0 ?
+                        "bg-gray-50 dark:bg-white/5"
+                      : "bg-white dark:bg-transparent"
                     }`}
                   >
-                    <td className="px-4 py-4 text-sm font-medium text-white">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-white">
                       {reserva.nombre}
                     </td>
-                    <td className="px-4 py-4 text-sm text-blue-200 hidden sm:table-cell">
+                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden sm:table-cell">
                       {reserva.telefono}
                     </td>
-                    <td className="px-4 py-4 text-sm text-blue-200 hidden md:table-cell capitalize">
+                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden md:table-cell capitalize">
                       {reserva.forma}
                     </td>
-                    <td className="px-4 py-4 text-sm text-blue-200 hidden md:table-cell">
+                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden md:table-cell">
                       {reserva.largo}
                     </td>
                     <td className="px-4 py-4 text-sm">
                       <span
                         className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide ${
                           reserva.estado === "pendiente" ?
-                            "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50"
+                            "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-400/50"
                           : reserva.estado === "confirmada" ?
-                            "bg-green-500/20 text-green-300 border border-green-400/50"
+                            "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-400/50"
                           : reserva.estado === "completada" ?
-                            "bg-blue-500/20 text-blue-300 border border-blue-400/50"
-                          : "bg-gray-500/20 text-gray-300 border border-gray-400/50"
+                            "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-400/50"
+                          : "bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-400/50"
                         }`}
                       >
                         {reserva.estado}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-blue-200">
+                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200">
                       <div className="flex flex-col">
                         <span className="font-medium">{reserva.fechaCita}</span>
-                        <span className="text-xs text-blue-300">{reserva.horaCita}</span>
+                        <span className="text-xs text-gray-500 dark:text-blue-300">
+                          {reserva.horaCita}
+                        </span>
                       </div>
                     </td>
                     <td
@@ -597,27 +609,28 @@ function DashboardContent() {
         </div>
 
         {/* Gestión de Contenido */}
-        <div className="glass-strong rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-white/20">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 flex items-center gap-3">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
             <span className="text-3xl">🎨</span>
             Gestión de Contenido
           </h2>
           <button
             onClick={() => router.push("/admin/contenido")}
-            className="group w-full p-6 sm:p-8 bg-gradient-to-br from-blue-600/30 to-blue-600/30 hover:from-blue-600/50 hover:to-blue-600/50 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 text-left relative overflow-hidden"
+            className="group w-full p-6 sm:p-8 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-600/30 dark:to-blue-600/30 hover:from-blue-200 hover:to-blue-100 dark:hover:from-blue-600/50 dark:hover:to-blue-600/50 rounded-xl border border-blue-200 dark:border-white/20 hover:border-blue-300 dark:hover:border-white/40 transition-all duration-300 text-left relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 group-hover:via-blue-400/20 transition-all"></div>
             <div className="relative flex items-center justify-between">
               <div>
                 <div className="text-5xl mb-4">💅</div>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Gestión Unificada de Contenido
                 </h3>
-                <p className="text-sm text-blue-200">
-                  Administra imágenes, galerías, categorías y servicios en un solo lugar
+                <p className="text-sm text-gray-700 dark:text-blue-200">
+                  Administra imágenes, galerías, categorías y servicios en un
+                  solo lugar
                 </p>
               </div>
-              <div className="text-3xl text-white opacity-60 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
+              <div className="text-3xl text-gray-700 dark:text-white opacity-60 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
                 →
               </div>
             </div>
@@ -625,9 +638,9 @@ function DashboardContent() {
         </div>
 
         {/* Clientes Table */}
-        <div className="glass-strong rounded-2xl shadow-2xl p-6 sm:p-8 border border-white/20">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 dark:border-white/20">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <span className="text-3xl">👥</span>
               Clientes Registrados
             </h2>
@@ -641,17 +654,17 @@ function DashboardContent() {
           <div className="overflow-x-auto -mx-6 sm:-mx-8 px-6 sm:px-8">
             <table className="w-full min-w-full">
               <thead>
-                <tr className="border-b-2 border-white/20">
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                <tr className="border-b-2 border-gray-200 dark:border-white/20">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Nombre
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Teléfono
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden sm:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden sm:table-cell">
                     Fecha Registro
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -661,17 +674,19 @@ function DashboardContent() {
                   <tr
                     key={cliente._id}
                     onClick={() => setEditingCliente(cliente)}
-                    className={`border-b border-white/10 hover:bg-white/5 cursor-pointer transition-colors ${
-                      index % 2 === 0 ? 'bg-white/5' : ''
+                    className={`border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors ${
+                      index % 2 === 0 ?
+                        "bg-gray-50 dark:bg-white/5"
+                      : "bg-white dark:bg-transparent"
                     }`}
                   >
-                    <td className="px-4 py-4 text-sm font-medium text-white">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-white">
                       {cliente.nombre}
                     </td>
-                    <td className="px-4 py-4 text-sm text-blue-200">
+                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200">
                       {cliente.telefono}
                     </td>
-                    <td className="px-4 py-4 text-sm text-blue-200 hidden sm:table-cell">
+                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden sm:table-cell">
                       {cliente.fechaCreacion ?
                         new Date(cliente.fechaCreacion).toLocaleDateString()
                       : "-"}
@@ -698,8 +713,8 @@ function DashboardContent() {
       {/* Edit Reserva Modal */}
       {editingReserva && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="glass-strong rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 animate-fadeInUp">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-white/20 animate-fadeInUp">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
               <span className="text-2xl">✏️</span>
               Editar Reserva
             </h3>
@@ -763,10 +778,18 @@ function DashboardContent() {
                     }
                     className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white"
                   >
-                    <option value="coffin" className="bg-gray-800">Coffin</option>
-                    <option value="almond" className="bg-gray-800">Almond</option>
-                    <option value="stiletto" className="bg-gray-800">Stiletto</option>
-                    <option value="square" className="bg-gray-800">Square</option>
+                    <option value="coffin" className="bg-gray-800">
+                      Coffin
+                    </option>
+                    <option value="almond" className="bg-gray-800">
+                      Almond
+                    </option>
+                    <option value="stiletto" className="bg-gray-800">
+                      Stiletto
+                    </option>
+                    <option value="square" className="bg-gray-800">
+                      Square
+                    </option>
                   </select>
                 </div>
                 <div>
@@ -840,10 +863,18 @@ function DashboardContent() {
                     }
                     className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white"
                   >
-                    <option value="pendiente" className="bg-gray-800">Pendiente</option>
-                    <option value="confirmada" className="bg-gray-800">Confirmada</option>
-                    <option value="cancelada" className="bg-gray-800">Cancelada</option>
-                    <option value="completada" className="bg-gray-800">Completada</option>
+                    <option value="pendiente" className="bg-gray-800">
+                      Pendiente
+                    </option>
+                    <option value="confirmada" className="bg-gray-800">
+                      Confirmada
+                    </option>
+                    <option value="cancelada" className="bg-gray-800">
+                      Cancelada
+                    </option>
+                    <option value="completada" className="bg-gray-800">
+                      Completada
+                    </option>
                   </select>
                 </div>
                 <div className="md:col-span-2">
@@ -1010,8 +1041,8 @@ function DashboardContent() {
             </h3>
             <p className="text-blue-200 mb-6">
               ¿Estás seguro de que deseas eliminar la reserva de{" "}
-              <strong className="text-white">{deletingReserva.nombre}</strong>? Esta acción no se puede
-              deshacer.
+              <strong className="text-white">{deletingReserva.nombre}</strong>?
+              Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -1175,8 +1206,9 @@ function DashboardContent() {
             </h3>
             <p className="text-blue-200 mb-6">
               ¿Estás seguro de que deseas eliminar al cliente{" "}
-              <strong className="text-white">{deletingCliente.nombre}</strong>? Esta acción no se puede
-              deshacer. No se puede eliminar un cliente con reservas activas.
+              <strong className="text-white">{deletingCliente.nombre}</strong>?
+              Esta acción no se puede deshacer. No se puede eliminar un cliente
+              con reservas activas.
             </p>
             <div className="flex gap-3 justify-end">
               <button

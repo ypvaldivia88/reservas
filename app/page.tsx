@@ -16,7 +16,7 @@ export default function Home() {
       <section className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-[url('/main.avif')] bg-center bg-cover bg-no-repeat">
         {/* overlay to improve text contrast */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-blue-950/80 via-blue-950/80 to-blue-950/80 dark:bg-gradient-to-br dark:from-black/85 dark:via-blue-950/85 dark:to-black/85"
+          className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/70 to-blue-900/70 dark:bg-gradient-to-br dark:from-black/85 dark:via-blue-950/85 dark:to-black/85"
           aria-hidden
         />
         <div className="max-w-7xl mx-auto relative z-10">
@@ -315,7 +315,7 @@ export default function Home() {
       </section>
 
       {/* Footer - Mobile First */}
-      <footer className="bg-gray-900 dark:bg-gray-950 text-white py-8 sm:py-12">
+      <footer className="bg-gray-800 dark:bg-gray-950 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             <div>
@@ -332,10 +332,10 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base text-white">
                 Enlaces Rápidos
               </h4>
-              <ul className="space-y-1 sm:space-y-2 text-gray-400 text-sm sm:text-base">
+              <ul className="space-y-1 sm:space-y-2 text-gray-300 dark:text-gray-400 text-sm sm:text-base">
                 <li>
                   <Link
                     href="#servicios"
@@ -364,7 +364,7 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+              <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base text-white">
                 Síguenos
               </h4>
               <div className="flex space-x-3 sm:space-x-4">
@@ -381,11 +381,11 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 dark:border-gray-700 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-400 text-xs sm:text-sm">
+          <div className="border-t border-gray-700 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-300 dark:text-gray-400 text-xs sm:text-sm">
             <p>&copy; 2025 Oh`Diosa Salón. Todos los derechos reservados.</p>
             <Link
               href="/admin"
-              className="text-gray-600 hover:text-gray-400 mt-2 inline-block"
+              className="text-gray-500 dark:text-gray-600 hover:text-gray-400 mt-2 inline-block"
             >
               Admin
             </Link>
