@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ImageData } from "@/lib/types";
 import { preprocessImage, base64ToDataURL, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
+import Image from "next/image";
 
 export default function ImagenesAdmin() {
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
@@ -58,7 +59,11 @@ export default function ImagenesAdmin() {
     setMessage("");
 
     try {
-      let imageData: { base64Data: string; mimeType: string; size: number } | null = null;
+      let imageData: {
+        base64Data: string;
+        mimeType: string;
+        size: number;
+      } | null = null;
 
       if (uploadedFile) {
         imageData = await preprocessImage(uploadedFile);
@@ -67,8 +72,9 @@ export default function ImagenesAdmin() {
         return;
       }
 
-      const payload = editingImage
-        ? {
+      const payload =
+        editingImage ?
+          {
             _id: editingImage._id,
             nombre: formData.nombre || editingImage.nombre,
             descripcion: formData.descripcion || editingImage.descripcion,
@@ -194,11 +200,12 @@ export default function ImagenesAdmin() {
               key={imagen._id}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
             >
-              <div className="aspect-square bg-gray-200 dark:bg-gray-700">
-                <img
+              <div className="aspect-square bg-gray-200 dark:bg-gray-700 relative">
+                <Image
                   src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
                   alt={`Image: ${imagen.nombre}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
               <div className="p-4">

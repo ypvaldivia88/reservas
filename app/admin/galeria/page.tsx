@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GaleriaItem, ImageData, Categoria, Servicio } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
+import Image from "next/image";
 
 export default function GaleriaAdmin() {
   const [galeria, setGaleria] = useState<GaleriaItem[]>([]);
@@ -30,12 +31,13 @@ export default function GaleriaAdmin() {
 
   const loadData = async () => {
     try {
-      const [resGaleria, resImagenes, resCategorias, resServicios] = await Promise.all([
-        fetch("/api/galeria"),
-        fetch("/api/imagenes"),
-        fetch("/api/categorias"),
-        fetch("/api/servicios"),
-      ]);
+      const [resGaleria, resImagenes, resCategorias, resServicios] =
+        await Promise.all([
+          fetch("/api/galeria"),
+          fetch("/api/imagenes"),
+          fetch("/api/categorias"),
+          fetch("/api/servicios"),
+        ]);
 
       if (resGaleria.ok) {
         const data = await resGaleria.json();
@@ -68,9 +70,8 @@ export default function GaleriaAdmin() {
     setMessage("");
 
     try {
-      const payload = editingItem
-        ? { _id: editingItem._id, ...formData }
-        : formData;
+      const payload =
+        editingItem ? { _id: editingItem._id, ...formData } : formData;
 
       const url = "/api/galeria";
       const method = editingItem ? "PATCH" : "POST";
@@ -217,17 +218,17 @@ export default function GaleriaAdmin() {
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
               >
                 <div className="relative aspect-square bg-gray-200 dark:bg-gray-700">
-                  {imagen ? (
-                    <img
+                  {imagen ?
+                    <Image
                       src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
                       alt={`Gallery image: ${item.titulo}`}
                       className="w-full h-full object-cover"
+                      fill
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
+                  : <div className="w-full h-full flex items-center justify-center text-4xl">
                       🎨
                     </div>
-                  )}
+                  }
                   {item.destacado && (
                     <span className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
                       ⭐ Destacado
@@ -244,12 +245,8 @@ export default function GaleriaAdmin() {
                     </p>
                   )}
                   <div className="text-xs text-gray-500 dark:text-gray-500 mb-3 space-y-1">
-                    {categoria && (
-                      <div>📁 {categoria.nombre}</div>
-                    )}
-                    {servicio && (
-                      <div>💅 {servicio.nombre}</div>
-                    )}
+                    {categoria && <div>📁 {categoria.nombre}</div>}
+                    {servicio && <div>💅 {servicio.nombre}</div>}
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -286,7 +283,9 @@ export default function GaleriaAdmin() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                {editingItem ? "Editar Item de Galería" : "Nuevo Item de Galería"}
+                {editingItem ?
+                  "Editar Item de Galería"
+                : "Nuevo Item de Galería"}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -380,7 +379,10 @@ export default function GaleriaAdmin() {
                       type="checkbox"
                       checked={formData.destacado}
                       onChange={(e) =>
-                        setFormData({ ...formData, destacado: e.target.checked })
+                        setFormData({
+                          ...formData,
+                          destacado: e.target.checked,
+                        })
                       }
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />

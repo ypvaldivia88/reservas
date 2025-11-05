@@ -3,13 +3,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Categoria, ImageData } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
+import Image from "next/image";
 
 export default function CategoriasAdmin() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
+  const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(
+    null
+  );
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
@@ -52,8 +55,9 @@ export default function CategoriasAdmin() {
     setMessage("");
 
     try {
-      const payload = editingCategoria
-        ? { _id: editingCategoria._id, ...formData }
+      const payload =
+        editingCategoria ?
+          { _id: editingCategoria._id, ...formData }
         : formData;
 
       const url = "/api/categorias";
@@ -185,17 +189,17 @@ export default function CategoriasAdmin() {
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
               >
                 <div className="h-40 bg-gray-200 dark:bg-gray-700">
-                  {imagen ? (
-                    <img
+                  {imagen ?
+                    <Image
                       src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
                       alt={`Category image for ${categoria.nombre}`}
                       className="w-full h-full object-cover"
+                      fill
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
+                  : <div className="w-full h-full flex items-center justify-center text-4xl">
                       📁
                     </div>
-                  )}
+                  }
                 </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
@@ -204,9 +208,9 @@ export default function CategoriasAdmin() {
                     </h3>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        categoria.activo
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                        categoria.activo ?
+                          "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                       }`}
                     >
                       {categoria.activo ? "Activo" : "Inactivo"}

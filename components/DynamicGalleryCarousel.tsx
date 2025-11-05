@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ImageData } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
+import Image from "next/image";
 
 export default function DynamicGalleryCarousel() {
   const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
@@ -29,9 +30,11 @@ export default function DynamicGalleryCarousel() {
 
         if (imagenesData.success) {
           const imagenes: ImageData[] = imagenesData.data;
-          
+
           // Filter images that are marked for dashboard gallery
-          const dashboardImages = imagenes.filter(img => img.enGaleriaDashboard);
+          const dashboardImages = imagenes.filter(
+            (img) => img.enGaleriaDashboard
+          );
 
           setGalleryImages(dashboardImages);
         }
@@ -108,7 +111,8 @@ export default function DynamicGalleryCarousel() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 dark:text-gray-400">
-          No hay trabajos en la galería aún. El administrador puede agregar imágenes desde el panel de control.
+          No hay trabajos en la galería aún. El administrador puede agregar
+          imágenes desde el panel de control.
         </p>
       </div>
     );
@@ -151,7 +155,10 @@ export default function DynamicGalleryCarousel() {
             style={{ scrollBehavior: "smooth" }}
           >
             {galleryImages.map((imagen) => {
-              const imageUrl = base64ToDataURL(imagen.base64Data, imagen.mimeType);
+              const imageUrl = base64ToDataURL(
+                imagen.base64Data,
+                imagen.mimeType
+              );
 
               return (
                 <div
@@ -167,7 +174,8 @@ export default function DynamicGalleryCarousel() {
                     setSelected(imageUrl);
                   }}
                   onKeyDown={(e) =>
-                    (e.key === "Enter" || e.key === " ") && setSelected(imageUrl)
+                    (e.key === "Enter" || e.key === " ") &&
+                    setSelected(imageUrl)
                   }
                   className="snap-center flex-shrink-0 group cursor-pointer rounded-2xl overflow-hidden bg-white/5 shadow-sm"
                   style={{
@@ -177,11 +185,12 @@ export default function DynamicGalleryCarousel() {
                   }}
                 >
                   <div className="relative w-full h-full">
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={imagen.titulo || imagen.nombre}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
                       onDragStart={(e) => e.preventDefault()} // prevent image drag interfering with carousel drag
+                      fill
                     />
                     {/* overlay CTA visible on hover */}
                     <div className="absolute inset-0 flex items-end justify-center p-3 pointer-events-none">
@@ -217,10 +226,11 @@ export default function DynamicGalleryCarousel() {
               ✕
             </button>
             <div className="relative w-full h-[70vh] sm:h-[60vh] bg-black">
-              <img
+              <Image
                 src={selected}
                 alt="Foto grande"
                 className="w-full h-full object-contain"
+                fill
               />
             </div>
           </div>

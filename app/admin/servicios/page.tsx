@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Servicio, ImageData } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
+import Image from "next/image";
 
 export default function ServiciosAdmin() {
   const [servicios, setServicios] = useState<Servicio[]>([]);
@@ -54,9 +55,8 @@ export default function ServiciosAdmin() {
     setMessage("");
 
     try {
-      const payload = editingServicio
-        ? { _id: editingServicio._id, ...formData }
-        : formData;
+      const payload =
+        editingServicio ? { _id: editingServicio._id, ...formData } : formData;
 
       const url = "/api/servicios";
       const method = editingServicio ? "PATCH" : "POST";
@@ -191,17 +191,17 @@ export default function ServiciosAdmin() {
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
               >
                 <div className="h-48 bg-gray-200 dark:bg-gray-700">
-                  {imagen ? (
-                    <img
+                  {imagen ?
+                    <Image
                       src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
                       alt={`Service image for ${servicio.nombre}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
+                  : <div className="w-full h-full flex items-center justify-center text-4xl">
                       💅
                     </div>
-                  )}
+                  }
                 </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
@@ -210,9 +210,9 @@ export default function ServiciosAdmin() {
                     </h3>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        servicio.activo
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                        servicio.activo ?
+                          "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                       }`}
                     >
                       {servicio.activo ? "Activo" : "Inactivo"}

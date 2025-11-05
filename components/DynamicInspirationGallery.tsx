@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { ImageData, Categoria } from "@/lib/types";
 import { base64ToDataURL } from "@/lib/imageUtils";
+import Image from "next/image";
 
 // Gallery item card component
 const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
@@ -11,10 +12,11 @@ const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700">
       {/* Image preview */}
       <div className="aspect-square">
-        <img
+        <Image
           src={imageUrl}
           alt={imagen.titulo || imagen.nombre}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          fill
         />
       </div>
 
@@ -28,7 +30,7 @@ const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
             {imagen.descripcion}
           </p>
         )}
-        <span 
+        <span
           role="presentation"
           className="block w-full bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 text-center"
         >

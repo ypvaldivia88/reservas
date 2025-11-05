@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ImageData, Categoria, Servicio } from "@/lib/types";
 import { preprocessImage, base64ToDataURL, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
+import Image from "next/image";
 
 export default function ContenidoAdmin() {
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
@@ -23,10 +24,10 @@ export default function ContenidoAdmin() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showCategoriaModal, setShowCategoriaModal] = useState(false);
   const [showServicioModal, setShowServicioModal] = useState(false);
-  
+
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     nombre: "",
@@ -38,8 +39,14 @@ export default function ContenidoAdmin() {
     servicioIds: [] as string[],
   });
 
-  const [categoriaForm, setCategoriaForm] = useState({ nombre: "", descripcion: "" });
-  const [servicioForm, setServicioForm] = useState({ nombre: "", descripcion: "" });
+  const [categoriaForm, setCategoriaForm] = useState({
+    nombre: "",
+    descripcion: "",
+  });
+  const [servicioForm, setServicioForm] = useState({
+    nombre: "",
+    descripcion: "",
+  });
 
   useEffect(() => {
     loadData();
@@ -101,7 +108,7 @@ export default function ContenidoAdmin() {
 
     try {
       const imageData = await preprocessImage(uploadedFile);
-      
+
       const payload = {
         nombre: formData.nombre,
         titulo: formData.titulo || undefined,
@@ -289,29 +296,37 @@ export default function ContenidoAdmin() {
   };
 
   const toggleCategoria = (id: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      categoriaIds: prev.categoriaIds.includes(id)
-        ? prev.categoriaIds.filter(cid => cid !== id)
-        : [...prev.categoriaIds, id]
+      categoriaIds:
+        prev.categoriaIds.includes(id) ?
+          prev.categoriaIds.filter((cid) => cid !== id)
+        : [...prev.categoriaIds, id],
     }));
   };
 
   const toggleServicio = (id: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      servicioIds: prev.servicioIds.includes(id)
-        ? prev.servicioIds.filter(sid => sid !== id)
-        : [...prev.servicioIds, id]
+      servicioIds:
+        prev.servicioIds.includes(id) ?
+          prev.servicioIds.filter((sid) => sid !== id)
+        : [...prev.servicioIds, id],
     }));
   };
 
   // Filter images based on selected filters
-  const filteredImages = imagenes.filter(imagen => {
-    if (filterCategoria && !(imagen.categoriaIds || []).includes(filterCategoria)) {
+  const filteredImages = imagenes.filter((imagen) => {
+    if (
+      filterCategoria &&
+      !(imagen.categoriaIds || []).includes(filterCategoria)
+    ) {
       return false;
     }
-    if (filterServicio && !(imagen.servicioIds || []).includes(filterServicio)) {
+    if (
+      filterServicio &&
+      !(imagen.servicioIds || []).includes(filterServicio)
+    ) {
       return false;
     }
     if (filterGaleria === "dashboard" && !imagen.enGaleriaDashboard) {
@@ -393,8 +408,10 @@ export default function ContenidoAdmin() {
                 className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Todas las categorías</option>
-                {categorias.map(cat => (
-                  <option key={cat._id} value={cat._id}>{cat.nombre}</option>
+                {categorias.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.nombre}
+                  </option>
                 ))}
               </select>
 
@@ -404,8 +421,10 @@ export default function ContenidoAdmin() {
                 className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Todos los servicios</option>
-                {servicios.map(srv => (
-                  <option key={srv._id} value={srv._id}>{srv.nombre}</option>
+                {servicios.map((srv) => (
+                  <option key={srv._id} value={srv._id}>
+                    {srv.nombre}
+                  </option>
                 ))}
               </select>
             </div>
@@ -441,14 +460,15 @@ export default function ContenidoAdmin() {
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden group"
             >
               {/* Image */}
-              <div 
+              <div
                 className="aspect-square bg-gray-200 dark:bg-gray-700 cursor-pointer relative"
                 onClick={() => openViewModal(imagen)}
               >
-                <img
+                <Image
                   src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
                   alt={imagen.nombre}
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  fill
                 />
                 {/* Gallery badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -475,7 +495,7 @@ export default function ContenidoAdmin() {
                     {imagen.titulo}
                   </p>
                 )}
-                
+
                 {/* Action buttons */}
                 <div className="flex gap-1 mt-2">
                   <button
@@ -537,7 +557,9 @@ export default function ContenidoAdmin() {
                   <input
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
@@ -550,7 +572,9 @@ export default function ContenidoAdmin() {
                   <input
                     type="text"
                     value={formData.titulo}
-                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, titulo: e.target.value })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -561,7 +585,9 @@ export default function ContenidoAdmin() {
                   </label>
                   <textarea
                     value={formData.descripcion}
-                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descripcion: e.target.value })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows={3}
                   />
@@ -576,7 +602,12 @@ export default function ContenidoAdmin() {
                       <input
                         type="checkbox"
                         checked={formData.enGaleriaDashboard}
-                        onChange={(e) => setFormData({ ...formData, enGaleriaDashboard: e.target.checked })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            enGaleriaDashboard: e.target.checked,
+                          })
+                        }
                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -587,7 +618,12 @@ export default function ContenidoAdmin() {
                       <input
                         type="checkbox"
                         checked={formData.enGaleriaInspiracion}
-                        onChange={(e) => setFormData({ ...formData, enGaleriaInspiracion: e.target.checked })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            enGaleriaInspiracion: e.target.checked,
+                          })
+                        }
                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -603,15 +639,20 @@ export default function ContenidoAdmin() {
                       Categorías (opcional)
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {categorias.map(cat => (
-                        <label key={cat._id} className="flex items-center space-x-1 text-sm">
+                      {categorias.map((cat) => (
+                        <label
+                          key={cat._id}
+                          className="flex items-center space-x-1 text-sm"
+                        >
                           <input
                             type="checkbox"
                             checked={formData.categoriaIds.includes(cat._id!)}
                             onChange={() => toggleCategoria(cat._id!)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />
-                          <span className="text-gray-700 dark:text-gray-300">{cat.nombre}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {cat.nombre}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -624,15 +665,20 @@ export default function ContenidoAdmin() {
                       Servicios (opcional)
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {servicios.map(srv => (
-                        <label key={srv._id} className="flex items-center space-x-1 text-sm">
+                      {servicios.map((srv) => (
+                        <label
+                          key={srv._id}
+                          className="flex items-center space-x-1 text-sm"
+                        >
                           <input
                             type="checkbox"
                             checked={formData.servicioIds.includes(srv._id!)}
                             onChange={() => toggleServicio(srv._id!)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />
-                          <span className="text-gray-700 dark:text-gray-300">{srv.nombre}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {srv.nombre}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -640,7 +686,7 @@ export default function ContenidoAdmin() {
                 )}
 
                 {message && <p className="text-sm">{message}</p>}
-                
+
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
@@ -693,7 +739,9 @@ export default function ContenidoAdmin() {
                   <input
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -705,7 +753,9 @@ export default function ContenidoAdmin() {
                   <input
                     type="text"
                     value={formData.titulo}
-                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, titulo: e.target.value })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -716,7 +766,9 @@ export default function ContenidoAdmin() {
                   </label>
                   <textarea
                     value={formData.descripcion}
-                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descripcion: e.target.value })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows={3}
                   />
@@ -731,7 +783,12 @@ export default function ContenidoAdmin() {
                       <input
                         type="checkbox"
                         checked={formData.enGaleriaDashboard}
-                        onChange={(e) => setFormData({ ...formData, enGaleriaDashboard: e.target.checked })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            enGaleriaDashboard: e.target.checked,
+                          })
+                        }
                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -742,7 +799,12 @@ export default function ContenidoAdmin() {
                       <input
                         type="checkbox"
                         checked={formData.enGaleriaInspiracion}
-                        onChange={(e) => setFormData({ ...formData, enGaleriaInspiracion: e.target.checked })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            enGaleriaInspiracion: e.target.checked,
+                          })
+                        }
                         className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -758,15 +820,20 @@ export default function ContenidoAdmin() {
                       Categorías (opcional)
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {categorias.map(cat => (
-                        <label key={cat._id} className="flex items-center space-x-1 text-sm">
+                      {categorias.map((cat) => (
+                        <label
+                          key={cat._id}
+                          className="flex items-center space-x-1 text-sm"
+                        >
                           <input
                             type="checkbox"
                             checked={formData.categoriaIds.includes(cat._id!)}
                             onChange={() => toggleCategoria(cat._id!)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />
-                          <span className="text-gray-700 dark:text-gray-300">{cat.nombre}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {cat.nombre}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -779,15 +846,20 @@ export default function ContenidoAdmin() {
                       Servicios (opcional)
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {servicios.map(srv => (
-                        <label key={srv._id} className="flex items-center space-x-1 text-sm">
+                      {servicios.map((srv) => (
+                        <label
+                          key={srv._id}
+                          className="flex items-center space-x-1 text-sm"
+                        >
                           <input
                             type="checkbox"
                             checked={formData.servicioIds.includes(srv._id!)}
                             onChange={() => toggleServicio(srv._id!)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />
-                          <span className="text-gray-700 dark:text-gray-300">{srv.nombre}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {srv.nombre}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -795,7 +867,7 @@ export default function ContenidoAdmin() {
                 )}
 
                 {message && <p className="text-sm">{message}</p>}
-                
+
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
@@ -822,7 +894,7 @@ export default function ContenidoAdmin() {
 
       {/* View Modal - Full size image */}
       {showViewModal && selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
           onClick={() => setShowViewModal(false)}
         >
@@ -834,10 +906,14 @@ export default function ContenidoAdmin() {
               >
                 ✕ Cerrar
               </button>
-              <img
-                src={base64ToDataURL(selectedImage.base64Data, selectedImage.mimeType)}
+              <Image
+                src={base64ToDataURL(
+                  selectedImage.base64Data,
+                  selectedImage.mimeType
+                )}
                 alt={selectedImage.nombre}
                 className="w-full h-auto rounded-lg"
+                fill
               />
               {(selectedImage.titulo || selectedImage.descripcion) && (
                 <div className="mt-4 bg-white dark:bg-gray-800 p-4 rounded-lg">
@@ -874,7 +950,12 @@ export default function ContenidoAdmin() {
                   <input
                     type="text"
                     value={categoriaForm.nombre}
-                    onChange={(e) => setCategoriaForm({ ...categoriaForm, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setCategoriaForm({
+                        ...categoriaForm,
+                        nombre: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
@@ -885,7 +966,12 @@ export default function ContenidoAdmin() {
                   </label>
                   <textarea
                     value={categoriaForm.descripcion}
-                    onChange={(e) => setCategoriaForm({ ...categoriaForm, descripcion: e.target.value })}
+                    onChange={(e) =>
+                      setCategoriaForm({
+                        ...categoriaForm,
+                        descripcion: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows={2}
                   />
@@ -930,7 +1016,12 @@ export default function ContenidoAdmin() {
                   <input
                     type="text"
                     value={servicioForm.nombre}
-                    onChange={(e) => setServicioForm({ ...servicioForm, nombre: e.target.value })}
+                    onChange={(e) =>
+                      setServicioForm({
+                        ...servicioForm,
+                        nombre: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
@@ -941,7 +1032,12 @@ export default function ContenidoAdmin() {
                   </label>
                   <textarea
                     value={servicioForm.descripcion}
-                    onChange={(e) => setServicioForm({ ...servicioForm, descripcion: e.target.value })}
+                    onChange={(e) =>
+                      setServicioForm({
+                        ...servicioForm,
+                        descripcion: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows={2}
                   />
