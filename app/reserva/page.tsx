@@ -68,9 +68,6 @@ export default function ReservaPage() {
         </div>
       </section>
 
-      {/* Nail Shape Guide */}
-      <NailShapeGuide />
-
       {/* Inspiration Gallery - Now using dynamic data from database */}
       <DynamicInspirationGallery />
 
