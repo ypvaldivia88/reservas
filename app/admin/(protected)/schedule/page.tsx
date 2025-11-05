@@ -1,7 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Schedule, DayOfWeek, DAY_NAMES, AvailabilityOverride } from "@/lib/types";
+import {
+  Schedule,
+  DayOfWeek,
+  DAY_NAMES,
+  AvailabilityOverride,
+} from "@/lib/types";
 import TimePickerInput from "@/components/TimePickerInput";
 
 export default function AdminSchedulePage() {
@@ -10,15 +14,15 @@ export default function AdminSchedulePage() {
   const [message, setMessage] = useState("");
   const [editingDay, setEditingDay] = useState<DayOfWeek | null>(null);
   const [editingSlots, setEditingSlots] = useState<string>("");
+  const [showTimePickerModal, setShowTimePickerModal] = useState(false);
   const [specialDays, setSpecialDays] = useState<AvailabilityOverride[]>([]);
   const [showAddSpecialDay, setShowAddSpecialDay] = useState(false);
   const [newSpecialDay, setNewSpecialDay] = useState({
     date: "",
     reason: "",
     isWorkingDay: false,
-    slots: ""
+    slots: "",
   });
-  const router = useRouter();
 
   useEffect(() => {
     loadSchedule();
@@ -59,18 +63,24 @@ export default function AdminSchedulePage() {
     if (!schedule) return;
 
     const updatedSchedule = { ...schedule };
-    const dayIndex = updatedSchedule.schedule.findIndex(d => d.dayOfWeek === dayOfWeek);
-    
+    const dayIndex = updatedSchedule.schedule.findIndex(
+      (d) => d.dayOfWeek === dayOfWeek
+    );
+
     if (dayIndex >= 0) {
-      updatedSchedule.schedule[dayIndex].isWorkingDay = !updatedSchedule.schedule[dayIndex].isWorkingDay;
-      
+      updatedSchedule.schedule[dayIndex].isWorkingDay =
+        !updatedSchedule.schedule[dayIndex].isWorkingDay;
+
       // Si se activa el día, agregar slots por defecto
-      if (updatedSchedule.schedule[dayIndex].isWorkingDay && updatedSchedule.schedule[dayIndex].slots.length === 0) {
+      if (
+        updatedSchedule.schedule[dayIndex].isWorkingDay &&
+        updatedSchedule.schedule[dayIndex].slots.length === 0
+      ) {
         updatedSchedule.schedule[dayIndex].slots = [
           { time: "08:30", available: true },
           { time: "10:30", available: true },
           { time: "14:00", available: true },
-          { time: "16:00", available: true }
+          { time: "16:00", available: true },
         ];
       }
 
@@ -79,32 +89,61 @@ export default function AdminSchedulePage() {
   };
 
   const handleEditSlots = (dayOfWeek: DayOfWeek) => {
-    const day = schedule?.schedule.find(d => d.dayOfWeek === dayOfWeek);
+    const day = schedule?.schedule.find((d) => d.dayOfWeek === dayOfWeek);
     if (day) {
       setEditingDay(dayOfWeek);
-      setEditingSlots(day.slots.map(s => s.time).join(", "));
+      setEditingSlots("");
+      setShowTimePickerModal(true);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowTimePickerModal(false);
+    setEditingDay(null);
+    setEditingSlots("");
   };
 
   const handleSaveSlots = async () => {
     if (!schedule || !editingDay) return;
 
     const updatedSchedule = { ...schedule };
-    const dayIndex = updatedSchedule.schedule.findIndex(d => d.dayOfWeek === editingDay);
-    
+    const dayIndex = updatedSchedule.schedule.findIndex(
+      (d) => d.dayOfWeek === editingDay
+    );
+
     if (dayIndex >= 0) {
-      const times = editingSlots.split(",").map(t => t.trim()).filter(isValidTime);
-      
-      if (editingSlots.trim() && times.length === 0) {
-        setMessage("❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)");
+      const newTimes = editingSlots
+        .split(",")
+        .map((t) => t.trim())
+        .filter(isValidTime);
+
+      if (editingSlots.trim() && newTimes.length === 0) {
+        setMessage(
+          "❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)"
+        );
         return;
       }
-      
-      updatedSchedule.schedule[dayIndex].slots = times.map(time => ({ time, available: true }));
-      
+
+      // Combinar horarios existentes con nuevos y eliminar duplicados
+      const existingTimes = updatedSchedule.schedule[dayIndex].slots.map(
+        (s) => s.time
+      );
+      const allTimes = [...new Set([...existingTimes, ...newTimes])];
+
+      // Ordenar horarios
+      allTimes.sort((a, b) => {
+        const [aHour, aMin] = a.split(":").map(Number);
+        const [bHour, bMin] = b.split(":").map(Number);
+        return aHour * 60 + aMin - (bHour * 60 + bMin);
+      });
+
+      updatedSchedule.schedule[dayIndex].slots = allTimes.map((time) => ({
+        time,
+        available: true,
+      }));
+
       await saveSchedule(updatedSchedule);
-      setEditingDay(null);
-      setEditingSlots("");
+      handleCloseModal();
     }
   };
 
@@ -112,15 +151,15 @@ export default function AdminSchedulePage() {
     try {
       // Only send the necessary fields to avoid serialization issues
       const schedulePayload = {
-        name: updatedSchedule.name || 'default',
-        description: updatedSchedule.description || '',
-        schedule: updatedSchedule.schedule
+        name: updatedSchedule.name || "default",
+        description: updatedSchedule.description || "",
+        schedule: updatedSchedule.schedule,
       };
 
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(schedulePayload)
+        body: JSON.stringify(schedulePayload),
       });
 
       const data = await res.json();
@@ -139,7 +178,7 @@ export default function AdminSchedulePage() {
 
   const isValidTime = (time: string): boolean => {
     if (!/^\d{2}:\d{2}$/.test(time)) return false;
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] = time.split(":").map(Number);
     return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
   };
 
@@ -150,12 +189,22 @@ export default function AdminSchedulePage() {
     }
 
     try {
-      const slotsArray = newSpecialDay.isWorkingDay && newSpecialDay.slots
-        ? newSpecialDay.slots.split(",").map(t => t.trim()).filter(isValidTime)
+      const slotsArray =
+        newSpecialDay.isWorkingDay && newSpecialDay.slots ?
+          newSpecialDay.slots
+            .split(",")
+            .map((t) => t.trim())
+            .filter(isValidTime)
         : [];
 
-      if (newSpecialDay.isWorkingDay && newSpecialDay.slots && slotsArray.length === 0) {
-        setMessage("❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)");
+      if (
+        newSpecialDay.isWorkingDay &&
+        newSpecialDay.slots &&
+        slotsArray.length === 0
+      ) {
+        setMessage(
+          "❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)"
+        );
         return;
       }
 
@@ -166,15 +215,20 @@ export default function AdminSchedulePage() {
           date: newSpecialDay.date,
           reason: newSpecialDay.reason,
           isWorkingDay: newSpecialDay.isWorkingDay,
-          slots: slotsArray.map(time => ({ time, available: true }))
-        })
+          slots: slotsArray.map((time) => ({ time, available: true })),
+        }),
       });
 
       const data = await res.json();
       if (data.success) {
         setMessage("✅ Día especial creado exitosamente");
         setShowAddSpecialDay(false);
-        setNewSpecialDay({ date: "", reason: "", isWorkingDay: false, slots: "" });
+        setNewSpecialDay({
+          date: "",
+          reason: "",
+          isWorkingDay: false,
+          slots: "",
+        });
         await loadSpecialDays();
         setTimeout(() => setMessage(""), 3000);
       } else {
@@ -193,7 +247,7 @@ export default function AdminSchedulePage() {
 
     try {
       const res = await fetch(`/api/special-days?date=${date}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
 
       const data = await res.json();
@@ -212,13 +266,13 @@ export default function AdminSchedulePage() {
 
   const formatDate = (dateString: string) => {
     // Parse date string (YYYY-MM-DD) correctly to avoid timezone issues
-    const [year, month, day] = dateString.split('-').map(Number);
+    const [year, month, day] = dateString.split("-").map(Number);
     const date = new Date(year, month - 1, day);
-    return new Intl.DateTimeFormat('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Intl.DateTimeFormat("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
   };
 
@@ -227,7 +281,9 @@ export default function AdminSchedulePage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-gray-300">Cargando horarios...</p>
+          <p className="text-gray-700 dark:text-gray-300">
+            Cargando horarios...
+          </p>
         </div>
       </div>
     );
@@ -237,61 +293,56 @@ export default function AdminSchedulePage() {
     <>
       {/* Mensaje */}
       {message && (
-        <div className={`mb-6 p-4 rounded-lg ${message.includes("✅") ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"}`}>
+        <div
+          className={`mb-6 p-4 rounded-lg ${message.includes("✅") ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"}`}
+        >
           {message}
         </div>
       )}
 
-      {/* Instrucciones */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">📋 Información</h2>
-        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-          <li>• Activa/desactiva días hábiles con el interruptor</li>
-          <li>• Haz clic en &quot;Editar Horarios&quot; para personalizar los slots de tiempo</li>
-          <li>• Usa el selector de hora para agregar horarios fácilmente desde tu móvil</li>
-          <li>• Los horarios se agregan ordenados automáticamente</li>
-          <li>• Por defecto: Martes a Sábado, 8:30am, 10:30am, 2:00pm, 4:00pm</li>
-        </ul>
-      </div>
-
       {/* Tabla de Horarios */}
-      <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-200 dark:border-white/20">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Horario Semanal</h2>
+      <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-lg overflow-hidden mb-6 sm:mb-8 border border-gray-200 dark:border-white/20">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+            Horario Semanal
+          </h2>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Día
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Horarios Disponibles
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Acciones
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Horarios
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {schedule?.schedule.map((day) => (
-                <tr key={day.dayOfWeek} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr
+                  key={day.dayOfWeek}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                >
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {DAY_NAMES[day.dayOfWeek]}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                     <button
                       onClick={() => handleToggleWorkingDay(day.dayOfWeek)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        day.isWorkingDay ? "bg-green-600" : "bg-gray-300 dark:bg-gray-600"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${
+                        day.isWorkingDay ? "bg-green-600" : (
+                          "bg-gray-300 dark:bg-gray-600"
+                        )
                       }`}
+                      aria-label={`${day.isWorkingDay ? "Desactivar" : "Activar"} ${DAY_NAMES[day.dayOfWeek]}`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -299,63 +350,70 @@ export default function AdminSchedulePage() {
                         }`}
                       />
                     </button>
-                    <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
-                      {day.isWorkingDay ? "Activo" : "Inactivo"}
-                    </span>
                   </td>
-                  <td className="px-6 py-4">
-                    {editingDay === day.dayOfWeek ? (
-                      <div className="space-y-3">
-                        <TimePickerInput
-                          value={editingSlots}
-                          onChange={setEditingSlots}
-                          placeholder="Seleccione un horario"
-                          className="w-full"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSaveSlots}
-                            className="flex-1 sm:flex-none px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium touch-manipulation min-h-[44px]"
-                          >
-                            ✓ Guardar
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingDay(null);
-                              setEditingSlots("");
-                            }}
-                            className="flex-1 sm:flex-none px-4 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium touch-manipulation min-h-[44px]"
-                          >
-                            ✕ Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {day.slots.length > 0 ? (
-                          day.slots.map((slot, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                            >
-                              {slot.time}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Sin horarios</span>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {day.isWorkingDay && editingDay !== day.dayOfWeek && (
-                      <button
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    {day.isWorkingDay ?
+                      <div
                         onClick={() => handleEditSlots(day.dayOfWeek)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium touch-manipulation min-h-[44px] px-2"
+                        className="w-full text-left touch-manipulation min-h-[44px] flex items-center cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleEditSlots(day.dayOfWeek);
+                          }
+                        }}
                       >
-                        ✏️ Editar Horarios
-                      </button>
-                    )}
+                        {day.slots.length > 0 ?
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full">
+                            {day.slots.map((slot, idx) => (
+                              <div
+                                key={idx}
+                                className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                              >
+                                <span>{slot.time}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newSlots = day.slots.filter(
+                                      (_, i) => i !== idx
+                                    );
+                                    const updatedSchedule = { ...schedule };
+                                    const dayIndex =
+                                      updatedSchedule.schedule.findIndex(
+                                        (d) => d.dayOfWeek === day.dayOfWeek
+                                      );
+                                    if (dayIndex >= 0) {
+                                      updatedSchedule.schedule[dayIndex].slots =
+                                        newSlots;
+                                      saveSchedule(updatedSchedule);
+                                    }
+                                  }}
+                                  className="ml-1.5 sm:ml-2 text-blue-800 dark:text-blue-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                  title="Eliminar horario"
+                                  aria-label={`Eliminar horario ${slot.time}`}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">
+                              <span>+</span>
+                            </div>
+                          </div>
+                        : <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                            <span>Sin horarios</span>
+                            <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">
+                              +
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    : <span className="text-sm text-gray-400 dark:text-gray-500 italic">
+                        Cerrado
+                      </span>
+                    }
                   </td>
                 </tr>
               ))}
@@ -363,6 +421,58 @@ export default function AdminSchedulePage() {
           </table>
         </div>
       </div>
+
+      {/* Modal de Time Picker */}
+      {showTimePickerModal && editingDay && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                {DAY_NAMES[editingDay]}
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Agregar nuevo horario
+              </label>
+              <TimePickerInput
+                value={editingSlots}
+                onChange={setEditingSlots}
+                placeholder="00:00"
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Gestión de fechas especiales */}
       <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-white/20">
@@ -379,7 +489,8 @@ export default function AdminSchedulePage() {
         </div>
 
         <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
-          Configura horarios especiales para días específicos (feriados, eventos, cierres temporales, etc.)
+          Configura horarios especiales para días específicos (feriados,
+          eventos, cierres temporales, etc.)
         </p>
 
         {/* Formulario para agregar día especial */}
@@ -393,9 +504,11 @@ export default function AdminSchedulePage() {
                 <input
                   type="date"
                   value={newSpecialDay.date}
-                  onChange={(e) => setNewSpecialDay({ ...newSpecialDay, date: e.target.value })}
+                  onChange={(e) =>
+                    setNewSpecialDay({ ...newSpecialDay, date: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  min={new Date().toISOString().split('T')[0]}
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
               <div>
@@ -405,19 +518,30 @@ export default function AdminSchedulePage() {
                 <input
                   type="text"
                   value={newSpecialDay.reason}
-                  onChange={(e) => setNewSpecialDay({ ...newSpecialDay, reason: e.target.value })}
+                  onChange={(e) =>
+                    setNewSpecialDay({
+                      ...newSpecialDay,
+                      reason: e.target.value,
+                    })
+                  }
                   placeholder="Ej: Feriado, Evento especial"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
-            
+
             <div className="mt-4">
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   checked={newSpecialDay.isWorkingDay}
-                  onChange={(e) => setNewSpecialDay({ ...newSpecialDay, isWorkingDay: e.target.checked, slots: e.target.checked ? newSpecialDay.slots : "" })}
+                  onChange={(e) =>
+                    setNewSpecialDay({
+                      ...newSpecialDay,
+                      isWorkingDay: e.target.checked,
+                      slots: e.target.checked ? newSpecialDay.slots : "",
+                    })
+                  }
                   className="w-4 h-4 text-blue-600 rounded"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -433,7 +557,9 @@ export default function AdminSchedulePage() {
                 </label>
                 <TimePickerInput
                   value={newSpecialDay.slots}
-                  onChange={(value) => setNewSpecialDay({ ...newSpecialDay, slots: value })}
+                  onChange={(value) =>
+                    setNewSpecialDay({ ...newSpecialDay, slots: value })
+                  }
                   placeholder="Seleccione horarios"
                   className="w-full"
                 />
@@ -452,14 +578,13 @@ export default function AdminSchedulePage() {
         )}
 
         {/* Lista de días especiales */}
-        {specialDays.length === 0 ? (
+        {specialDays.length === 0 ?
           <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               No hay días especiales configurados
             </p>
           </div>
-        ) : (
-          <div className="space-y-3">
+        : <div className="space-y-3">
             {specialDays.map((day) => (
               <div
                 key={day._id || day.date}
@@ -470,11 +595,13 @@ export default function AdminSchedulePage() {
                     <span className="text-lg font-semibold text-gray-900 dark:text-white">
                       {formatDate(day.date)}
                     </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      day.isWorkingDay 
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        day.isWorkingDay ?
+                          "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
                         : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                    }`}>
+                      }`}
+                    >
                       {day.isWorkingDay ? "Día laborable" : "Cerrado"}
                     </span>
                   </div>
@@ -507,7 +634,7 @@ export default function AdminSchedulePage() {
               </div>
             ))}
           </div>
-        )}
+        }
       </div>
     </>
   );
