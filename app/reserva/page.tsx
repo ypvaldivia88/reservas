@@ -2,14 +2,10 @@ import Image from "next/image";
 import ReservaForm from "@/components/ReservaForm";
 import NailShapeGuide from "@/components/NailShapeGuide";
 import DynamicInspirationGallery from "@/components/DynamicInspirationGallery";
-import Header from "@/components/Header";
 
 export default function ReservaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
-      {/* Header */}
-      <Header isHomePage={false} />
-
       {/* Hero Section - Mobile First */}
       <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">

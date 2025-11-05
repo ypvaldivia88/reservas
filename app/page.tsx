@@ -3,15 +3,11 @@ import Image from "next/image";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import StatsSection from "@/components/StatsSection";
 import ProcessSection from "@/components/ProcessSection";
-import Header from "@/components/Header";
 import DynamicGalleryCarousel from "@/components/DynamicGalleryCarousel";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
-      {/* Header */}
-      <Header isHomePage={true} />
-
       {/* Hero Section - Mobile First */}
       <section className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-[url('/main.avif')] bg-center bg-cover bg-no-repeat">
         {/* overlay to improve text contrast */}
