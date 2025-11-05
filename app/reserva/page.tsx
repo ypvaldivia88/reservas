@@ -129,39 +129,51 @@ export default function ReservaPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
-            <a
-              href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
+              <a
+                href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl sm:text-2xl">📞</span>
+                  <div className="text-left">
+                    <p className="font-semibold text-sm sm:text-base">
+                      Llámanos
+                    </p>
+                    <p className="opacity-90 text-sm sm:text-base">
+                      +5 (363) 233-073
+                    </p>
+                  </div>
+                </div>
+              </a>
+
+              <a
+                href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl sm:text-2xl">💬</span>
+                  <div className="text-left">
+                    <p className="font-semibold text-sm sm:text-base">
+                      WhatsApp
+                    </p>
+                    <p className="opacity-90 text-sm sm:text-base">
+                      Respuesta inmediata
+                    </p>
+                  </div>
+                </div>
+              </a>
+
               <div className="flex items-center space-x-3">
-                <span className="text-xl sm:text-2xl">📞</span>
+                <span className="text-xl sm:text-2xl">🕒</span>
                 <div className="text-left">
-                  <p className="font-semibold text-sm sm:text-base">Llámanos</p>
+                  <p className="font-semibold text-sm sm:text-base">Horarios</p>
                   <p className="opacity-90 text-sm sm:text-base">
-                    +5 (363) 233-073
+                    Mar-Sáb: 8:30AM-6:00PM
                   </p>
                 </div>
-              </div>
-            </a>
-
-            <div className="flex items-center space-x-3">
-              <span className="text-xl sm:text-2xl">💬</span>
-              <div className="text-left">
-                <p className="font-semibold text-sm sm:text-base">WhatsApp</p>
-                <p className="opacity-90 text-sm sm:text-base">
-                  Respuesta inmediata
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <span className="text-xl sm:text-2xl">🕒</span>
-              <div className="text-left">
-                <p className="font-semibold text-sm sm:text-base">Horarios</p>
-                <p className="opacity-90 text-sm sm:text-base">
-                  Mar-Dom: 8:30AM-6:00PM
-                </p>
               </div>
             </div>
           </div>
