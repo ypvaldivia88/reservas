@@ -10,12 +10,7 @@ import {
   User,
 } from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
-import {
-  openWhatsAppNotification,
-  openConsultExpertWhatsApp,
-  openSendReferenceWhatsApp,
-  openCustomDesignWhatsApp,
-} from "@/lib/whatsapp";
+import { openWhatsAppNotification } from "@/lib/whatsapp";
 
 interface FormErrors {
   nombre?: string;
@@ -242,43 +237,7 @@ export default function ReservaForm() {
     );
   }, []);
 
-  // WhatsApp button handlers
-  const handleConsultExpert = useCallback(() => {
-    if (!form.nombre.trim()) {
-      setMensaje("Por favor ingresa tu nombre antes de consultar");
-      return;
-    }
-    if (!form.telefono.trim()) {
-      setMensaje("Por favor ingresa tu teléfono antes de consultar");
-      return;
-    }
-    openConsultExpertWhatsApp(form.nombre, form.telefono);
-  }, [form.nombre, form.telefono]);
-
-  const handleSendReference = useCallback(() => {
-    if (!form.nombre.trim()) {
-      setMensaje("Por favor ingresa tu nombre antes de enviar referencia");
-      return;
-    }
-    if (!form.telefono.trim()) {
-      setMensaje("Por favor ingresa tu teléfono antes de enviar referencia");
-      return;
-    }
-    openSendReferenceWhatsApp(form.nombre, form.telefono);
-  }, [form.nombre, form.telefono]);
-
-  const handleCustomDesign = useCallback(() => {
-    if (!form.nombre.trim()) {
-      setMensaje("Por favor ingresa tu nombre antes de consultar diseño");
-      return;
-    }
-    if (!form.telefono.trim()) {
-      setMensaje("Por favor ingresa tu teléfono antes de consultar diseño");
-      return;
-    }
-    openCustomDesignWhatsApp(form.nombre, form.telefono);
-  }, [form.nombre, form.telefono]);
-
+  // button handlers
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -470,7 +429,7 @@ export default function ReservaForm() {
                           {clientInfo.reservasActivas.length > 1 ? "s" : ""}:
                         </p>
                         <div className="space-y-2">
-                          {clientInfo.reservasActivas.map((reserva, index) => (
+                          {clientInfo.reservasActivas.map((reserva) => (
                             <div
                               key={reserva._id}
                               className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-2 rounded border border-blue-200 dark:border-blue-700"
