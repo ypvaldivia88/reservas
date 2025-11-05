@@ -10,7 +10,10 @@ import {
   User,
 } from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
-import { openWhatsAppNotification } from "@/lib/whatsapp";
+import {
+  openWhatsAppNotification,
+  openClientCancellationWhatsApp,
+} from "@/lib/whatsapp";
 
 interface FormErrors {
   nombre?: string;
@@ -82,6 +85,14 @@ export default function ReservaForm() {
     reservasActivas: Reserva[];
   } | null>(null);
   const [showClientInfo, setShowClientInfo] = useState(false);
+
+  // Cancellation modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [reservaToCancelId, setReservaToCancelId] = useState<string | null>(
+    null
+  );
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const validateField = useCallback(
     (name: keyof ReservaFormData, value: string): string | undefined => {
@@ -361,6 +372,83 @@ export default function ReservaForm() {
     }
   };
 
+  const handleCancelReservation = useCallback((reservaId: string) => {
+    setReservaToCancelId(reservaId);
+    setShowCancelModal(true);
+    setCancellationReason("");
+  }, []);
+
+  const confirmCancellation = useCallback(async () => {
+    if (!reservaToCancelId || !clientInfo) return;
+
+    setIsCancelling(true);
+
+    try {
+      // Find the reservation to cancel
+      const reserva = clientInfo.reservasActivas.find(
+        (r) => r._id === reservaToCancelId
+      );
+
+      if (!reserva) {
+        setMensaje("Error: Reserva no encontrada");
+        return;
+      }
+
+      // Update reservation status to cancelled
+      const res = await fetch(`/api/reservas/${reservaToCancelId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ estado: "cancelada" }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data: ApiResponse = await res.json();
+
+      if (data.success) {
+        // Open WhatsApp to notify admin
+        setTimeout(() => {
+          openClientCancellationWhatsApp(
+            {
+              nombre: reserva.nombre,
+              telefono: reserva.telefono,
+              fechaCita: reserva.fechaCita,
+              horaCita: reserva.horaCita,
+              forma: reserva.forma,
+              largo: reserva.largo,
+              decoracion: reserva.decoracion,
+            },
+            reservaToCancelId,
+            cancellationReason.trim() || undefined
+          );
+        }, 500);
+
+        // Update local state to remove cancelled reservation
+        setClientInfo((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            reservasActivas: prev.reservasActivas.filter(
+              (r) => r._id !== reservaToCancelId
+            ),
+          };
+        });
+
+        setMensaje(
+          "Reserva cancelada exitosamente. Abriendo WhatsApp para notificar al admin..."
+        );
+        setShowCancelModal(false);
+        setReservaToCancelId(null);
+        setCancellationReason("");
+      } else {
+        setMensaje(data.message || "Error al cancelar la reserva");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setMensaje("Error de conexión al cancelar la reserva");
+    } finally {
+      setIsCancelling(false);
+    }
+  }, [reservaToCancelId, clientInfo, cancellationReason]);
+
   const formaDescriptions = {
     coffin: "Rectangular con punta redondeada, elegante y moderna",
     almond: "Forma ovalada puntiaguda que alarga los dedos",
@@ -559,26 +647,43 @@ export default function ReservaForm() {
                             {clientInfo.reservasActivas.map((reserva) => (
                               <div
                                 key={reserva._id}
-                                className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-2 rounded border border-blue-200 dark:border-blue-700"
+                                className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-3 rounded border border-blue-200 dark:border-blue-700"
                               >
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <span className="font-medium text-gray-900 dark:text-white">
-                                      {reserva.fechaCita} a las{" "}
-                                      {reserva.horaCita}
-                                    </span>
-                                    <span
-                                      className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                                        reserva.estado === "confirmada" ?
-                                          "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                                        : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
-                                      }`}
-                                    >
-                                      {reserva.estado === "confirmada" ?
-                                        "✓ Confirmada"
-                                      : "⏳ Pendiente"}
-                                    </span>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                                      <span className="font-medium text-gray-900 dark:text-white">
+                                        {reserva.fechaCita} a las{" "}
+                                        {reserva.horaCita}
+                                      </span>
+                                      <span
+                                        className={`px-2 py-0.5 rounded text-xs ${
+                                          reserva.estado === "confirmada" ?
+                                            "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                                          : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
+                                        }`}
+                                      >
+                                        {reserva.estado === "confirmada" ?
+                                          "✓ Confirmada"
+                                        : "⏳ Pendiente"}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                                      {reserva.forma} • Largo #{reserva.largo}
+                                      {reserva.decoracion &&
+                                        ` • ${reserva.decoracion}`}
+                                    </p>
                                   </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleCancelReservation(reserva._id!)
+                                    }
+                                    className="flex items-center justify-center gap-1 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-xs font-medium whitespace-nowrap"
+                                  >
+                                    <span>🗑️</span>
+                                    <span>Cancelar</span>
+                                  </button>
                                 </div>
                               </div>
                             ))}
@@ -1070,8 +1175,8 @@ export default function ReservaForm() {
                     </h4>
                     <ul className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 space-y-1">
                       <li>
-                        • Te contactaremos en las próximas horas para
-                        confirmar tu cita
+                        • Te contactaremos en las próximas horas para confirmar
+                        tu cita
                       </li>
                       <li>
                         • Duración aproximada: 60-90 minutos según el servicio
@@ -1152,6 +1257,79 @@ export default function ReservaForm() {
           )}
         </form>
       </div>
+
+      {/* Cancellation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+            <div className="flex items-start mb-4">
+              <span className="text-4xl mr-3">⚠️</span>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Cancelar Reserva
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  ¿Estás seguro que deseas cancelar esta reserva? Esta acción
+                  notificará al administrador.
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="cancellationReason"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Motivo de cancelación (opcional)
+              </label>
+              <textarea
+                id="cancellationReason"
+                rows={3}
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                placeholder="Ej: Surgió un compromiso, necesito reagendar, etc."
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-red-300 dark:focus:border-red-500 resize-none transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm"
+                disabled={isCancelling}
+              />
+            </div>
+
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
+              <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                💡 <strong>Nota:</strong> Al confirmar, se abrirá WhatsApp para
+                notificar al administrador sobre tu solicitud de cancelación.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setReservaToCancelId(null);
+                  setCancellationReason("");
+                }}
+                disabled={isCancelling}
+                className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancellation}
+                disabled={isCancelling}
+                className="flex-1 px-4 py-3 bg-red-600 dark:bg-red-500 text-white rounded-xl font-semibold hover:bg-red-700 dark:hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCancelling ?
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Cancelando...
+                  </span>
+                : "Sí, Cancelar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {

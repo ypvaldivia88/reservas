@@ -299,3 +299,63 @@ export function openCustomDesignWhatsApp(
   }
 }
 
+/**
+ * Generate WhatsApp link for client to notify admin about cancellation
+ * @param reserva - Reservation details
+ * @param reservaId - ID of the reservation
+ * @param motivo - Optional reason for cancellation
+ * @returns WhatsApp URL
+ */
+export function generateClientCancellationWhatsAppLink(
+  reserva: ReservaDetails,
+  reservaId: string,
+  motivo?: string
+): string {
+  // Build the admin link
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const adminLink = `${baseUrl}/admin/dashboard?reserva=${reservaId}`;
+  
+  // Build the message
+  const message = `❌ *Solicitud de Cancelación de Reserva*
+
+👤 *Cliente:* ${reserva.nombre}
+📞 *Teléfono:* ${reserva.telefono}
+📅 *Fecha:* ${reserva.fechaCita}
+🕐 *Hora:* ${reserva.horaCita}
+💅 *Forma:* ${reserva.forma}
+📏 *Largo:* ${reserva.largo}
+${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
+${motivo ? `\n📝 *Motivo:* ${motivo}` : ''}
+
+🔗 *Gestionar reserva:*
+${adminLink}
+
+_El cliente solicita cancelar esta reserva. Click en el link para procesar la cancelación._`;
+
+  // Encode the message for URL
+  const encodedMessage = encodeURIComponent(message);
+  
+  // Generate WhatsApp link
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
+  
+  return whatsappLink;
+}
+
+/**
+ * Open WhatsApp to notify admin about client cancellation
+ * @param reserva - Reservation details
+ * @param reservaId - ID of the reservation
+ * @param motivo - Optional reason for cancellation
+ */
+export function openClientCancellationWhatsApp(
+  reserva: ReservaDetails,
+  reservaId: string,
+  motivo?: string
+): void {
+  const whatsappLink = generateClientCancellationWhatsAppLink(reserva, reservaId, motivo);
+  
+  if (typeof window !== 'undefined') {
+    window.open(whatsappLink, '_blank');
+  }
+}
+
