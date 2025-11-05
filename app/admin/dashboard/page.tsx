@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
 import AdminNav from "@/components/AdminNav";
+import ThemeToggle from "@/components/ThemeToggle";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
 
 // Componente interno que usa useSearchParams
@@ -287,9 +288,9 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-violet-900 dark:from-gray-950 dark:via-purple-950 dark:to-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-900 to-blue-900 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-400 border-t-transparent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent mx-auto mb-4"></div>
           <p className="text-white dark:text-gray-300 font-medium">Cargando dashboard...</p>
         </div>
       </div>
@@ -297,26 +298,27 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-violet-900 dark:from-gray-950 dark:via-purple-950 dark:to-gray-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950">
       {/* Header */}
-      <header className="glass-strong sticky top-0 z-50 border-b border-white/10">
+      <header className="glass-strong sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-br from-purple-400 to-pink-400 p-3 rounded-xl shadow-lg">
+              <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-3 rounded-xl shadow-lg">
                 <span className="text-2xl">💎</span>
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white">
                   Panel Administrador
                 </h1>
-                <p className="text-purple-200 text-sm">Beauty Salon Management</p>
+                <p className="text-blue-200 text-sm">Beauty Salon Management</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-center">
+              <ThemeToggle />
               <button
                 onClick={() => setShowChangePassword(!showChangePassword)}
-                className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 touch-manipulation min-h-[44px] whitespace-nowrap"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg hover:from-blue-700 hover:to-blue-500 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 touch-manipulation min-h-[44px] whitespace-nowrap"
               >
                 <span className="hidden sm:inline">🔑 Cambiar Contraseña</span>
                 <span className="sm:hidden">🔑</span>
@@ -338,7 +340,7 @@ function DashboardContent() {
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Global Action Message */}
         {actionMessage && (
-          <div className="mb-6 p-4 glass-strong rounded-xl border-l-4 border-purple-400 shadow-lg animate-fadeInUp">
+          <div className="mb-6 p-4 glass-strong rounded-xl border-l-4 border-blue-400 shadow-lg animate-fadeInUp">
             <p className="text-center text-sm font-semibold text-white">{actionMessage}</p>
           </div>
         )}
@@ -352,27 +354,27 @@ function DashboardContent() {
             </h2>
             <form onSubmit={handleChangePassword} className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-purple-200 mb-3">
+                <label className="block text-sm font-semibold text-blue-200 mb-3">
                   Contraseña Actual
                 </label>
                 <input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50 transition-all"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50 transition-all"
                   placeholder="Ingresa tu contraseña actual"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-purple-200 mb-3">
+                <label className="block text-sm font-semibold text-blue-200 mb-3">
                   Nueva Contraseña
                 </label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50 transition-all"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50 transition-all"
                   placeholder="Mínimo 8 caracteres"
                   minLength={8}
                   required
@@ -385,7 +387,7 @@ function DashboardContent() {
               )}
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-500 text-white rounded-xl hover:from-blue-600 hover:to-blue-600 transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
                 Actualizar Contraseña
               </button>
@@ -398,7 +400,7 @@ function DashboardContent() {
           <div className="group glass-strong rounded-2xl shadow-xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
                   Total Reservas
                 </p>
                 <p className="text-4xl font-bold text-white">
@@ -413,7 +415,7 @@ function DashboardContent() {
           <div className="group glass-strong rounded-2xl shadow-xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
                   Total Clientes
                 </p>
                 <p className="text-4xl font-bold text-white">
@@ -428,7 +430,7 @@ function DashboardContent() {
           <div className="group glass-strong rounded-2xl shadow-xl p-6 border border-white/20 hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
                   Pendientes
                 </p>
                 <p className="text-4xl font-bold text-white">
@@ -452,25 +454,25 @@ function DashboardContent() {
             <table className="w-full min-w-full">
               <thead>
                 <tr className="border-b-2 border-white/20">
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider hidden sm:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden sm:table-cell">
                     Teléfono
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden md:table-cell">
                     Forma
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden md:table-cell">
                     Largo
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Fecha Cita
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -487,13 +489,13 @@ function DashboardContent() {
                     <td className="px-4 py-4 text-sm font-medium text-white">
                       {reserva.nombre}
                     </td>
-                    <td className="px-4 py-4 text-sm text-purple-200 hidden sm:table-cell">
+                    <td className="px-4 py-4 text-sm text-blue-200 hidden sm:table-cell">
                       {reserva.telefono}
                     </td>
-                    <td className="px-4 py-4 text-sm text-purple-200 hidden md:table-cell capitalize">
+                    <td className="px-4 py-4 text-sm text-blue-200 hidden md:table-cell capitalize">
                       {reserva.forma}
                     </td>
-                    <td className="px-4 py-4 text-sm text-purple-200 hidden md:table-cell">
+                    <td className="px-4 py-4 text-sm text-blue-200 hidden md:table-cell">
                       {reserva.largo}
                     </td>
                     <td className="px-4 py-4 text-sm">
@@ -511,10 +513,10 @@ function DashboardContent() {
                         {reserva.estado}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-purple-200">
+                    <td className="px-4 py-4 text-sm text-blue-200">
                       <div className="flex flex-col">
                         <span className="font-medium">{reserva.fechaCita}</span>
-                        <span className="text-xs text-purple-300">{reserva.horaCita}</span>
+                        <span className="text-xs text-blue-300">{reserva.horaCita}</span>
                       </div>
                     </td>
                     <td
@@ -602,16 +604,16 @@ function DashboardContent() {
           </h2>
           <button
             onClick={() => router.push("/admin/contenido")}
-            className="group w-full p-6 sm:p-8 bg-gradient-to-br from-purple-600/30 to-pink-600/30 hover:from-purple-600/50 hover:to-pink-600/50 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 text-left relative overflow-hidden"
+            className="group w-full p-6 sm:p-8 bg-gradient-to-br from-blue-600/30 to-blue-600/30 hover:from-blue-600/50 hover:to-blue-600/50 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 text-left relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400/0 via-pink-400/10 to-purple-400/0 group-hover:via-pink-400/20 transition-all"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 group-hover:via-blue-400/20 transition-all"></div>
             <div className="relative flex items-center justify-between">
               <div>
                 <div className="text-5xl mb-4">💅</div>
                 <h3 className="text-xl font-bold text-white mb-2">
                   Gestión Unificada de Contenido
                 </h3>
-                <p className="text-sm text-purple-200">
+                <p className="text-sm text-blue-200">
                   Administra imágenes, galerías, categorías y servicios en un solo lugar
                 </p>
               </div>
@@ -640,16 +642,16 @@ function DashboardContent() {
             <table className="w-full min-w-full">
               <thead>
                 <tr className="border-b-2 border-white/20">
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Nombre
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Teléfono
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider hidden sm:table-cell">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider hidden sm:table-cell">
                     Fecha Registro
                   </th>
-                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-purple-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -666,10 +668,10 @@ function DashboardContent() {
                     <td className="px-4 py-4 text-sm font-medium text-white">
                       {cliente.nombre}
                     </td>
-                    <td className="px-4 py-4 text-sm text-purple-200">
+                    <td className="px-4 py-4 text-sm text-blue-200">
                       {cliente.telefono}
                     </td>
-                    <td className="px-4 py-4 text-sm text-purple-200 hidden sm:table-cell">
+                    <td className="px-4 py-4 text-sm text-blue-200 hidden sm:table-cell">
                       {cliente.fechaCreacion ?
                         new Date(cliente.fechaCreacion).toLocaleDateString()
                       : "-"}
@@ -710,7 +712,7 @@ function DashboardContent() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Nombre
                   </label>
                   <input
@@ -722,12 +724,12 @@ function DashboardContent() {
                         nombre: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Teléfono
                   </label>
                   <input
@@ -739,12 +741,12 @@ function DashboardContent() {
                         telefono: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Forma
                   </label>
                   <select
@@ -759,7 +761,7 @@ function DashboardContent() {
                           | "square",
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white"
                   >
                     <option value="coffin" className="bg-gray-800">Coffin</option>
                     <option value="almond" className="bg-gray-800">Almond</option>
@@ -768,7 +770,7 @@ function DashboardContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Largo
                   </label>
                   <input
@@ -782,12 +784,12 @@ function DashboardContent() {
                         largo: parseInt(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Fecha Cita
                   </label>
                   <input
@@ -799,12 +801,12 @@ function DashboardContent() {
                         fechaCita: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Hora Cita
                   </label>
                   <input
@@ -816,12 +818,12 @@ function DashboardContent() {
                         horaCita: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Estado
                   </label>
                   <select
@@ -836,7 +838,7 @@ function DashboardContent() {
                           | "completada",
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white"
                   >
                     <option value="pendiente" className="bg-gray-800">Pendiente</option>
                     <option value="confirmada" className="bg-gray-800">Confirmada</option>
@@ -845,7 +847,7 @@ function DashboardContent() {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-purple-200 mb-2">
+                  <label className="block text-sm font-semibold text-blue-200 mb-2">
                     Decoración
                   </label>
                   <textarea
@@ -856,14 +858,14 @@ function DashboardContent() {
                         decoracion: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                     rows={3}
                   />
                 </div>
                 {(editingReserva.estado === "completada" ||
                   editingReserva.estado === "confirmada") && (
                   <div>
-                    <label className="block text-sm font-semibold text-purple-200 mb-2">
+                    <label className="block text-sm font-semibold text-blue-200 mb-2">
                       Costo{" "}
                       {editingReserva.estado === "completada" ?
                         "(requerido)"
@@ -883,7 +885,7 @@ function DashboardContent() {
                             : undefined,
                         })
                       }
-                      className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                      className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                       required={editingReserva.estado === "completada"}
                     />
                   </div>
@@ -893,7 +895,7 @@ function DashboardContent() {
               {/* Quick Action Buttons */}
               {editingReserva.estado === "pendiente" && (
                 <div className="border-t-2 border-white/20 pt-6">
-                  <h4 className="text-sm font-bold text-purple-200 mb-4 uppercase tracking-wide">
+                  <h4 className="text-sm font-bold text-blue-200 mb-4 uppercase tracking-wide">
                     Acciones Rápidas:
                   </h4>
                   <div className="flex flex-wrap gap-3">
@@ -933,7 +935,7 @@ function DashboardContent() {
 
               {editingReserva.estado === "confirmada" && (
                 <div className="border-t-2 border-white/20 pt-6">
-                  <h4 className="text-sm font-bold text-purple-200 mb-4 uppercase tracking-wide">
+                  <h4 className="text-sm font-bold text-blue-200 mb-4 uppercase tracking-wide">
                     Acciones Rápidas:
                   </h4>
                   <div className="flex flex-wrap gap-3">
@@ -988,7 +990,7 @@ function DashboardContent() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
                   Guardar Cambios
                 </button>
@@ -1006,7 +1008,7 @@ function DashboardContent() {
               <span className="text-2xl">⚠️</span>
               Confirmar Eliminación
             </h3>
-            <p className="text-purple-200 mb-6">
+            <p className="text-blue-200 mb-6">
               ¿Estás seguro de que deseas eliminar la reserva de{" "}
               <strong className="text-white">{deletingReserva.nombre}</strong>? Esta acción no se puede
               deshacer.
@@ -1049,27 +1051,27 @@ function DashboardContent() {
               className="space-y-6"
             >
               <div>
-                <label className="block text-sm font-semibold text-purple-200 mb-2">
+                <label className="block text-sm font-semibold text-blue-200 mb-2">
                   Nombre
                 </label>
                 <input
                   type="text"
                   name="nombre"
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                   required
                   minLength={2}
                   placeholder="Nombre del cliente"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-purple-200 mb-2">
+                <label className="block text-sm font-semibold text-blue-200 mb-2">
                   Teléfono
                 </label>
                 <input
                   type="tel"
                   name="telefono"
                   placeholder="+53 12345678"
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                   required
                 />
               </div>
@@ -1109,7 +1111,7 @@ function DashboardContent() {
               className="space-y-6"
             >
               <div>
-                <label className="block text-sm font-semibold text-purple-200 mb-2">
+                <label className="block text-sm font-semibold text-blue-200 mb-2">
                   Nombre
                 </label>
                 <input
@@ -1121,13 +1123,13 @@ function DashboardContent() {
                       nombre: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                   required
                   minLength={2}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-purple-200 mb-2">
+                <label className="block text-sm font-semibold text-blue-200 mb-2">
                   Teléfono
                 </label>
                 <input
@@ -1139,7 +1141,7 @@ function DashboardContent() {
                       telefono: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-white placeholder-white/50"
                   required
                 />
               </div>
@@ -1153,7 +1155,7 @@ function DashboardContent() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
                   Guardar Cambios
                 </button>
@@ -1171,7 +1173,7 @@ function DashboardContent() {
               <span className="text-2xl">⚠️</span>
               Confirmar Eliminación
             </h3>
-            <p className="text-purple-200 mb-6">
+            <p className="text-blue-200 mb-6">
               ¿Estás seguro de que deseas eliminar al cliente{" "}
               <strong className="text-white">{deletingCliente.nombre}</strong>? Esta acción no se puede
               deshacer. No se puede eliminar un cliente con reservas activas.
@@ -1202,7 +1204,7 @@ export default function AdminDashboard() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
             <p className="text-gray-700 dark:text-gray-300">

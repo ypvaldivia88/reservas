@@ -4,23 +4,24 @@
   --background: #ffffff;
   --foreground: #171717;
   
-  /* Beauty Salon Color Palette */
-  --color-primary-dark: #1e3a8a;
-  --color-primary: #2563eb;
-  --color-primary-light: #3b82f6;
+  /* Beauty Salon Color Palette - Blue tones */
+  --color-primary-dark: #1e3a8a;      /* Dark blue */
+  --color-primary: #2563eb;            /* Medium blue */
+  --color-primary-light: #3b82f6;      /* Light blue */
+  --color-primary-lighter: #60a5fa;    /* Lighter blue */
   
-  --color-secondary-dark: #7c3aed;
-  --color-secondary: #8b5cf6;
-  --color-secondary-light: #a855f7;
+  --color-secondary-dark: #1e40af;     /* Deep blue */
+  --color-secondary: #3b82f6;          /* Bright blue */
+  --color-secondary-light: #60a5fa;    /* Sky blue */
   
-  --color-accent: #c4b5fd;
-  --color-accent-light: #ddd6fe;
-  --color-accent-lighter: #e9d5ff;
+  --color-accent: #93c5fd;             /* Light blue accent */
+  --color-accent-light: #bfdbfe;       /* Pale blue */
+  --color-accent-lighter: #dbeafe;     /* Very pale blue */
   
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #8b5cf6 100%);
-  --gradient-secondary: linear-gradient(135deg, #2563eb 0%, #a855f7 100%);
-  --gradient-accent: linear-gradient(135deg, #c4b5fd 0%, #e9d5ff 100%);
+  /* Gradients - Blue tones only */
+  --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  --gradient-secondary: linear-gradient(135deg, #1e40af 0%, #60a5fa 100%);
+  --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #93c5fd 100%);
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -84,16 +85,16 @@ html {
       animation: fadeInUp 0.8s ease-out;
     }
   
-    /* Custom gradient text */
+    /* Custom gradient text - Blue tones only */
     .gradient-text {
-      background: linear-gradient(135deg, #1e3a8a, #8b5cf6);
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     
     .gradient-text-secondary {
-      background: linear-gradient(135deg, #2563eb, #a855f7);
+      background: linear-gradient(135deg, #1e40af, #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -126,10 +127,10 @@ html {
 
 .btn-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(30, 58, 138, 0.4);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
 }
 .dark .btn-hover:hover {
-  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.6);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.6);
 }
 /* Card hover effects */
 .card-hover {
@@ -142,7 +143,7 @@ html {
 }
 
 .dark .card-hover:hover {
-  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
 }
 
 /* Modern card styling */
@@ -164,7 +165,7 @@ html {
 }
 
 .dark .modern-card:hover {
-  box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.25), 0 10px 10px -5px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.25), 0 10px 10px -5px rgba(59, 130, 246, 0.15);
 }
 
 /* Mobile-first responsive utilities */

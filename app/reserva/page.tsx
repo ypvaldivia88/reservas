@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 
 export default function ReservaPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       {/* Header */}
       <Header isHomePage={false} />
 
@@ -14,12 +14,12 @@ export default function ReservaPage() {
       <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-6 sm:mb-8">
-            <span className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+            <span className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
               ✨ Paso 1: Reserva tu cita
             </span>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight">
               Reserva tu
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-600">
                 Cita Perfecta
               </span>
             </h1>
@@ -32,25 +32,25 @@ export default function ReservaPage() {
           {/* Process indicators - Mobile First */}
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-8 sm:mb-12">
             <div className="flex items-center">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-lg">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-lg">
                 1
               </div>
-              <span className="ml-2 text-purple-700 dark:text-purple-400 font-semibold text-sm sm:text-base">
+              <span className="ml-2 text-blue-700 dark:text-blue-400 font-semibold text-sm sm:text-base">
                 Reserva
               </span>
             </div>
-            <div className="w-8 sm:w-12 h-0.5 bg-purple-200 dark:bg-purple-700 rotate-90 sm:rotate-0"></div>
+            <div className="w-8 sm:w-12 h-0.5 bg-blue-200 dark:bg-blue-700 rotate-90 sm:rotate-0"></div>
             <div className="flex items-center">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-200 dark:bg-purple-700 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-bold">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-200 dark:bg-blue-700 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-bold">
                 2
               </div>
               <span className="ml-2 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                 Confirmación
               </span>
             </div>
-            <div className="w-8 sm:w-12 h-0.5 bg-purple-200 dark:bg-purple-700 rotate-90 sm:rotate-0"></div>
+            <div className="w-8 sm:w-12 h-0.5 bg-blue-200 dark:bg-blue-700 rotate-90 sm:rotate-0"></div>
             <div className="flex items-center">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-200 dark:bg-purple-700 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400 text-xs sm:text-sm font-bold">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-200 dark:bg-blue-700 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-bold">
                 3
               </div>
               <span className="ml-2 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
@@ -118,7 +118,7 @@ export default function ReservaPage() {
       </section>
 
       {/* Contact Section - Mobile First */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-violet-600">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             ¿Necesitas ayuda?
