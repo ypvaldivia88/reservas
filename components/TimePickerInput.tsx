@@ -6,21 +6,27 @@ interface TimePickerInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  singleMode?: boolean; // If true, only allows single time selection (no chips, no add button, no help text)
 }
 
-export default function TimePickerInput({ value, onChange, placeholder, className }: TimePickerInputProps) {
+export default function TimePickerInput({ value, onChange, placeholder, className, singleMode = false }: TimePickerInputProps) {
   const [times, setTimes] = useState<string[]>([]);
   const [newTime, setNewTime] = useState("");
 
   useEffect(() => {
-    // Parse the comma-separated value into an array
-    if (value) {
-      const parsedTimes = value.split(",").map(t => t.trim()).filter(t => t.length > 0);
-      setTimes(parsedTimes);
+    if (singleMode) {
+      // In single mode, the value is the time itself
+      setNewTime(value || "");
     } else {
-      setTimes([]);
+      // Parse the comma-separated value into an array
+      if (value) {
+        const parsedTimes = value.split(",").map(t => t.trim()).filter(t => t.length > 0);
+        setTimes(parsedTimes);
+      } else {
+        setTimes([]);
+      }
     }
-  }, [value]);
+  }, [value, singleMode]);
 
   const addTime = () => {
     if (newTime && !times.includes(newTime)) {
@@ -42,14 +48,25 @@ export default function TimePickerInput({ value, onChange, placeholder, classNam
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      addTime();
+      if (!singleMode) {
+        addTime();
+      }
+    }
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const timeValue = e.target.value;
+    setNewTime(timeValue);
+    if (singleMode) {
+      // In single mode, update immediately
+      onChange(timeValue);
     }
   };
 
   return (
     <div className={className}>
-      {/* Display selected times as chips */}
-      {times.length > 0 && (
+      {/* Display selected times as chips - only in multi mode */}
+      {!singleMode && times.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
           {times.map((time) => (
             <span
@@ -77,25 +94,29 @@ export default function TimePickerInput({ value, onChange, placeholder, classNam
         <input
           type="time"
           value={newTime}
-          onChange={(e) => setNewTime(e.target.value)}
+          onChange={handleTimeChange}
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
           className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
-        <button
-          type="button"
-          onClick={addTime}
-          disabled={!newTime}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition-colors whitespace-nowrap"
-        >
-          + Agregar
-        </button>
+        {!singleMode && (
+          <button
+            type="button"
+            onClick={addTime}
+            disabled={!newTime}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition-colors whitespace-nowrap"
+          >
+            + Agregar
+          </button>
+        )}
       </div>
 
-      {/* Helper text */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-        Use el selector de hora arriba para agregar horarios. Haga clic en × para eliminar.
-      </p>
+      {/* Helper text - only in multi mode */}
+      {!singleMode && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          Use el selector de hora arriba para agregar horarios. Haga clic en × para eliminar.
+        </p>
+      )}
     </div>
   );
 }

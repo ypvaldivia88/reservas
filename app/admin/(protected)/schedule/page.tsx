@@ -15,6 +15,7 @@ export default function AdminSchedulePage() {
   const [editingDay, setEditingDay] = useState<DayOfWeek | null>(null);
   const [editingSlots, setEditingSlots] = useState<string>("");
   const [showTimePickerModal, setShowTimePickerModal] = useState(false);
+  const [editingSlotIndex, setEditingSlotIndex] = useState<number | null>(null);
   const [specialDays, setSpecialDays] = useState<AvailabilityOverride[]>([]);
   const [showAddSpecialDay, setShowAddSpecialDay] = useState(false);
   const [newSpecialDay, setNewSpecialDay] = useState({
@@ -89,18 +90,28 @@ export default function AdminSchedulePage() {
   };
 
   const handleEditSlots = (dayOfWeek: DayOfWeek) => {
-    const day = schedule?.schedule.find((d) => d.dayOfWeek === dayOfWeek);
-    if (day) {
-      setEditingDay(dayOfWeek);
-      setEditingSlots("");
-      setShowTimePickerModal(true);
-    }
+    setEditingDay(dayOfWeek);
+    setEditingSlots("");
+    setEditingSlotIndex(null);
+    setShowTimePickerModal(true);
+  };
+
+  const handleEditExistingSlot = (
+    dayOfWeek: DayOfWeek,
+    slotIndex: number,
+    time: string
+  ) => {
+    setEditingDay(dayOfWeek);
+    setEditingSlots(time);
+    setEditingSlotIndex(slotIndex);
+    setShowTimePickerModal(true);
   };
 
   const handleCloseModal = () => {
     setShowTimePickerModal(false);
     setEditingDay(null);
     setEditingSlots("");
+    setEditingSlotIndex(null);
   };
 
   const handleSaveSlots = async () => {
@@ -112,36 +123,85 @@ export default function AdminSchedulePage() {
     );
 
     if (dayIndex >= 0) {
-      const newTimes = editingSlots
-        .split(",")
-        .map((t) => t.trim())
-        .filter(isValidTime);
+      // Si estamos editando un slot existente
+      if (editingSlotIndex !== null) {
+        if (!editingSlots.trim()) {
+          setMessage("❌ Debe ingresar un horario válido o usar el botón Eliminar");
+          return;
+        }
 
-      if (editingSlots.trim() && newTimes.length === 0) {
-        setMessage(
-          "❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)"
+        const newTime = editingSlots.trim();
+        if (!isValidTime(newTime)) {
+          setMessage("❌ El horario ingresado no es válido. Use formato HH:mm (00:00 - 23:59)");
+          return;
+        }
+
+        const updatedSlots = [...updatedSchedule.schedule[dayIndex].slots];
+        updatedSlots[editingSlotIndex] = { time: newTime, available: true };
+
+        // Ordenar horarios
+        updatedSlots.sort((a, b) => {
+          const [aHour, aMin] = a.time.split(":").map(Number);
+          const [bHour, bMin] = b.time.split(":").map(Number);
+          return aHour * 60 + aMin - (bHour * 60 + bMin);
+        });
+
+        updatedSchedule.schedule[dayIndex].slots = updatedSlots;
+        await saveSchedule(updatedSchedule);
+        handleCloseModal();
+      } else {
+        // Modo agregar: agregar múltiples horarios
+        const newTimes = editingSlots
+          .split(",")
+          .map((t) => t.trim())
+          .filter(isValidTime);
+
+        if (editingSlots.trim() && newTimes.length === 0) {
+          setMessage(
+            "❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)"
+          );
+          return;
+        }
+
+        if (newTimes.length === 0) {
+          setMessage("❌ Debe ingresar al menos un horario");
+          return;
+        }
+
+        // Agregar nuevos horarios
+        const existingTimes = updatedSchedule.schedule[dayIndex].slots.map(
+          (s) => s.time
         );
-        return;
+        const allTimes = [...new Set([...existingTimes, ...newTimes])];
+
+        // Ordenar horarios
+        allTimes.sort((a, b) => {
+          const [aHour, aMin] = a.split(":").map(Number);
+          const [bHour, bMin] = b.split(":").map(Number);
+          return aHour * 60 + aMin - (bHour * 60 + bMin);
+        });
+
+        updatedSchedule.schedule[dayIndex].slots = allTimes.map((time) => ({
+          time,
+          available: true,
+        }));
+
+        await saveSchedule(updatedSchedule);
+        handleCloseModal();
       }
+    }
+  };
 
-      // Combinar horarios existentes con nuevos y eliminar duplicados
-      const existingTimes = updatedSchedule.schedule[dayIndex].slots.map(
-        (s) => s.time
-      );
-      const allTimes = [...new Set([...existingTimes, ...newTimes])];
+  const handleDeleteSlot = async () => {
+    if (!schedule || !editingDay || editingSlotIndex === null) return;
 
-      // Ordenar horarios
-      allTimes.sort((a, b) => {
-        const [aHour, aMin] = a.split(":").map(Number);
-        const [bHour, bMin] = b.split(":").map(Number);
-        return aHour * 60 + aMin - (bHour * 60 + bMin);
-      });
+    const updatedSchedule = { ...schedule };
+    const dayIndex = updatedSchedule.schedule.findIndex(
+      (d) => d.dayOfWeek === editingDay
+    );
 
-      updatedSchedule.schedule[dayIndex].slots = allTimes.map((time) => ({
-        time,
-        available: true,
-      }));
-
+    if (dayIndex >= 0) {
+      updatedSchedule.schedule[dayIndex].slots.splice(editingSlotIndex, 1);
       await saveSchedule(updatedSchedule);
       handleCloseModal();
     }
@@ -353,62 +413,54 @@ export default function AdminSchedulePage() {
                   </td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4">
                     {day.isWorkingDay ?
-                      <div
-                        onClick={() => handleEditSlots(day.dayOfWeek)}
-                        className="w-full text-left touch-manipulation min-h-[44px] flex items-center cursor-pointer"
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            handleEditSlots(day.dayOfWeek);
-                          }
-                        }}
-                      >
-                        {day.slots.length > 0 ?
-                          <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+                        {day.slots.length > 0 && (
+                          <>
                             {day.slots.map((slot, idx) => (
-                              <div
+                              <button
                                 key={idx}
-                                className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                onClick={() =>
+                                  handleEditExistingSlot(
+                                    day.dayOfWeek,
+                                    idx,
+                                    slot.time
+                                  )
+                                }
+                                className="inline-flex items-center px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all touch-manipulation"
                               >
-                                <span>{slot.time}</span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newSlots = day.slots.filter(
-                                      (_, i) => i !== idx
-                                    );
-                                    const updatedSchedule = { ...schedule };
-                                    const dayIndex =
-                                      updatedSchedule.schedule.findIndex(
-                                        (d) => d.dayOfWeek === day.dayOfWeek
-                                      );
-                                    if (dayIndex >= 0) {
-                                      updatedSchedule.schedule[dayIndex].slots =
-                                        newSlots;
-                                      saveSchedule(updatedSchedule);
-                                    }
-                                  }}
-                                  className="ml-1.5 sm:ml-2 text-blue-800 dark:text-blue-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                                  title="Eliminar horario"
-                                  aria-label={`Eliminar horario ${slot.time}`}
-                                >
-                                  ✕
-                                </button>
-                              </div>
+                                {slot.time}
+                              </button>
                             ))}
-                            <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">
-                              <span>+</span>
-                            </div>
-                          </div>
-                        : <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span>Sin horarios</span>
-                            <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">
-                              +
-                            </span>
-                          </div>
-                        }
+                          </>
+                        )}
+
+                        {/* Botón para agregar nuevo horario */}
+                        <button
+                          onClick={() => handleEditSlots(day.dayOfWeek)}
+                          className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all touch-manipulation shadow-md hover:shadow-lg"
+                          title="Agregar horario"
+                          aria-label="Agregar nuevo horario"
+                        >
+                          <svg
+                            className="w-4 h-4 sm:w-5 sm:h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                        </button>
+
+                        {day.slots.length === 0 && (
+                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 ml-2">
+                            Sin horarios
+                          </span>
+                        )}
                       </div>
                     : <span className="text-sm text-gray-400 dark:text-gray-500 italic">
                         Cerrado
@@ -435,7 +487,10 @@ export default function AdminSchedulePage() {
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                {DAY_NAMES[editingDay]}
+                {editingSlotIndex !== null ?
+                  "Editar Horario"
+                : "Agregar Horario"}{" "}
+                - {DAY_NAMES[editingDay]}
               </h3>
               <button
                 onClick={handleCloseModal}
@@ -461,14 +516,49 @@ export default function AdminSchedulePage() {
             {/* Content */}
             <div className="px-4 sm:px-6 py-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                Agregar nuevo horario
+                {editingSlotIndex !== null ?
+                  "Modificar horario"
+                : "Agregar horarios (separados por comas)"}
               </label>
               <TimePickerInput
                 value={editingSlots}
                 onChange={setEditingSlots}
-                placeholder="00:00"
+                placeholder={editingSlotIndex !== null ? "HH:mm" : "HH:mm, HH:mm, ..."}
                 className="w-full"
+                singleMode={editingSlotIndex !== null}
               />
+              {editingSlotIndex === null && (
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  💡 Puedes agregar varios horarios separados por comas
+                </p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              {editingSlotIndex !== null ?
+                <>
+                  <button
+                    onClick={handleDeleteSlot}
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation"
+                    title="Eliminar horario"
+                  >
+                    🗑️ Eliminar
+                  </button>
+                  <button
+                    onClick={handleSaveSlots}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation"
+                  >
+                    💾 Guardar
+                  </button>
+                </>
+              : <button
+                  onClick={handleSaveSlots}
+                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation"
+                >
+                  ✅ Agregar Horarios
+                </button>
+              }
             </div>
           </div>
         </div>
