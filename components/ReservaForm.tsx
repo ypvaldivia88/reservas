@@ -352,9 +352,9 @@ export default function ReservaForm() {
   };
 
   const formaDescriptions = {
-    coffin: "Forma rectangular con punta redondeada, elegante y moderna",
+    coffin: "Rectangular con punta redondeada, elegante y moderna",
     almond: "Forma ovalada puntiaguda que alarga los dedos",
-    stiletto: "Forma muy puntiaguda y dramática, perfecta para nail art",
+    stiletto: "Muy Puntiaguda y dramática, perfecta para nail art",
     square: "Forma cuadrada clásica, práctica y resistente",
   };
 
@@ -574,7 +574,7 @@ export default function ReservaForm() {
                 {FORMAS_UNAS.map((forma) => (
                   <label
                     key={forma}
-                    className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 min-h-[140px] ${
+                    className={`relative flex flex-col items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 min-h-[140px] ${
                       form.forma === forma ?
                         "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 shadow-md"
                       : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-500"
@@ -591,12 +591,36 @@ export default function ReservaForm() {
                     />
 
                     {/* Icono o emoji según la forma */}
-                    <span className="text-3xl mb-2">
-                      {forma === "stiletto" && "🗡️"}
-                      {forma === "almond" && "🥜"}
-                      {forma === "coffin" && "⚰️"}
-                      {forma === "square" && "⬜"}
-                    </span>
+                    <div className="w-12 h-12 mb-2 flex items-center justify-center">
+                      {forma === "stiletto" && (
+                        <div
+                          className="w-8 h-8 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100"
+                          style={{
+                            clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+                          }}
+                        />
+                      )}
+                      {forma === "almond" && (
+                        <div
+                          className="w-6 h-10 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100 rounded-full"
+                          style={{
+                            clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",
+                          }}
+                        />
+                      )}
+                      {forma === "coffin" && (
+                        <div
+                          className="w-6 h-10 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100 rounded-b-full"
+                          style={{
+                            clipPath:
+                              "polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)",
+                          }}
+                        />
+                      )}
+                      {forma === "square" && (
+                        <div className="w-6 h-10 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100 rounded-sm" />
+                      )}
+                    </div>
 
                     <span
                       className={`text-sm font-semibold text-center mb-2 ${
