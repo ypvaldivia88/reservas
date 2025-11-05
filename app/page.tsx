@@ -16,19 +16,19 @@ export default function Home() {
       <section className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-[url('/main.avif')] bg-center bg-cover bg-no-repeat">
         {/* overlay to improve text contrast */}
         <div
-          className="absolute inset-0 bg-black/75 dark:bg-black/75"
+          className="absolute inset-0 bg-gradient-to-br from-blue-950/80 via-purple-950/80 to-violet-950/80 dark:bg-gradient-to-br dark:from-black/85 dark:via-purple-950/85 dark:to-black/85"
           aria-hidden
         />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
             {/* Mobile: text-3xl, SM: text-4xl, MD: text-5xl, LG: text-6xl, XL: text-7xl */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               Belleza en tus
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                 Manos
               </span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 sm:mb-10 md:mb-12 max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-2">
+            <p className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 sm:mb-10 md:mb-12 max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-2">
               Descubre la excelencia en el cuidado de uñas. Diseños únicos,
               técnicas profesionales y la mejor atención para que luzcas
               radiante.
@@ -38,7 +38,7 @@ export default function Home() {
             <div className="flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 md:space-x-4 lg:space-x-6 justify-center items-center px-4 sm:px-6">
               <Link
                 href="/reserva"
-                className="w-full sm:w-72 bg-gradient-to-r from-blue-600 to-violet-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-center"
+                className="w-full sm:w-72 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 text-center"
               >
                 ✨ Reservar Cita
               </Link>
@@ -46,10 +46,10 @@ export default function Home() {
                 href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-72 border-2 border-green-400 dark:border-green-500 text-green-700 dark:text-green-400 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300 text-center"
+                className="w-full sm:w-72 border-2 border-purple-400 hover:border-purple-300 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-purple-500/20 transition-all duration-300 text-center backdrop-blur-sm"
               >
                 <svg
-                  className="w-5 h-5 inline-block mr-2 mb-1 align-middle text-white dark:text-white"
+                  className="w-5 h-5 inline-block mr-2 mb-1 align-middle"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -67,10 +67,10 @@ export default function Home() {
         </div>
 
         {/* Decorative elements - Hidden on mobile, visible on larger screens */}
-        <div className="hidden md:block absolute top-20 left-4 lg:left-10 text-blue-300 dark:text-blue-400 text-4xl lg:text-6xl opacity-50 animate-bounce">
+        <div className="hidden md:block absolute top-20 left-4 lg:left-10 text-purple-300 dark:text-purple-400 text-4xl lg:text-6xl opacity-50 animate-bounce">
           💎
         </div>
-        <div className="hidden md:block absolute bottom-20 right-4 lg:right-10 text-violet-300 dark:text-violet-400 text-3xl lg:text-4xl opacity-50 animate-pulse">
+        <div className="hidden md:block absolute bottom-20 right-4 lg:right-10 text-pink-300 dark:text-pink-400 text-3xl lg:text-4xl opacity-50 animate-pulse">
           ✨
         </div>
       </section>
@@ -208,7 +208,7 @@ export default function Home() {
       {/* Gallery Preview - Mobile First */}
       <section
         id="galeria"
-        className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30"
+        className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12 md:mb-16">
@@ -295,17 +295,17 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-600 to-violet-600 p-6 sm:p-8 rounded-2xl text-white">
+            <div className="bg-gradient-to-br from-purple-600 to-pink-600 p-6 sm:p-8 rounded-2xl text-white shadow-2xl">
               <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
                 ¿Lista para tu nueva manicure?
               </h3>
-              <p className="text-sm sm:text-base mb-4 sm:mb-6">
+              <p className="text-sm sm:text-base mb-4 sm:mb-6 text-purple-50">
                 Agenda tu cita hoy y descubre por qué somos el salón favorito de
                 la ciudad
               </p>
               <Link
                 href="/reserva"
-                className="bg-white text-blue-700 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 inline-block text-sm sm:text-base"
+                className="bg-white text-purple-700 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 inline-block text-sm sm:text-base"
               >
                 Reservar Ahora
               </Link>
