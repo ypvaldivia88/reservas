@@ -556,53 +556,86 @@ export default function ReservaForm() {
               💅 Preferencias de Diseño
             </h3>
 
+            {/* Imagen de referencia */}
+            <div className="relative mb-4 rounded-xl overflow-hidden h-80 sm:h-64 md:h-80 shadow-md border border-gray-200 dark:border-gray-600">
+              <Image
+                src="/images/forma.jpg"
+                alt="Guía de longitudes de uñas"
+                fill
+                className="object-contain"
+              />
+            </div>
+
             <div>
-              <label
-                htmlFor="forma"
-                className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
-              >
+              <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
                 Forma de Uñas *
               </label>
-              <select
-                id="forma"
-                name="forma"
-                value={form.forma}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 sm:px-4 sm:py-3 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors appearance-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base ${
-                  errors.forma ?
-                    "border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
-                  : "border-gray-200 dark:border-gray-600 focus:border-blue-300 dark:focus:border-blue-500"
-                }`}
-                required
-              >
-                <option value="" className="text-gray-600 dark:text-gray-400">
-                  ✨ Selecciona tu forma favorita
-                </option>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {FORMAS_UNAS.map((forma) => (
-                  <option
+                  <label
                     key={forma}
-                    value={forma}
-                    className="text-gray-900 dark:text-white"
+                    className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 min-h-[140px] ${
+                      form.forma === forma ?
+                        "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 shadow-md"
+                      : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-500"
+                    }`}
                   >
-                    {forma.charAt(0).toUpperCase() + forma.slice(1)}
-                  </option>
+                    <input
+                      type="radio"
+                      name="forma"
+                      value={forma}
+                      checked={form.forma === forma}
+                      onChange={handleChange}
+                      className="sr-only"
+                      required
+                    />
+
+                    {/* Icono o emoji según la forma */}
+                    <span className="text-3xl mb-2">
+                      {forma === "stiletto" && "🗡️"}
+                      {forma === "almond" && "🥜"}
+                      {forma === "coffin" && "⚰️"}
+                      {forma === "square" && "⬜"}
+                    </span>
+
+                    <span
+                      className={`text-sm font-semibold text-center mb-2 ${
+                        form.forma === forma ?
+                          "text-blue-700 dark:text-blue-300"
+                        : "text-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {forma.charAt(0).toUpperCase() + forma.slice(1)}
+                    </span>
+
+                    {/* Descripción de la forma */}
+                    <p
+                      className={`text-xs text-center px-2 ${
+                        form.forma === forma ?
+                          "text-blue-600 dark:text-blue-400"
+                        : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {
+                        formaDescriptions[
+                          forma as keyof typeof formaDescriptions
+                        ]
+                      }
+                    </p>
+
+                    {/* Checkmark cuando está seleccionado */}
+                    {form.forma === forma && (
+                      <span className="absolute top-2 right-2 text-blue-600 dark:text-blue-400 text-lg">
+                        ✓
+                      </span>
+                    )}
+                  </label>
                 ))}
-              </select>
-              {form.forma &&
-                formaDescriptions[
-                  form.forma as keyof typeof formaDescriptions
-                ] && (
-                  <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 rounded-lg">
-                    💡{" "}
-                    {
-                      formaDescriptions[
-                        form.forma as keyof typeof formaDescriptions
-                      ]
-                    }
-                  </p>
-                )}
+              </div>
+
               {errors.forma && (
-                <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
+                <p className="mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
                   <span className="mr-1">⚠️</span> {errors.forma}
                 </p>
               )}

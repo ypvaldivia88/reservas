@@ -34,7 +34,12 @@ export interface ReservaFormData {
 
 export type FormaUna = 'coffin' | 'almond' | 'stiletto' | 'square';
 
-export const FORMAS_UNAS: FormaUna[] = ['coffin', 'almond', 'stiletto', 'square'];
+export const FORMAS_UNAS: FormaUna[] = [
+  "stiletto",
+  "almond",
+  "coffin",
+  "square",
+];
 export const LARGOS_UNAS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 // Tipos para autenticación y usuarios
