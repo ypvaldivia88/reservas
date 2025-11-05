@@ -646,7 +646,7 @@ export default function ReservaForm() {
                 Colores Preferidos
               </label>
 
-              {/* Color badges */}
+              {/* Color badges - predefined colors */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {PREDEFINED_COLORS.map((colorOption) => (
                   <button
@@ -671,25 +671,92 @@ export default function ReservaForm() {
                 ))}
               </div>
 
-              {/* Custom color input */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={customColor}
-                  onChange={(e) => setCustomColor(e.target.value)}
-                  placeholder="🎨 O escribe otro color personalizado..."
-                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                />
+              {/* Native Color Picker */}
+              <div className="mb-3">
+                <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  🎨 O elige colores personalizados:
+                </label>
+                <div className="flex items-stretch gap-2 sm:gap-3">
+                  <input
+                    type="color"
+                    value={customColor || "#000000"}
+                    onChange={(e) => setCustomColor(e.target.value)}
+                    className="h-10 w-16 sm:h-12 sm:w-20 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
+                  />
+                  <input
+                    type="text"
+                    value={customColor}
+                    onChange={(e) => setCustomColor(e.target.value)}
+                    placeholder="#000000"
+                    maxLength={7}
+                    className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        customColor.trim() &&
+                        !selectedColors.includes(customColor.trim())
+                      ) {
+                        setSelectedColors((prev) => [
+                          ...prev,
+                          customColor.trim(),
+                        ]);
+                        setCustomColor("");
+                      }
+                    }}
+                    disabled={!customColor.trim()}
+                    className="px-3 py-2 sm:px-4 sm:py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    + Agregar
+                  </button>
+                </div>
               </div>
 
               {/* Display selected colors */}
-              {(selectedColors.length > 0 || customColor.trim()) && (
-                <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Seleccionados:{" "}
-                  {[...selectedColors, customColor.trim()]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
+              {selectedColors.length > 0 && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">
+                    Colores seleccionados:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedColors.map((color) => {
+                      const colorData = PREDEFINED_COLORS.find(
+                        (c) => c.name === color
+                      );
+                      const isHexColor = color.startsWith("#");
+
+                      return (
+                        <div
+                          key={color}
+                          className="flex items-center gap-2 px-2 py-1 bg-white dark:bg-gray-800 rounded-full border border-blue-200 dark:border-blue-700"
+                        >
+                          <span
+                            className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
+                            style={{
+                              backgroundColor:
+                                isHexColor ? color : colorData?.color,
+                            }}
+                          />
+                          <span className="text-xs text-gray-700 dark:text-gray-300">
+                            {color}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedColors((prev) =>
+                                prev.filter((c) => c !== color)
+                              )
+                            }
+                            className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 ml-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
 
