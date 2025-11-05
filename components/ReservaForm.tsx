@@ -35,7 +35,6 @@ export default function ReservaForm() {
   const PREDEFINED_COLORS = [
     { name: "Rosa", color: "#FFB6C1" },
     { name: "Rojo", color: "#DC143C" },
-    { name: "Nude", color: "#E8C4B4" },
     { name: "Dorado", color: "#FFD700" },
     { name: "Plata", color: "#C0C0C0" },
     { name: "Negro", color: "#000000" },
@@ -556,20 +555,20 @@ export default function ReservaForm() {
               💅 Preferencias de Diseño
             </h3>
 
-            {/* Imagen de referencia */}
-            <div className="relative mb-4 rounded-xl overflow-hidden h-80 sm:h-64 md:h-80 shadow-md border border-gray-200 dark:border-gray-600">
-              <Image
-                src="/images/forma.jpg"
-                alt="Guía de longitudes de uñas"
-                fill
-                className="object-contain"
-              />
-            </div>
-
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
                 Forma de Uñas *
               </label>
+
+              {/* Imagen de referencia */}
+              <div className="relative mb-4 rounded-xl overflow-hidden h-36 sm:h-64 md:h-80 shadow-md border border-gray-200 dark:border-gray-600">
+                <Image
+                  src="/images/forma.jpg"
+                  alt="Guía de longitudes de uñas"
+                  fill
+                  className="object-cover"
+                />
+              </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {FORMAS_UNAS.map((forma) => (
@@ -677,19 +676,21 @@ export default function ReservaForm() {
                   🎨 O elige colores personalizados:
                 </label>
                 <div className="flex items-stretch gap-2 sm:gap-3">
-                  <input
-                    type="color"
-                    value={customColor || "#000000"}
-                    onChange={(e) => setCustomColor(e.target.value)}
-                    className="h-10 w-16 sm:h-12 sm:w-20 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700"
-                  />
+                  <div className="relative flex-shrink-0">
+                    <input
+                      type="color"
+                      value={customColor || "#000000"}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="h-10 w-12 sm:h-12 sm:w-16 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700 overflow-hidden"
+                    />
+                  </div>
                   <input
                     type="text"
                     value={customColor}
                     onChange={(e) => setCustomColor(e.target.value)}
                     placeholder="#000000"
                     maxLength={7}
-                    className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                    className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                   />
                   <button
                     type="button"
@@ -706,7 +707,7 @@ export default function ReservaForm() {
                       }
                     }}
                     disabled={!customColor.trim()}
-                    className="px-3 py-2 sm:px-4 sm:py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
+                    className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
                   >
                     + Agregar
                   </button>
