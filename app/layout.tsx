@@ -52,11 +52,20 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  // Priority: manually set theme (localStorage) > system preference
                   var savedTheme = localStorage.getItem('theme');
-                  var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                  var theme = savedTheme || systemTheme;
+                  var theme;
+                  if (savedTheme) {
+                    // Use manually set theme if available
+                    theme = savedTheme;
+                  } else {
+                    // Otherwise, use system preference
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
                   if (theme === 'dark') {
                     document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {}
               })();

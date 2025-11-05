@@ -11,23 +11,23 @@ export default function AdminNav() {
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-md mb-6">
+    <nav className="glass-strong border-b border-white/10 mb-6 sticky top-0 z-40 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-4 py-3">
+        <div className="flex space-x-2 sm:space-x-4 py-4 overflow-x-auto hide-scrollbar">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center space-x-2 px-4 sm:px-6 py-3 rounded-xl transition-all duration-300 whitespace-nowrap font-semibold ${
                   isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg scale-105"
+                    : "bg-white/5 text-blue-200 hover:bg-white/10 hover:text-white border border-white/10"
                 }`}
               >
-                <span>{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                <span className="text-lg sm:text-xl">{item.icon}</span>
+                <span className="text-sm sm:text-base">{item.label}</span>
               </Link>
             );
           })}

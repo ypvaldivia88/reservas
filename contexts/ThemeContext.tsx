@@ -15,10 +15,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Check localStorage and system preference
+    // Priority: manually set theme (localStorage) > system preference
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    const initialTheme = savedTheme || systemTheme;
+    
+    let initialTheme: Theme;
+    if (savedTheme) {
+      // If user has manually set a theme, use it (highest priority)
+      initialTheme = savedTheme;
+    } else {
+      // Otherwise, default to system preference
+      initialTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
     
     setTheme(initialTheme);
     
@@ -35,6 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
+    // Save to localStorage - this gives it priority over system preference
     localStorage.setItem("theme", newTheme);
     
     // Apply theme to document immediately

@@ -60,16 +60,16 @@ export default function Header({ isHomePage = true }: HeaderProps) {
             ))}
             <Link
               href="/reserva"
-              className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300"
             >
               Reservar Cita
             </Link>
-            {/* <ThemeToggle /> */}
+            <ThemeToggle />
           </nav>
 
           {/* Mobile Menu Button and Theme Toggle */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* <ThemeToggle /> */}
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -127,7 +127,7 @@ export default function Header({ isHomePage = true }: HeaderProps) {
             <Link
               href="/reserva"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="block w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white text-center py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300"
+              className="block w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white text-center py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300"
             >
               ✨ Reservar Cita
             </Link>

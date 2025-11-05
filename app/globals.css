@@ -3,12 +3,44 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Beauty Salon Color Palette - Blue tones */
+  --color-primary-dark: #1e3a8a;      /* Dark blue */
+  --color-primary: #2563eb;            /* Medium blue */
+  --color-primary-light: #3b82f6;      /* Light blue */
+  --color-primary-lighter: #60a5fa;    /* Lighter blue */
+  
+  --color-secondary-dark: #1e40af;     /* Deep blue */
+  --color-secondary: #3b82f6;          /* Bright blue */
+  --color-secondary-light: #60a5fa;    /* Sky blue */
+  
+  --color-accent: #93c5fd;             /* Light blue accent */
+  --color-accent-light: #bfdbfe;       /* Pale blue */
+  --color-accent-lighter: #dbeafe;     /* Very pale blue */
+  
+  /* Gradients - Blue tones only */
+  --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  --gradient-secondary: linear-gradient(135deg, #1e40af 0%, #60a5fa 100%);
+  --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #93c5fd 100%);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Glass effect */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --glass-bg: rgba(0, 0, 0, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -53,9 +85,16 @@ html {
       animation: fadeInUp 0.8s ease-out;
     }
   
-    /* Custom gradient text */
+    /* Custom gradient text - Blue tones only */
     .gradient-text {
-      background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .gradient-text-secondary {
+      background: linear-gradient(135deg, #1e40af, #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -63,41 +102,70 @@ html {
   
     /* Glass morphism effect */
     .glass {
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--glass-border);
     }
-.dark .glass {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+    
+    .glass-strong {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(200%);
+      -webkit-backdrop-filter: blur(20px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .dark .glass-strong {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
 /* Button hover effects */
 .btn-hover {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
 }
 .dark .btn-hover:hover {
   box-shadow: 0 10px 25px rgba(59, 130, 246, 0.6);
 }
 /* Card hover effects */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
   transform: translateY(-5px);
-}
-
-.card-hover:hover {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(30, 58, 138, 0.15);
 }
 
 .dark .card-hover:hover {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+}
+
+/* Modern card styling */
+.modern-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .modern-card {
+  background: rgba(31, 41, 55, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(30, 58, 138, 0.15), 0 10px 10px -5px rgba(30, 58, 138, 0.1);
+}
+
+.dark .modern-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.25), 0 10px 10px -5px rgba(59, 130, 246, 0.15);
 }
 
 /* Mobile-first responsive utilities */

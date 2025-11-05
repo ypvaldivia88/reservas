@@ -380,7 +380,7 @@ export default function ReservaForm() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transition-colors duration-200">
       {/* Progress Steps Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-white">
         <div className="flex items-center justify-between mb-4">
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
             <div key={step} className="flex items-center flex-1">
@@ -951,8 +951,8 @@ export default function ReservaForm() {
                       onClick={() => toggleDecoration(decoration)}
                       className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
                         selectedDecorations.includes(decoration) ?
-                          "border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-violet-300 dark:hover:border-violet-500"
+                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500"
                       }`}
                     >
                       {decoration}
@@ -997,7 +997,7 @@ export default function ReservaForm() {
           {/* Step 4: Resumen */}
           {currentStep === 4 && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/20 dark:to-violet-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                   📋 Resumen de tu Reserva
                 </h3>
@@ -1061,7 +1061,7 @@ export default function ReservaForm() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/20 dark:to-violet-900/20 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800">
                 <div className="flex items-start space-x-2 sm:space-x-3">
                   <span className="text-xl sm:text-2xl">💡</span>
                   <div>
@@ -1103,7 +1103,7 @@ export default function ReservaForm() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300"
+                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-600 dark:from-blue-500 dark:to-blue-500 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300"
               >
                 Siguiente →
               </button>
@@ -1111,7 +1111,7 @@ export default function ReservaForm() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white rounded-lg sm:rounded-xl text-base sm:text-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-600 dark:from-blue-500 dark:to-blue-500 text-white rounded-lg sm:rounded-xl text-base sm:text-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               >
                 {isSubmitting ?
                   <span className="flex items-center justify-center">

@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 
 export default function ReservaPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       {/* Header */}
       <Header isHomePage={false} />
 
@@ -19,7 +19,7 @@ export default function ReservaPage() {
             </span>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight">
               Reserva tu
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-600">
                 Cita Perfecta
               </span>
             </h1>
@@ -32,10 +32,10 @@ export default function ReservaPage() {
           {/* Process indicators - Mobile First */}
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-8 sm:mb-12">
             <div className="flex items-center">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-lg">
                 1
               </div>
-              <span className="ml-2 text-blue-700 dark:text-blue-400 font-medium text-sm sm:text-base">
+              <span className="ml-2 text-blue-700 dark:text-blue-400 font-semibold text-sm sm:text-base">
                 Reserva
               </span>
             </div>
@@ -118,7 +118,7 @@ export default function ReservaPage() {
       </section>
 
       {/* Contact Section - Mobile First */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-violet-600">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             ¿Necesitas ayuda?
