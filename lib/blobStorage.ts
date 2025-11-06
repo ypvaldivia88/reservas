@@ -1,5 +1,14 @@
 import { put, del, list } from '@vercel/blob';
 
+// Read token from environment. Prefer BLOB_READ_WRITE_TOKEN for clarity.
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
+
+if (!BLOB_TOKEN) {
+  // Do not throw during module import to keep dev experience smooth, but log clearly.
+  // Individual functions will throw if called without a token.
+  console.warn('[blobStorage] BLOB_READ_WRITE_TOKEN is not set. Blob operations will fail until configured.');
+}
+
 /**
  * Upload an image to Vercel Blob Storage
  * @param file - File object or Buffer
@@ -18,9 +27,11 @@ export async function uploadImageToBlob(file: File | Buffer, filename: string) {
     }
 
     // Upload to Vercel Blob
+    if (!BLOB_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
     const blob = await put(filename, buffer, {
       access: 'public',
       addRandomSuffix: true, // Adds random suffix to avoid name collisions
+      token: BLOB_TOKEN,
     });
 
     return {
@@ -40,7 +51,8 @@ export async function uploadImageToBlob(file: File | Buffer, filename: string) {
  */
 export async function deleteImageFromBlob(url: string) {
   try {
-    await del(url);
+  if (!BLOB_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
+  await del(url, { token: BLOB_TOKEN });
     return { success: true };
   } catch (error) {
     console.error('Error deleting from Vercel Blob:', error);
@@ -53,7 +65,8 @@ export async function deleteImageFromBlob(url: string) {
  */
 export async function listAllBlobs() {
   try {
-    const { blobs } = await list();
+  if (!BLOB_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
+  const { blobs } = await list({ token: BLOB_TOKEN });
     return blobs;
   } catch (error) {
     console.error('Error listing blobs:', error);
@@ -77,10 +90,12 @@ export async function uploadBase64ToBlob(
     const base64String = base64Data.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64String, 'base64');
 
+    if (!BLOB_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN is not configured');
     const blob = await put(filename, buffer, {
       access: 'public',
       addRandomSuffix: true,
       contentType: mimeType,
+      token: BLOB_TOKEN,
     });
 
     return {
