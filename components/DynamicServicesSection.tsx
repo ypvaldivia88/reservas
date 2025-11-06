@@ -116,7 +116,7 @@ export default function DynamicServicesSection() {
               {/* Text container with blur background - expands on hover/tap */}
               <div className="absolute bottom-0 left-0 right-0 backdrop-blur-md bg-white/20 dark:bg-black/30 px-4 sm:px-5 lg:px-6 py-3 sm:py-4 transition-all duration-500 group-hover:py-5 group-hover:sm:py-6 group-hover:backdrop-blur-lg group-hover:bg-white/30 dark:group-hover:bg-black/40 group-active:py-5 group-active:sm:py-6">
                 {/* Título - siempre visible */}
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white drop-shadow-lg mb-0 group-hover:mb-2 group-active:mb-2 transition-all duration-300">
+                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white drop-shadow-lg mb-0 group-hover:mb-2 group-active:mb-2 transition-all duration-300">
                   {servicio.nombre}
                 </h3>
 

@@ -5,6 +5,7 @@ import StatsSection from "@/components/StatsSection";
 import ProcessSection from "@/components/ProcessSection";
 import DynamicGalleryCarousel from "@/components/DynamicGalleryCarousel";
 import DynamicServicesSection from "@/components/DynamicServicesSection";
+import { Button } from "@/components/ui/Button";
 
 export default function Home() {
   return (
@@ -33,44 +34,58 @@ export default function Home() {
 
             {/* Mobile-first button layout */}
             <div className="flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 md:space-x-4 lg:space-x-6 justify-center items-center px-4 sm:px-6">
-              <Link
-                href="/reserva"
-                className="w-full sm:w-72 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 text-center flex items-center justify-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <Link href="/reserva" className="w-full sm:w-72">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  className="text-base sm:text-lg"
+                  icon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                      />
+                    </svg>
+                  }
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                  />
-                </svg>
-                <span>Reservar Cita</span>
+                  Reservar Cita
+                </Button>
               </Link>
               <a
                 href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-72 border-2 border-blue-400 hover:border-blue-300 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-500/20 transition-all duration-300 text-center backdrop-blur-sm"
+                className="w-full sm:w-72"
               >
-                <svg
-                  className="w-5 h-5 inline-block mr-2 mb-1 align-middle"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
+                <Button
+                  variant="outlined-primary"
+                  size="lg"
+                  fullWidth
+                  className="text-base sm:text-lg border-2 border-white/80 text-white hover:bg-white/20 hover:border-white backdrop-blur-md bg-white/5"
+                  icon={
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.09 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.74 3.03a2 2 0 0 1-.45 2.11L9.91 10.09a16 16 0 0 0 6 6l1.22-1.22a2 2 0 0 1 2.11-.45c.96.37 1.98.62 3.03.74A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  }
                 >
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.09 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.74 3.03a2 2 0 0 1-.45 2.11L9.91 10.09a16 16 0 0 0 6 6l1.22-1.22a2 2 0 0 1 2.11-.45c.96.37 1.98.62 3.03.74A2 2 0 0 1 22 16.92z" />
-                </svg>{" "}
-                Llamar / WhatsApp
+                  Llamar / WhatsApp
+                </Button>
               </a>
             </div>
           </div>
@@ -340,11 +355,14 @@ export default function Home() {
                 Agenda tu cita hoy y descubre por qué somos el salón favorito de
                 la ciudad
               </p>
-              <Link
-                href="/reserva"
-                className="bg-white text-blue-700 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 inline-block text-sm sm:text-base"
-              >
-                Reservar Ahora
+              <Link href="/reserva">
+                <Button
+                  variant="outlined-primary"
+                  size="lg"
+                  className="text-sm sm:text-base bg-white text-blue-600 border-white hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Reservar Ahora
+                </Button>
               </Link>
             </div>
           </div>

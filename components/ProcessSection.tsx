@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 export default function ProcessSection() {
   const steps = [
@@ -128,11 +129,14 @@ export default function ProcessSection() {
           <p className="text-gray-700 dark:text-gray-300 mb-4 sm:mb-6 text-sm sm:text-base">
             ¿Lista para comenzar tu transformación?
           </p>
-          <Link
-            href="/reserva"
-            className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base lg:text-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300 inline-block"
-          >
-            Iniciar mi Proceso
+          <Link href="/reserva">
+            <Button
+              variant="outlined-primary"
+              size="lg"
+              className="text-sm sm:text-base lg:text-lg"
+            >
+              Iniciar mi Proceso
+            </Button>
           </Link>
         </div>
       </div>
