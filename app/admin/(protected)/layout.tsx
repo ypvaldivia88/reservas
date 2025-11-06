@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -13,8 +13,8 @@ export default function AdminProtectedLayout({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   const handleLogout = async () => {
     try {
@@ -73,24 +73,80 @@ export default function AdminProtectedLayout({
                 </p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-center">
+
+            {/* Desktop View - Botones */}
+            <div className="hidden md:flex items-center gap-3">
               <ThemeToggle />
               <button
                 onClick={() => setShowChangePassword(!showChangePassword)}
-                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 touch-manipulation min-h-[44px] whitespace-nowrap"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
               >
-                <span className="hidden sm:inline">🔑 Cambiar Contraseña</span>
-                <span className="sm:hidden">🔑</span>
+                🔑 Cambiar Contraseña
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm sm:text-base font-medium border border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 touch-manipulation min-h-[44px] whitespace-nowrap"
+                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm font-medium border border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 whitespace-nowrap"
               >
-                <span className="hidden sm:inline">🚪 Cerrar Sesión</span>
-                <span className="sm:hidden">🚪</span>
+                🚪 Cerrar Sesión
+              </button>
+            </div>
+
+            {/* Mobile View - Hamburger Menu */}
+            <div className="flex md:hidden items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-colors touch-manipulation"
+                aria-label="Toggle menu"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {isMobileMenuOpen ?
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  : <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  }
+                </svg>
               </button>
             </div>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden mt-4 space-y-2 pb-2">
+              <button
+                onClick={() => {
+                  setShowChangePassword(!showChangePassword);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm font-medium shadow-lg flex items-center justify-center gap-2 touch-manipulation"
+              >
+                🔑 Cambiar Contraseña
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm font-medium border border-gray-300 dark:border-white/20 flex items-center justify-center gap-2 touch-manipulation"
+              >
+                🚪 Cerrar Sesión
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
