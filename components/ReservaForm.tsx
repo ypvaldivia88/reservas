@@ -463,7 +463,60 @@ export default function ReservaForm() {
     "Confirmar Reserva",
   ];
 
-  const stepIcons = ["👤", "📅", "💅", "✨"];
+  const stepIcons = [
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+      />
+    </svg>,
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>,
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+      />
+    </svg>,
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>,
+  ];
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transition-colors duration-200">
@@ -481,7 +534,21 @@ export default function ReservaForm() {
                     : "bg-blue-800/30 text-white/50"
                   }`}
                 >
-                  {step < currentStep ? "✓" : stepIcons[step - 1]}
+                  {step < currentStep ?
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  : stepIcons[step - 1]}
                 </div>
                 <span
                   className={`text-xs mt-1 font-medium hidden sm:block ${
@@ -543,8 +610,20 @@ export default function ReservaForm() {
                       }`}
                       required
                     />
-                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                      📞
+                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-blue-600 dark:text-blue-400">
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
+                      </svg>
                     </span>
                     {isCheckingPhone && (
                       <span className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2">
@@ -562,7 +641,20 @@ export default function ReservaForm() {
                     !clientInfo &&
                     !isNameEnabled && (
                       <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                        <span className="mr-1">🔍</span> Verificando teléfono...
+                        <svg
+                          className="w-4 h-4 mr-1 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        Verificando teléfono...
                       </p>
                     )}
                 </div>
@@ -600,8 +692,35 @@ export default function ReservaForm() {
                       }`}
                       required
                     />
-                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                      {clientInfo ? "✓" : "👤"}
+                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                      {clientInfo ?
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      : <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      }
                     </span>
                   </div>
                   {errors.nombre && (
@@ -611,14 +730,38 @@ export default function ReservaForm() {
                   )}
                   {!isNameEnabled && !clientInfo && !isCheckingPhone && (
                     <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 flex items-center">
-                      <span className="mr-1">💡</span> Primero verifica tu
-                      número de teléfono
+                      <svg
+                        className="w-4 h-4 mr-1 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Primero verifica tu número de teléfono
                     </p>
                   )}
                   {isNameEnabled && !clientInfo && (
                     <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-green-600 dark:text-green-400 flex items-center">
-                      <span className="mr-1">✨</span> ¡Nuevo cliente! Completa
-                      tu nombre para registrarte
+                      <svg
+                        className="w-4 h-4 mr-1 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                        />
+                      </svg>
+                      ¡Nuevo cliente! Completa tu nombre para registrarte
                     </p>
                   )}
                 </div>
@@ -629,14 +772,39 @@ export default function ReservaForm() {
                 <div className="mt-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm sm:text-base font-medium text-blue-900 dark:text-blue-200 mb-2">
-                        👋 ¡Bienvenido de nuevo, {clientInfo.cliente.nombre}!
+                      <p className="text-sm sm:text-base font-medium text-blue-900 dark:text-blue-200 mb-2 flex items-center">
+                        <svg
+                          className="w-5 h-5 mr-2 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
+                          />
+                        </svg>
+                        ¡Bienvenido de nuevo, {clientInfo.cliente.nombre}!
                       </p>
                       {clientInfo.reservasActivas.length > 0 ?
                         <div>
-                          <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 mb-2">
-                            📅 Tienes {clientInfo.reservasActivas.length}{" "}
-                            reserva
+                          <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 mb-2 flex items-center">
+                            <svg
+                              className="w-4 h-4 mr-1 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            Tienes {clientInfo.reservasActivas.length} reserva
                             {clientInfo.reservasActivas.length > 1 ?
                               "s"
                             : ""}{" "}
@@ -664,8 +832,39 @@ export default function ReservaForm() {
                                         }`}
                                       >
                                         {reserva.estado === "confirmada" ?
-                                          "✓ Confirmada"
-                                        : "⏳ Pendiente"}
+                                          <span className="flex items-center gap-1">
+                                            <svg
+                                              className="w-3 h-3"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M5 13l4 4L19 7"
+                                              />
+                                            </svg>
+                                            Confirmada
+                                          </span>
+                                        : <span className="flex items-center gap-1">
+                                            <svg
+                                              className="w-3 h-3 animate-spin"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                              />
+                                            </svg>
+                                            Pendiente
+                                          </span>
+                                        }
                                       </span>
                                     </div>
                                     <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -681,7 +880,19 @@ export default function ReservaForm() {
                                     }
                                     className="flex items-center justify-center gap-1 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-xs font-medium whitespace-nowrap"
                                   >
-                                    <span>🗑️</span>
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
                                     <span>Cancelar</span>
                                   </button>
                                 </div>
@@ -904,7 +1115,19 @@ export default function ReservaForm() {
                 {form.largo && (
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                     <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
-                      <span className="mr-2">✨</span>
+                      <svg
+                        className="w-4 h-4 mr-2 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                        />
+                      </svg>
                       Seleccionaste:{" "}
                       <strong className="ml-1">#{form.largo}</strong> -
                       <span className="ml-1">
@@ -955,8 +1178,21 @@ export default function ReservaForm() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    🎨 O elige colores personalizados:
+                  <label className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <svg
+                      className="w-4 h-4 mr-1 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+                      />
+                    </svg>
+                    O elige colores personalizados:
                   </label>
                   <div className="flex items-stretch gap-2 sm:gap-3">
                     <div className="relative flex-shrink-0">
@@ -1076,8 +1312,20 @@ export default function ReservaForm() {
                     placeholder="O describe tu diseño personalizado aquí..."
                     className="w-full px-3 py-2 sm:px-4 sm:py-3 pl-8 sm:pl-12 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 resize-none transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base"
                   />
-                  <span className="absolute left-2 sm:left-4 top-2 sm:top-3 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                    🎨
+                  <span className="absolute left-2 sm:left-4 top-2 sm:top-3 text-blue-600 dark:text-blue-400">
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+                      />
+                    </svg>
                   </span>
                 </div>
 
@@ -1091,8 +1339,21 @@ export default function ReservaForm() {
                   </p>
                 )}
 
-                <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  💡 Si no tienes una idea específica, nuestras profesionales te
+                <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                  <svg
+                    className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Si no tienes una idea específica, nuestras profesionales te
                   ayudarán a elegir el diseño perfecto
                 </p>
               </div>
@@ -1103,8 +1364,21 @@ export default function ReservaForm() {
           {currentStep === 4 && (
             <div className="space-y-4 animate-fadeIn">
               <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                  📋 Resumen de tu Reserva
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+                  <svg
+                    className="w-5 h-5 mr-2 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    />
+                  </svg>
+                  Resumen de tu Reserva
                 </h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
@@ -1168,7 +1442,19 @@ export default function ReservaForm() {
 
               <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800">
                 <div className="flex items-start space-x-2 sm:space-x-3">
-                  <span className="text-xl sm:text-2xl">💡</span>
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
                   <div>
                     <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base mb-1 sm:mb-2">
                       Información Importante
@@ -1224,7 +1510,20 @@ export default function ReservaForm() {
                     <span className="text-sm sm:text-base">Procesando...</span>
                   </span>
                 : <span className="flex items-center justify-center text-sm sm:text-base">
-                    ✨ Confirmar Reserva
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                      />
+                    </svg>
+                    Confirmar Reserva
                   </span>
                 }
               </button>
@@ -1294,9 +1593,24 @@ export default function ReservaForm() {
             </div>
 
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
-              <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                💡 <strong>Nota:</strong> Al confirmar, se abrirá WhatsApp para
-                notificar al administrador sobre tu solicitud de cancelación.
+              <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-start">
+                <svg
+                  className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>
+                  <strong>Nota:</strong> Al confirmar, se abrirá WhatsApp para
+                  notificar al administrador sobre tu solicitud de cancelación.
+                </span>
               </p>
             </div>
 

@@ -39,18 +39,16 @@ export default function AdminProtectedLayout({
       const data = await res.json();
 
       if (data.success) {
-        setPasswordMessage("✅ Contraseña actualizada exitosamente");
+        setPasswordMessage("Contraseña actualizada exitosamente");
         setCurrentPassword("");
         setNewPassword("");
         setTimeout(() => setShowChangePassword(false), 2000);
       } else {
-        setPasswordMessage(
-          "❌ " + (data.error || "Error al cambiar contraseña")
-        );
+        setPasswordMessage(data.error || "Error al cambiar contraseña");
       }
     } catch (error) {
       console.error("Error:", error);
-      setPasswordMessage("❌ Error de conexión");
+      setPasswordMessage("Error de conexión");
     }
   };
 
@@ -62,7 +60,19 @@ export default function AdminProtectedLayout({
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
-                <span className="text-2xl">💎</span>
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -101,15 +111,41 @@ export default function AdminProtectedLayout({
 
               <button
                 onClick={() => setShowChangePassword(!showChangePassword)}
-                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2"
               >
-                🔑 Cambiar Contraseña
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
+                </svg>
+                <span>Cambiar Contraseña</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm font-medium border border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 whitespace-nowrap"
+                className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm font-medium border border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 whitespace-nowrap flex items-center gap-2"
               >
-                🚪 Cerrar Sesión
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Cerrar Sesión</span>
               </button>
             </div>
 
@@ -175,7 +211,20 @@ export default function AdminProtectedLayout({
                 }}
                 className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-sm font-medium shadow-lg flex items-center justify-center gap-2 touch-manipulation"
               >
-                🔑 Cambiar Contraseña
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
+                </svg>
+                <span>Cambiar Contraseña</span>
               </button>
               <button
                 onClick={() => {
@@ -184,7 +233,20 @@ export default function AdminProtectedLayout({
                 }}
                 className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 text-gray-700 dark:text-white rounded-lg transition-all duration-300 text-sm font-medium border border-gray-300 dark:border-white/20 flex items-center justify-center gap-2 touch-manipulation"
               >
-                🚪 Cerrar Sesión
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Cerrar Sesión</span>
               </button>
             </div>
           )}
@@ -199,8 +261,20 @@ export default function AdminProtectedLayout({
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-200 dark:border-white/20 animate-fadeInUp">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-              <span className="text-3xl">🔒</span>
-              Cambiar Contraseña
+              <svg
+                className="w-7 h-7 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+              <span>Cambiar Contraseña</span>
             </h2>
             <form onSubmit={handleChangePassword} className="space-y-6">
               <div>
@@ -232,12 +306,40 @@ export default function AdminProtectedLayout({
               </div>
               {passwordMessage && (
                 <div
-                  className={`p-3 rounded-lg ${
-                    passwordMessage.includes("✅") ?
+                  className={`p-3 rounded-lg flex items-center gap-2 ${
+                    passwordMessage.includes("exitosamente") ?
                       "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                     : "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300"
                   }`}
                 >
+                  {passwordMessage.includes("exitosamente") ?
+                    <svg
+                      className="w-5 h-5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  : <svg
+                      className="w-5 h-5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  }
                   <p className="text-sm font-medium">{passwordMessage}</p>
                 </div>
               )}
