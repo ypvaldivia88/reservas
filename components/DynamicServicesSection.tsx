@@ -5,6 +5,7 @@ import { Servicio, ImageData } from "@/lib/types";
 export default function DynamicServicesSection() {
   const [servicios, setServicios] = useState<(Servicio & { imagen?: ImageData })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   useEffect(() => {
     loadServicios();
@@ -22,16 +23,22 @@ export default function DynamicServicesSection() {
         const dataImagenes = await resImagenes.json();
 
         if (dataServicios.success && dataImagenes.success) {
-          const serviciosActivos = dataServicios.data.filter((s: Servicio) => s.activo);
-          
+          const serviciosActivos = dataServicios.data.filter(
+            (s: Servicio) => s.activo
+          );
+
           // Map servicios with their images
-          const serviciosConImagenes = serviciosActivos.map((servicio: Servicio) => {
-            const imagen = dataImagenes.data.find((img: ImageData) => img._id === servicio.imagenId);
-            return {
-              ...servicio,
-              imagen,
-            };
-          });
+          const serviciosConImagenes = serviciosActivos.map(
+            (servicio: Servicio) => {
+              const imagen = dataImagenes.data.find(
+                (img: ImageData) => img._id === servicio.imagenId
+              );
+              return {
+                ...servicio,
+                imagen,
+              };
+            }
+          );
 
           setServicios(serviciosConImagenes);
         }
@@ -88,6 +95,12 @@ export default function DynamicServicesSection() {
             <div
               key={servicio._id}
               className="group relative rounded-2xl overflow-hidden transition-all duration-500 transform-gpu will-change-transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl cursor-pointer h-64 sm:h-72 lg:h-80"
+              onClick={() =>
+                setExpandedCard(
+                  expandedCard === servicio._id ? null : servicio._id || null
+                )
+              }
+              onMouseLeave={() => setExpandedCard(null)}
               style={{
                 backgroundImage:
                   servicio.imagen?.blobUrl ?
@@ -101,7 +114,11 @@ export default function DynamicServicesSection() {
             >
               {/* decorative sparkle that appears on hover */}
               <svg
-                className="absolute top-3 right-3 w-8 h-8 text-white opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-400 drop-shadow-lg z-10"
+                className={`absolute top-3 right-3 w-8 h-8 text-white transition-all duration-400 drop-shadow-lg z-10 ${
+                  expandedCard === servicio._id ?
+                    "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0"
+                }`}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -114,14 +131,32 @@ export default function DynamicServicesSection() {
               </svg>
 
               {/* Text container with blur background - expands on hover/tap */}
-              <div className="absolute bottom-0 left-0 right-0 backdrop-blur-md bg-white/20 dark:bg-black/30 px-4 sm:px-5 lg:px-6 py-3 sm:py-4 transition-all duration-500 group-hover:py-5 group-hover:sm:py-6 group-hover:backdrop-blur-lg group-hover:bg-white/30 dark:group-hover:bg-black/40 group-active:py-5 group-active:sm:py-6">
+              <div
+                className={`absolute bottom-0 left-0 right-0 backdrop-blur-md bg-white/20 dark:bg-black/30 px-4 sm:px-5 lg:px-6 py-3 sm:py-4 transition-all duration-500 ${
+                  expandedCard === servicio._id ?
+                    "py-5 sm:py-6 backdrop-blur-lg bg-white/30 dark:bg-black/40"
+                  : "group-hover:py-5 group-hover:sm:py-6 group-hover:backdrop-blur-lg group-hover:bg-white/30 dark:group-hover:bg-black/40"
+                }`}
+              >
                 {/* Título - siempre visible */}
-                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white drop-shadow-lg mb-0 group-hover:mb-2 group-active:mb-2 transition-all duration-300">
+                <h3
+                  className={`text-sm sm:text-base lg:text-lg font-bold text-white drop-shadow-lg transition-all duration-300 ${
+                    expandedCard === servicio._id ?
+                      "mb-2"
+                    : "mb-0 group-hover:mb-2"
+                  }`}
+                >
                   {servicio.nombre}
                 </h3>
 
                 {/* Descripción - se muestra en hover/tap con animación */}
-                <p className="text-sm sm:text-base text-white/95 drop-shadow-md leading-relaxed max-h-0 opacity-0 overflow-hidden group-hover:max-h-32 group-hover:opacity-100 group-active:max-h-32 group-active:opacity-100 transition-all duration-500 ease-in-out">
+                <p
+                  className={`text-xs sm:text-sm text-white/95 drop-shadow-md leading-relaxed overflow-hidden transition-all duration-500 ease-in-out ${
+                    expandedCard === servicio._id ?
+                      "max-h-32 opacity-100"
+                    : "max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100"
+                  }`}
+                >
                   {servicio.descripcion}
                 </p>
               </div>
