@@ -14,11 +14,17 @@ function DashboardContent() {
   // Modal states for Reservas
   const [editingReserva, setEditingReserva] = useState<Reserva | null>(null);
   const [deletingReserva, setDeletingReserva] = useState<Reserva | null>(null);
+  const [openMenuReservaId, setOpenMenuReservaId] = useState<string | null>(
+    null
+  );
 
   // Modal states for Clientes
   const [creatingCliente, setCreatingCliente] = useState(false);
   const [editingCliente, setEditingCliente] = useState<User | null>(null);
   const [deletingCliente, setDeletingCliente] = useState<User | null>(null);
+  const [openMenuClienteId, setOpenMenuClienteId] = useState<string | null>(
+    null
+  );
 
   const [actionMessage, setActionMessage] = useState("");
   const router = useRouter();
@@ -27,6 +33,21 @@ function DashboardContent() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = () => {
+      if (openMenuReservaId) {
+        setOpenMenuReservaId(null);
+      }
+      if (openMenuClienteId) {
+        setOpenMenuClienteId(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openMenuReservaId, openMenuClienteId]);
 
   useEffect(() => {
     // Check if there's a reserva parameter in the URL
@@ -411,36 +432,143 @@ function DashboardContent() {
                     className="px-4 py-4 text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex gap-2 flex-wrap">
+                    {/* Mobile: Dropdown Menu */}
+                    <div className="md:hidden relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuReservaId(
+                            openMenuReservaId === reserva._id ?
+                              null
+                            : reserva._id!
+                          );
+                        }}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        aria-label="Menú de acciones"
+                      >
+                        <svg
+                          className="w-5 h-5 text-gray-600 dark:text-gray-300"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {openMenuReservaId === reserva._id && (
+                        <div
+                          className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {reserva.estado === "pendiente" && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  handleUpdateReserva(
+                                    { ...reserva, estado: "confirmada" },
+                                    true
+                                  );
+                                  setOpenMenuReservaId(null);
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-300 font-medium transition-colors flex items-center gap-3"
+                              >
+                                <span className="text-lg">✅</span>
+                                Confirmar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleUpdateReserva(
+                                    { ...reserva, estado: "cancelada" },
+                                    true
+                                  );
+                                  setOpenMenuReservaId(null);
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                              >
+                                <span className="text-lg">❌</span>
+                                Cancelar
+                              </button>
+                            </>
+                          )}
+                          {reserva.estado === "confirmada" && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingReserva(reserva);
+                                  setOpenMenuReservaId(null);
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium transition-colors flex items-center gap-3"
+                              >
+                                <span className="text-lg">✔️</span>
+                                Completar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleUpdateReserva(
+                                    { ...reserva, estado: "cancelada" },
+                                    true
+                                  );
+                                  setOpenMenuReservaId(null);
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                              >
+                                <span className="text-lg">❌</span>
+                                Cancelar
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => {
+                              setEditingReserva(reserva);
+                              setOpenMenuReservaId(null);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-3 border-t border-gray-200 dark:border-gray-700"
+                          >
+                            <span className="text-lg">✏️</span>
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeletingReserva(reserva);
+                              setOpenMenuReservaId(null);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                          >
+                            <span className="text-lg">🗑️</span>
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop: Botones con Iconos y Texto */}
+                    <div className="hidden md:flex gap-2 flex-wrap">
                       {reserva.estado === "pendiente" && (
                         <>
                           <button
                             onClick={() => {
                               handleUpdateReserva(
-                                {
-                                  ...reserva,
-                                  estado: "confirmada",
-                                },
+                                { ...reserva, estado: "confirmada" },
                                 true
                               );
                             }}
-                            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
                           >
-                            ✅
+                            <span>✅</span>
+                            <span>Confirmar</span>
                           </button>
                           <button
                             onClick={() => {
                               handleUpdateReserva(
-                                {
-                                  ...reserva,
-                                  estado: "cancelada",
-                                },
+                                { ...reserva, estado: "cancelada" },
                                 true
                               );
                             }}
-                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
                           >
-                            ❌
+                            <span>❌</span>
+                            <span>Cancelar</span>
                           </button>
                         </>
                       )}
@@ -448,32 +576,39 @@ function DashboardContent() {
                         <>
                           <button
                             onClick={() => setEditingReserva(reserva)}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
                             title="Completar reserva (debe agregar el costo)"
                           >
-                            ✔️
+                            <span>✔️</span>
+                            <span>Completar</span>
                           </button>
                           <button
                             onClick={() => {
                               handleUpdateReserva(
-                                {
-                                  ...reserva,
-                                  estado: "cancelada",
-                                },
+                                { ...reserva, estado: "cancelada" },
                                 true
                               );
                             }}
-                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
                           >
-                            ❌
+                            <span>❌</span>
+                            <span>Cancelar</span>
                           </button>
                         </>
                       )}
                       <button
-                        onClick={() => setDeletingReserva(reserva)}
-                        className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                        onClick={() => setEditingReserva(reserva)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
                       >
-                        🗑️
+                        <span>✏️</span>
+                        <span>Editar</span>
+                      </button>
+                      <button
+                        onClick={() => setDeletingReserva(reserva)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        <span>🗑️</span>
+                        <span>Eliminar</span>
                       </button>
                     </div>
                   </td>
@@ -571,12 +706,76 @@ function DashboardContent() {
                     className="px-4 py-4 text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      onClick={() => setDeletingCliente(cliente)}
-                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
-                    >
-                      🗑️ Eliminar
-                    </button>
+                    {/* Mobile: Dropdown Menu */}
+                    <div className="md:hidden relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuClienteId(
+                            openMenuClienteId === cliente._id ?
+                              null
+                            : cliente._id!
+                          );
+                        }}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        aria-label="Menú de acciones"
+                      >
+                        <svg
+                          className="w-5 h-5 text-gray-600 dark:text-gray-300"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {openMenuClienteId === cliente._id && (
+                        <div
+                          className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => {
+                              setEditingCliente(cliente);
+                              setOpenMenuClienteId(null);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-3"
+                          >
+                            <span className="text-lg">✏️</span>
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeletingCliente(cliente);
+                              setOpenMenuClienteId(null);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                          >
+                            <span className="text-lg">🗑️</span>
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop: Botones con Iconos y Texto */}
+                    <div className="hidden md:flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => setEditingCliente(cliente)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        <span>✏️</span>
+                        <span>Editar</span>
+                      </button>
+                      <button
+                        onClick={() => setDeletingCliente(cliente)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        <span>🗑️</span>
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

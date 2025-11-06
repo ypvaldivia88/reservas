@@ -69,7 +69,7 @@ export default function AdminProtectedLayout({
                   Panel Administrador
                 </h1>
                 <p className="text-blue-600 dark:text-blue-300 text-sm">
-                  Beauty Salon Management
+                  Gestión del Salón de Belleza
                 </p>
               </div>
             </div>
