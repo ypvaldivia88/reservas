@@ -11,18 +11,26 @@ import TimePickerInput from "@/components/TimePickerInput";
 export default function AdminSchedulePage() {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [editingDay, setEditingDay] = useState<DayOfWeek | null>(null);
   const [editingSlots, setEditingSlots] = useState<string>("");
   const [showTimePickerModal, setShowTimePickerModal] = useState(false);
   const [editingSlotIndex, setEditingSlotIndex] = useState<number | null>(null);
   const [specialDays, setSpecialDays] = useState<AvailabilityOverride[]>([]);
-  const [showAddSpecialDay, setShowAddSpecialDay] = useState(false);
-  const [newSpecialDay, setNewSpecialDay] = useState({
+  const [showSpecialDayModal, setShowSpecialDayModal] = useState(false);
+  const [editingSpecialDay, setEditingSpecialDay] = useState<{
+    date: string;
+    reason: string;
+    isWorkingDay: boolean;
+    slots: string;
+    isEditing: boolean;
+  }>({
     date: "",
     reason: "",
     isWorkingDay: false,
     slots: "",
+    isEditing: false,
   });
 
   useEffect(() => {
@@ -117,6 +125,7 @@ export default function AdminSchedulePage() {
   const handleSaveSlots = async () => {
     if (!schedule || !editingDay) return;
 
+    setSaving(true);
     const updatedSchedule = { ...schedule };
     const dayIndex = updatedSchedule.schedule.findIndex(
       (d) => d.dayOfWeek === editingDay
@@ -126,13 +135,19 @@ export default function AdminSchedulePage() {
       // Si estamos editando un slot existente
       if (editingSlotIndex !== null) {
         if (!editingSlots.trim()) {
-          setMessage("❌ Debe ingresar un horario válido o usar el botón Eliminar");
+          setMessage(
+            "❌ Debe ingresar un horario válido o usar el botón Eliminar"
+          );
+          setSaving(false);
           return;
         }
 
         const newTime = editingSlots.trim();
         if (!isValidTime(newTime)) {
-          setMessage("❌ El horario ingresado no es válido. Use formato HH:mm (00:00 - 23:59)");
+          setMessage(
+            "❌ El horario ingresado no es válido. Use formato HH:mm (00:00 - 23:59)"
+          );
+          setSaving(false);
           return;
         }
 
@@ -160,11 +175,13 @@ export default function AdminSchedulePage() {
           setMessage(
             "❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)"
           );
+          setSaving(false);
           return;
         }
 
         if (newTimes.length === 0) {
           setMessage("❌ Debe ingresar al menos un horario");
+          setSaving(false);
           return;
         }
 
@@ -190,11 +207,13 @@ export default function AdminSchedulePage() {
         handleCloseModal();
       }
     }
+    setSaving(false);
   };
 
   const handleDeleteSlot = async () => {
     if (!schedule || !editingDay || editingSlotIndex === null) return;
 
+    setSaving(true);
     const updatedSchedule = { ...schedule };
     const dayIndex = updatedSchedule.schedule.findIndex(
       (d) => d.dayOfWeek === editingDay
@@ -205,6 +224,7 @@ export default function AdminSchedulePage() {
       await saveSchedule(updatedSchedule);
       handleCloseModal();
     }
+    setSaving(false);
   };
 
   const saveSchedule = async (updatedSchedule: Schedule) => {
@@ -243,28 +263,30 @@ export default function AdminSchedulePage() {
   };
 
   const handleAddSpecialDay = async () => {
-    if (!newSpecialDay.date) {
+    if (!editingSpecialDay.date) {
       setMessage("❌ La fecha es requerida");
       return;
     }
 
+    setSaving(true);
     try {
       const slotsArray =
-        newSpecialDay.isWorkingDay && newSpecialDay.slots ?
-          newSpecialDay.slots
+        editingSpecialDay.isWorkingDay && editingSpecialDay.slots ?
+          editingSpecialDay.slots
             .split(",")
-            .map((t) => t.trim())
+            .map((t: string) => t.trim())
             .filter(isValidTime)
         : [];
 
       if (
-        newSpecialDay.isWorkingDay &&
-        newSpecialDay.slots &&
+        editingSpecialDay.isWorkingDay &&
+        editingSpecialDay.slots &&
         slotsArray.length === 0
       ) {
         setMessage(
           "❌ Los horarios ingresados no son válidos. Use formato HH:mm (00:00 - 23:59)"
         );
+        setSaving(false);
         return;
       }
 
@@ -272,22 +294,23 @@ export default function AdminSchedulePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          date: newSpecialDay.date,
-          reason: newSpecialDay.reason,
-          isWorkingDay: newSpecialDay.isWorkingDay,
-          slots: slotsArray.map((time) => ({ time, available: true })),
+          date: editingSpecialDay.date,
+          reason: editingSpecialDay.reason,
+          isWorkingDay: editingSpecialDay.isWorkingDay,
+          slots: slotsArray.map((time: string) => ({ time, available: true })),
         }),
       });
 
       const data = await res.json();
       if (data.success) {
         setMessage("✅ Día especial creado exitosamente");
-        setShowAddSpecialDay(false);
-        setNewSpecialDay({
+        setShowSpecialDayModal(false);
+        setEditingSpecialDay({
           date: "",
           reason: "",
           isWorkingDay: false,
           slots: "",
+          isEditing: false,
         });
         await loadSpecialDays();
         setTimeout(() => setMessage(""), 3000);
@@ -297,7 +320,31 @@ export default function AdminSchedulePage() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const handleOpenSpecialDayModal = () => {
+    setEditingSpecialDay({
+      date: "",
+      reason: "",
+      isWorkingDay: false,
+      slots: "",
+      isEditing: false,
+    });
+    setShowSpecialDayModal(true);
+  };
+
+  const handleCloseSpecialDayModal = () => {
+    setShowSpecialDayModal(false);
+    setEditingSpecialDay({
+      date: "",
+      reason: "",
+      isWorkingDay: false,
+      slots: "",
+      isEditing: false,
+    });
   };
 
   const handleDeleteSpecialDay = async (date: string) => {
@@ -381,6 +428,7 @@ export default function AdminSchedulePage() {
                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Horarios
                 </th>
+                <th></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -433,29 +481,6 @@ export default function AdminSchedulePage() {
                             ))}
                           </>
                         )}
-
-                        {/* Botón para agregar nuevo horario */}
-                        <button
-                          onClick={() => handleEditSlots(day.dayOfWeek)}
-                          className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all touch-manipulation shadow-md hover:shadow-lg"
-                          title="Agregar horario"
-                          aria-label="Agregar nuevo horario"
-                        >
-                          <svg
-                            className="w-4 h-4 sm:w-5 sm:h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2.5}
-                              d="M12 4v16m8-8H4"
-                            />
-                          </svg>
-                        </button>
-
                         {day.slots.length === 0 && (
                           <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 ml-2">
                             Sin horarios
@@ -466,6 +491,31 @@ export default function AdminSchedulePage() {
                         Cerrado
                       </span>
                     }
+                  </td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
+                    {/* Botón para agregar nuevo horario */}
+                    {day.isWorkingDay && (
+                      <button
+                        onClick={() => handleEditSlots(day.dayOfWeek)}
+                        className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all touch-manipulation shadow-md hover:shadow-lg"
+                        title="Agregar horario"
+                        aria-label="Agregar nuevo horario"
+                      >
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -523,7 +573,9 @@ export default function AdminSchedulePage() {
               <TimePickerInput
                 value={editingSlots}
                 onChange={setEditingSlots}
-                placeholder={editingSlotIndex !== null ? "HH:mm" : "HH:mm, HH:mm, ..."}
+                placeholder={
+                  editingSlotIndex !== null ? "HH:mm" : "HH:mm, HH:mm, ..."
+                }
                 className="w-full"
                 singleMode={editingSlotIndex !== null}
               />
@@ -540,23 +592,41 @@ export default function AdminSchedulePage() {
                 <>
                   <button
                     onClick={handleDeleteSlot}
-                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation"
+                    disabled={saving}
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Eliminar horario"
                   >
-                    🗑️ Eliminar
+                    {saving ?
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Eliminando...
+                      </span>
+                    : "🗑️ Eliminar"}
                   </button>
                   <button
                     onClick={handleSaveSlots}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation"
+                    disabled={saving}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    💾 Guardar
+                    {saving ?
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Guardando...
+                      </span>
+                    : "💾 Guardar"}
                   </button>
                 </>
               : <button
                   onClick={handleSaveSlots}
-                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation"
+                  disabled={saving}
+                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ✅ Agregar Horarios
+                  {saving ?
+                    <span className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      Agregando...
+                    </span>
+                  : "✅ Agregar Horarios"}
                 </button>
               }
             </div>
@@ -571,10 +641,10 @@ export default function AdminSchedulePage() {
             📌 Gestión de Días Especiales
           </h2>
           <button
-            onClick={() => setShowAddSpecialDay(!showAddSpecialDay)}
+            onClick={handleOpenSpecialDayModal}
             className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px]"
           >
-            {showAddSpecialDay ? "❌ Cancelar" : "+ Agregar Día Especial"}
+            + Agregar Día Especial
           </button>
         </div>
 
@@ -582,90 +652,6 @@ export default function AdminSchedulePage() {
           Configura horarios especiales para días específicos (feriados,
           eventos, cierres temporales, etc.)
         </p>
-
-        {/* Formulario para agregar día especial */}
-        {showAddSpecialDay && (
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Fecha *
-                </label>
-                <input
-                  type="date"
-                  value={newSpecialDay.date}
-                  onChange={(e) =>
-                    setNewSpecialDay({ ...newSpecialDay, date: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  min={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Motivo
-                </label>
-                <input
-                  type="text"
-                  value={newSpecialDay.reason}
-                  onChange={(e) =>
-                    setNewSpecialDay({
-                      ...newSpecialDay,
-                      reason: e.target.value,
-                    })
-                  }
-                  placeholder="Ej: Feriado, Evento especial"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={newSpecialDay.isWorkingDay}
-                  onChange={(e) =>
-                    setNewSpecialDay({
-                      ...newSpecialDay,
-                      isWorkingDay: e.target.checked,
-                      slots: e.target.checked ? newSpecialDay.slots : "",
-                    })
-                  }
-                  className="w-4 h-4 text-blue-600 rounded"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Día laborable (con horarios especiales)
-                </span>
-              </label>
-            </div>
-
-            {newSpecialDay.isWorkingDay && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Horarios disponibles
-                </label>
-                <TimePickerInput
-                  value={newSpecialDay.slots}
-                  onChange={(value) =>
-                    setNewSpecialDay({ ...newSpecialDay, slots: value })
-                  }
-                  placeholder="Seleccione horarios"
-                  className="w-full"
-                />
-              </div>
-            )}
-
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={handleAddSpecialDay}
-                className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium touch-manipulation min-h-[44px]"
-              >
-                💾 Guardar Día Especial
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Lista de días especiales */}
         {specialDays.length === 0 ?
@@ -726,6 +712,140 @@ export default function AdminSchedulePage() {
           </div>
         }
       </div>
+
+      {/* Modal de Día Especial */}
+      {showSpecialDayModal && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={handleCloseSpecialDayModal}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Agregar Día Especial
+              </h3>
+              <button
+                onClick={handleCloseSpecialDayModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Fecha *
+                  </label>
+                  <input
+                    type="date"
+                    value={editingSpecialDay.date}
+                    onChange={(e) =>
+                      setEditingSpecialDay({
+                        ...editingSpecialDay,
+                        date: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Motivo
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSpecialDay.reason}
+                    onChange={(e) =>
+                      setEditingSpecialDay({
+                        ...editingSpecialDay,
+                        reason: e.target.value,
+                      })
+                    }
+                    placeholder="Ej: Feriado, Evento especial"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={editingSpecialDay.isWorkingDay}
+                    onChange={(e) =>
+                      setEditingSpecialDay({
+                        ...editingSpecialDay,
+                        isWorkingDay: e.target.checked,
+                        slots: e.target.checked ? editingSpecialDay.slots : "",
+                      })
+                    }
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Día laborable (con horarios especiales)
+                  </span>
+                </label>
+              </div>
+
+              {editingSpecialDay.isWorkingDay && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Horarios disponibles
+                  </label>
+                  <TimePickerInput
+                    value={editingSpecialDay.slots}
+                    onChange={(value) =>
+                      setEditingSpecialDay({
+                        ...editingSpecialDay,
+                        slots: value,
+                      })
+                    }
+                    placeholder="Seleccione horarios"
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                onClick={handleAddSpecialDay}
+                disabled={saving}
+                className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ?
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Guardando...
+                  </span>
+                : "💾 Guardar Día Especial"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
