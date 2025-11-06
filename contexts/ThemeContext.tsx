@@ -40,17 +40,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    // Save to localStorage - this gives it priority over system preference
-    localStorage.setItem("theme", newTheme);
-    
-    // Apply theme to document immediately
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    setTheme((prevTheme) => {
+      const newTheme = prevTheme === "light" ? "dark" : "light";
+      
+      // Save to localStorage - this gives it priority over system preference
+      localStorage.setItem("theme", newTheme);
+      
+      // Apply theme to document immediately
+      if (newTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      
+      return newTheme;
+    });
   };
 
   // Always provide the context, even before mounting
