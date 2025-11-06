@@ -8,7 +8,7 @@ export default function AdminNav() {
   const navItems = [
     { href: "/admin/dashboard", label: "Portada", icon: "📊" },
     { href: "/admin/schedule", label: "Horarios", icon: "📅" },
-    { href: "/admin/contenido", label: "Contenido", icon: "🎨" },
+    { href: "/admin/contenido", label: "Media", icon: "🎨" },
   ];
 
   return (
@@ -23,18 +23,18 @@ export default function AdminNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center gap-1 sm:gap-2 px-2 xs:px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 whitespace-nowrap font-semibold text-xs xs:text-sm sm:text-base ${
+                  className={`relative flex flex-col items-center gap-0.5 sm:gap-1 px-2 xs:px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold min-w-[60px] xs:min-w-[70px] sm:min-w-[90px] ${
                     isActive ?
                       "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/30"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-700/50"
                   }`}
                 >
                   <span
-                    className={`text-base xs:text-lg sm:text-xl transition-transform duration-300 ${isActive ? "scale-110" : ""}`}
+                    className={`text-lg xs:text-xl sm:text-2xl transition-transform duration-300 ${isActive ? "scale-110" : ""}`}
                   >
                     {item.icon}
                   </span>
-                  <span className="hidden xs:inline">{item.label}</span>
+                  <span className="text-[10px] xs:text-xs sm:text-sm leading-tight text-center">{item.label}</span>
                   {isActive && (
                     <span className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-blue-500/20 dark:border-blue-400/30 pointer-events-none"></span>
                   )}
