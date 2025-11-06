@@ -1014,11 +1014,11 @@ function DashboardContent() {
 
                 {/* Quick Action Buttons */}
                 {editingReserva.estado === "pendiente" && (
-                  <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
-                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
-                      Acciones Rápidas:
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                    <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
+                      Acciones Rápidas
                     </h4>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => {
@@ -1031,9 +1031,10 @@ function DashboardContent() {
                           );
                         }}
                         disabled={saving}
-                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-5 py-2.5 border-2 border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-emerald-600 dark:hover:border-emerald-300"
                       >
-                        ✅ Confirmar Reserva
+                        <span className="text-lg">✅</span>
+                        <span>Confirmar Reserva</span>
                       </button>
                       <button
                         type="button"
@@ -1047,20 +1048,21 @@ function DashboardContent() {
                           );
                         }}
                         disabled={saving}
-                        className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-5 py-2.5 border-2 border-rose-500 dark:border-rose-400 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-rose-600 dark:hover:border-rose-300"
                       >
-                        ❌ Cancelar Reserva
+                        <span className="text-lg">❌</span>
+                        <span>Cancelar Reserva</span>
                       </button>
                     </div>
                   </div>
                 )}
 
                 {editingReserva.estado === "confirmada" && (
-                  <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
-                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
-                      Acciones Rápidas:
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                    <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
+                      Acciones Rápidas
                     </h4>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => {
@@ -1080,9 +1082,10 @@ function DashboardContent() {
                           );
                         }}
                         disabled={saving}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-5 py-2.5 border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-blue-600 dark:hover:border-blue-300"
                       >
-                        ✔️ Completar Reserva
+                        <span className="text-lg">✔️</span>
+                        <span>Completar Reserva</span>
                       </button>
                       <button
                         type="button"
@@ -1096,9 +1099,10 @@ function DashboardContent() {
                           );
                         }}
                         disabled={saving}
-                        className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-5 py-2.5 border-2 border-rose-500 dark:border-rose-400 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-rose-600 dark:hover:border-rose-300"
                       >
-                        ❌ Cancelar Reserva
+                        <span className="text-lg">❌</span>
+                        <span>Cancelar Reserva</span>
                       </button>
                     </div>
                   </div>
