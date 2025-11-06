@@ -619,35 +619,6 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Gestión de Contenido */}
-      <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-          <span className="text-3xl">🎨</span>
-          Gestión de Contenido
-        </h2>
-        <button
-          onClick={() => router.push("/admin/contenido")}
-          className="group w-full p-6 sm:p-8 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-600/30 dark:to-blue-600/30 hover:from-blue-200 hover:to-blue-100 dark:hover:from-blue-600/50 dark:hover:to-blue-600/50 rounded-xl border border-blue-200 dark:border-white/20 hover:border-blue-300 dark:hover:border-white/40 transition-all duration-300 text-left relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 group-hover:via-blue-400/20 transition-all"></div>
-          <div className="relative flex items-center justify-between">
-            <div>
-              <div className="text-5xl mb-4">💅</div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                Gestión Unificada de Contenido
-              </h3>
-              <p className="text-sm text-gray-700 dark:text-blue-200">
-                Administra imágenes, galerías, categorías y servicios en un solo
-                lugar
-              </p>
-            </div>
-            <div className="text-3xl text-gray-700 dark:text-white opacity-60 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
-              →
-            </div>
-          </div>
-        </button>
-      </div>
-
       {/* Clientes Table */}
       <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 dark:border-white/20">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">

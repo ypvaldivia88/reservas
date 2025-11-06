@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ImageData, Categoria, Servicio } from "@/lib/types";
 import { preprocessImage, base64ToDataURL, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
 import Image from "next/image";
@@ -11,7 +10,6 @@ export default function ContenidoAdmin() {
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const router = useRouter();
 
   // Filter states
   const [filterCategoria, setFilterCategoria] = useState<string>("");
@@ -340,55 +338,43 @@ export default function ContenidoAdmin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-gray-300">Cargando...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300 font-medium">
+            Cargando contenido...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => router.push("/admin/dashboard")}
-                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                ← Volver
-              </button>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                🎨 Gestión de Contenido
-              </h1>
-            </div>
-            <button
-              onClick={() => {
-                resetForm();
-                setShowUploadModal(true);
-              }}
-              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium"
-            >
-              + Nueva Imagen
-            </button>
-          </div>
+    <>
+      {/* Global Message */}
+      {message && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-l-4 border-blue-500 dark:border-blue-400 shadow-lg animate-fadeInUp">
+          <p className="text-center text-sm font-semibold text-blue-900 dark:text-white">
+            {message}
+          </p>
         </div>
-      </header>
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-        {/* Message */}
-        {message && (
-          <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <p className="text-sm">{message}</p>
-          </div>
-        )}
+      {/* Action Button */}
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={() => {
+            resetForm();
+            setShowUploadModal(true);
+          }}
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+        >
+          ➕ Nueva Imagen
+        </button>
+      </div>
 
-        {/* Filters and Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-4">
+      {/* Filters and Quick Actions */}
+      <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 mb-6 border border-gray-200 dark:border-white/20">
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -523,7 +509,6 @@ export default function ContenidoAdmin() {
             </p>
           </div>
         )}
-      </div>
 
       {/* Upload Modal */}
       {showUploadModal && (
@@ -1065,6 +1050,6 @@ export default function ContenidoAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

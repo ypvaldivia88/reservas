@@ -8,6 +8,7 @@ export default function AdminNav() {
   const navItems = [
     { href: "/admin/dashboard", label: "Portada", icon: "📊" },
     { href: "/admin/schedule", label: "Horarios", icon: "📅" },
+    { href: "/admin/contenido", label: "Contenido", icon: "🎨" },
   ];
 
   return (
