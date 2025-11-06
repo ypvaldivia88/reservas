@@ -9,6 +9,7 @@ export default function ContenidoAdmin() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloading, setReloading] = useState(false); // New state for reloading after upload
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
@@ -28,6 +29,14 @@ export default function ContenidoAdmin() {
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  // Upload progress states
+  type UploadStatus = "pending" | "processing" | "completed" | "error";
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;
+    total: number;
+    files: { name: string; status: UploadStatus; error?: string }[];
+  }>({ current: 0, total: 0, files: [] });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -60,7 +69,11 @@ export default function ContenidoAdmin() {
     }
   }, [imagenes]);
 
-  const loadData = async () => {
+  const loadData = async (isReload = false) => {
+    if (isReload) {
+      setReloading(true);
+    }
+
     try {
       const [resImagenes, resCategorias, resServicios] = await Promise.all([
         fetch("/api/imagenes"),
@@ -86,6 +99,7 @@ export default function ContenidoAdmin() {
       console.error("Error cargando datos:", error);
     } finally {
       setLoading(false);
+      setReloading(false);
     }
   };
 
@@ -129,39 +143,97 @@ export default function ContenidoAdmin() {
     // Multiple files upload
     if (uploadedFiles.length > 0) {
       setSaving(true);
+
+      // Initialize progress tracking
+      const fileProgress = uploadedFiles.map((file) => ({
+        name: file.name,
+        status: "pending" as UploadStatus,
+      }));
+
+      setUploadProgress({
+        current: 0,
+        total: uploadedFiles.length,
+        files: fileProgress,
+      });
+
       try {
         let successCount = 0;
         let errorCount = 0;
 
         for (let i = 0; i < uploadedFiles.length; i++) {
           const file = uploadedFiles[i];
-          const imageData = await preprocessImage(file);
 
-          // Auto-generate name from filename without extension
-          const autoName = file.name.replace(/\.[^/.]+$/, "");
+          // Update status to processing
+          setUploadProgress((prev) => ({
+            ...prev,
+            current: i + 1,
+            files: prev.files.map((f, idx) =>
+              idx === i ? { ...f, status: "processing" } : f
+            ),
+          }));
 
-          const payload = {
-            nombre: autoName,
-            titulo: formData.titulo || undefined,
-            descripcion: formData.descripcion || undefined,
-            enGaleriaDashboard: formData.enGaleriaDashboard,
-            enGaleriaInspiracion: formData.enGaleriaInspiracion,
-            categoriaIds: formData.categoriaIds,
-            servicioIds: formData.servicioIds,
-            ...imageData,
-          };
+          try {
+            const imageData = await preprocessImage(file);
 
-          const res = await fetch("/api/imagenes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+            // Auto-generate name from filename without extension
+            const autoName = file.name.replace(/\.[^/.]+$/, "");
 
-          const data = await res.json();
-          if (data.success) {
-            successCount++;
-          } else {
+            const payload = {
+              nombre: autoName,
+              titulo: formData.titulo || undefined,
+              descripcion: formData.descripcion || undefined,
+              enGaleriaDashboard: formData.enGaleriaDashboard,
+              enGaleriaInspiracion: formData.enGaleriaInspiracion,
+              categoriaIds: formData.categoriaIds,
+              servicioIds: formData.servicioIds,
+              ...imageData,
+            };
+
+            const res = await fetch("/api/imagenes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+              successCount++;
+              // Update status to completed
+              setUploadProgress((prev) => ({
+                ...prev,
+                files: prev.files.map((f, idx) =>
+                  idx === i ? { ...f, status: "completed" } : f
+                ),
+              }));
+            } else {
+              errorCount++;
+              // Update status to error
+              setUploadProgress((prev) => ({
+                ...prev,
+                files: prev.files.map((f, idx) =>
+                  idx === i ?
+                    {
+                      ...f,
+                      status: "error",
+                      error: data.error || "Error desconocido",
+                    }
+                  : f
+                ),
+              }));
+            }
+          } catch (fileError) {
             errorCount++;
+            console.error(`Error uploading ${file.name}:`, fileError);
+            // Update status to error
+            setUploadProgress((prev) => ({
+              ...prev,
+              files: prev.files.map((f, idx) =>
+                idx === i ?
+                  { ...f, status: "error", error: "Error al procesar" }
+                : f
+              ),
+            }));
           }
         }
 
@@ -173,9 +245,13 @@ export default function ContenidoAdmin() {
           setMessage(`⚠️ ${successCount} subidas, ${errorCount} errores`);
         }
 
-        resetForm();
-        loadData();
-        setTimeout(() => setShowUploadModal(false), 1500);
+        // Wait a bit to show the completion state, then start reloading
+        setTimeout(async () => {
+          setShowUploadModal(false);
+          await loadData(true); // Reload with indicator
+          resetForm();
+          setUploadProgress({ current: 0, total: 0, files: [] });
+        }, 2000);
       } catch (error) {
         console.error("Error:", error);
         setMessage("❌ Error de conexión");
@@ -192,6 +268,14 @@ export default function ContenidoAdmin() {
     }
 
     setSaving(true);
+
+    // Initialize progress for single file
+    setUploadProgress({
+      current: 1,
+      total: 1,
+      files: [{ name: uploadedFile.name, status: "processing" }],
+    });
+
     try {
       const imageData = await preprocessImage(uploadedFile);
 
@@ -216,15 +300,39 @@ export default function ContenidoAdmin() {
 
       if (data.success) {
         setMessage("✅ Imagen subida exitosamente");
-        resetForm();
-        loadData();
-        setTimeout(() => setShowUploadModal(false), 1500);
+        setUploadProgress((prev) => ({
+          ...prev,
+          files: [{ name: uploadedFile.name, status: "completed" }],
+        }));
+
+        setTimeout(async () => {
+          setShowUploadModal(false);
+          await loadData(true); // Reload with indicator
+          resetForm();
+          setUploadProgress({ current: 0, total: 0, files: [] });
+        }, 1500);
       } else {
         setMessage(`❌ ${data.error}`);
+        setUploadProgress((prev) => ({
+          ...prev,
+          files: [
+            { name: uploadedFile.name, status: "error", error: data.error },
+          ],
+        }));
       }
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+      setUploadProgress((prev) => ({
+        ...prev,
+        files: [
+          {
+            name: uploadedFile.name,
+            status: "error",
+            error: "Error de conexión",
+          },
+        ],
+      }));
     } finally {
       setSaving(false);
     }
@@ -266,7 +374,7 @@ export default function ContenidoAdmin() {
       if (data.success) {
         setMessage("✅ Imagen actualizada exitosamente");
         resetForm();
-        loadData();
+        await loadData(true);
         setTimeout(() => setShowEditModal(false), 1500);
       } else {
         setMessage(`❌ ${data.error}`);
@@ -289,7 +397,7 @@ export default function ContenidoAdmin() {
 
       if (data.success) {
         setMessage("✅ Imagen eliminada exitosamente");
-        loadData();
+        await loadData(true);
         setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage(`❌ ${data.error}`);
@@ -338,6 +446,7 @@ export default function ContenidoAdmin() {
     setUploadedFiles([]);
     setSelectedImage(null);
     setMessage("");
+    setUploadProgress({ current: 0, total: 0, files: [] });
   };
 
   const handleCreateCategoria = async (e: React.FormEvent) => {
@@ -355,7 +464,7 @@ export default function ContenidoAdmin() {
         setMessage("✅ Categoría creada");
         setCategoriaForm({ nombre: "", descripcion: "" });
         setShowCategoriaModal(false);
-        loadData();
+        await loadData(true);
         setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage(`❌ ${data.error}`);
@@ -383,7 +492,7 @@ export default function ContenidoAdmin() {
         setMessage("✅ Servicio creado");
         setServicioForm({ nombre: "", descripcion: "" });
         setShowServicioModal(false);
-        loadData();
+        await loadData(true);
         setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage(`❌ ${data.error}`);
@@ -545,113 +654,130 @@ export default function ContenidoAdmin() {
       </div>
 
       {/* Images Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-        {filteredImages.map((imagen) => (
-          <div
-            key={imagen._id}
-            className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
-          >
-            {/* Image */}
-            <div
-              className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 cursor-pointer relative overflow-hidden"
-              onClick={() => openViewModal(imagen)}
-            >
-              {loadingImages.has(imagen._id!) && (
-                <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
-              )}
-              <Image
-                src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
-                alt={imagen.nombre}
-                className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
-                fill
-                loading="lazy"
-                onLoad={() => {
-                  setLoadingImages((prev) => {
-                    const next = new Set(prev);
-                    next.delete(imagen._id!);
-                    return next;
-                  });
-                }}
-              />
-              {/* Gallery badges */}
-              <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
-                {imagen.enGaleriaDashboard && (
-                  <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
-                    💼 Dashboard
-                  </span>
-                )}
-                {imagen.enGaleriaInspiracion && (
-                  <span className="px-2.5 py-1 bg-violet-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
-                    ✨ Inspiración
-                  </span>
-                )}
-              </div>
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-
-            {/* Info */}
-            <div className="p-3 sm:p-4">
-              <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate mb-1.5">
-                {imagen.nombre}
-              </h3>
-              {imagen.titulo && (
-                <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-3">
-                  {imagen.titulo}
-                </p>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => openEditModal(imagen)}
-                  disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  <span className="hidden sm:inline">Editar</span>
-                </button>
-                <button
-                  onClick={() => handleDelete(imagen._id!)}
-                  disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {saving ?
-                    <div className="w-4 h-4 border-2 border-red-700 dark:border-red-300 border-t-transparent rounded-full animate-spin"></div>
-                  : <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      <span className="hidden sm:inline">Eliminar</span>
-                    </>
-                  }
-                </button>
-              </div>
+      <div className="relative">
+        {/* Reloading Overlay */}
+        {reloading && (
+          <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-30 rounded-2xl flex items-center justify-center">
+            <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-gray-700 dark:text-gray-300 font-semibold text-lg mb-2">
+                🔄 Actualizando galería...
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Cargando nuevas imágenes
+              </p>
             </div>
           </div>
-        ))}
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+          {filteredImages.map((imagen) => (
+            <div
+              key={imagen._id}
+              className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
+            >
+              {/* Image */}
+              <div
+                className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 cursor-pointer relative overflow-hidden"
+                onClick={() => openViewModal(imagen)}
+              >
+                {loadingImages.has(imagen._id!) && (
+                  <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
+                )}
+                <Image
+                  src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
+                  alt={imagen.nombre}
+                  className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+                  fill
+                  loading="lazy"
+                  onLoad={() => {
+                    setLoadingImages((prev) => {
+                      const next = new Set(prev);
+                      next.delete(imagen._id!);
+                      return next;
+                    });
+                  }}
+                />
+                {/* Gallery badges */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                  {imagen.enGaleriaDashboard && (
+                    <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
+                      💼 Dashboard
+                    </span>
+                  )}
+                  {imagen.enGaleriaInspiracion && (
+                    <span className="px-2.5 py-1 bg-violet-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
+                      ✨ Inspiración
+                    </span>
+                  )}
+                </div>
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+
+              {/* Info */}
+              <div className="p-3 sm:p-4">
+                <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate mb-1.5">
+                  {imagen.nombre}
+                </h3>
+                {imagen.titulo && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-3">
+                    {imagen.titulo}
+                  </p>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditModal(imagen)}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    <span className="hidden sm:inline">Editar</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(imagen._id!)}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {saving ?
+                      <div className="w-4 h-4 border-2 border-red-700 dark:border-red-300 border-t-transparent rounded-full animate-spin"></div>
+                    : <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        <span className="hidden sm:inline">Eliminar</span>
+                      </>
+                    }
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {filteredImages.length === 0 && !loading && (
@@ -931,6 +1057,144 @@ export default function ContenidoAdmin() {
                     }`}
                   >
                     {message}
+                  </div>
+                )}
+
+                {/* Upload Progress */}
+                {saving && uploadProgress.total > 0 && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-semibold text-blue-900 dark:text-blue-300">
+                        📤 Subiendo imágenes...
+                      </span>
+                      <span className="text-sm font-bold text-blue-900 dark:text-blue-300">
+                        {uploadProgress.current} / {uploadProgress.total}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-blue-200 dark:bg-blue-900/50 rounded-full h-3 mb-4 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-violet-500 h-full rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+                        style={{
+                          width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                        }}
+                      >
+                        <div className="w-2 h-2 bg-white rounded-full mr-1 animate-pulse"></div>
+                      </div>
+                    </div>
+
+                    {/* Files List */}
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {uploadProgress.files.map((file, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center gap-2 text-xs p-2 rounded-lg ${
+                            file.status === "completed" ?
+                              "bg-green-50 dark:bg-green-900/20"
+                            : file.status === "error" ?
+                              "bg-red-50 dark:bg-red-900/20"
+                            : file.status === "processing" ?
+                              "bg-blue-100 dark:bg-blue-900/30"
+                            : "bg-gray-50 dark:bg-gray-800/50"
+                          }`}
+                        >
+                          {/* Status Icon */}
+                          <div className="flex-shrink-0">
+                            {file.status === "completed" && (
+                              <svg
+                                className="w-5 h-5 text-green-600 dark:text-green-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                            {file.status === "error" && (
+                              <svg
+                                className="w-5 h-5 text-red-600 dark:text-red-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            )}
+                            {file.status === "processing" && (
+                              <div className="w-5 h-5 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                            )}
+                            {file.status === "pending" && (
+                              <svg
+                                className="w-5 h-5 text-gray-400 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* File Info */}
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`font-medium truncate ${
+                                file.status === "completed" ?
+                                  "text-green-800 dark:text-green-300"
+                                : file.status === "error" ?
+                                  "text-red-800 dark:text-red-300"
+                                : file.status === "processing" ?
+                                  "text-blue-800 dark:text-blue-300"
+                                : "text-gray-600 dark:text-gray-400"
+                              }`}
+                            >
+                              {file.name}
+                            </p>
+                            {file.error && (
+                              <p className="text-red-700 dark:text-red-400 text-xs mt-1">
+                                {file.error}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Status Label */}
+                          <div className="flex-shrink-0">
+                            <span
+                              className={`text-xs font-semibold px-2 py-1 rounded ${
+                                file.status === "completed" ?
+                                  "bg-green-200 dark:bg-green-900/40 text-green-800 dark:text-green-300"
+                                : file.status === "error" ?
+                                  "bg-red-200 dark:bg-red-900/40 text-red-800 dark:text-red-300"
+                                : file.status === "processing" ?
+                                  "bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300"
+                                : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                              }`}
+                            >
+                              {file.status === "completed" && "✓"}
+                              {file.status === "error" && "✗"}
+                              {file.status === "processing" && "..."}
+                              {file.status === "pending" && "⏳"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -1248,8 +1512,8 @@ export default function ContenidoAdmin() {
               <div className="relative max-w-full max-h-[80vh]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={base64ToDataURL(
-                    selectedImage.base64Data,
+                  src={selectedImage.blobUrl || base64ToDataURL(
+                    selectedImage.base64Data || '',
                     selectedImage.mimeType
                   )}
                   alt={selectedImage.nombre}

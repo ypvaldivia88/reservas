@@ -220,7 +220,7 @@ export default function GaleriaAdmin() {
                 <div className="relative aspect-square bg-gray-200 dark:bg-gray-700">
                   {imagen ?
                     <Image
-                      src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
+                      src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
                       alt={`Gallery image: ${item.titulo}`}
                       className="w-full h-full object-cover"
                       fill

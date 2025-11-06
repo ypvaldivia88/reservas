@@ -202,7 +202,7 @@ export default function ImagenesAdmin() {
             >
               <div className="aspect-square bg-gray-200 dark:bg-gray-700 relative">
                 <Image
-                  src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
+                  src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
                   alt={`Image: ${imagen.nombre}`}
                   fill
                   className="object-cover"

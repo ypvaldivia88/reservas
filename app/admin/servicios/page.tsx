@@ -201,7 +201,7 @@ export default function ServiciosAdmin() {
                 <div className="h-48 bg-gray-200 dark:bg-gray-700">
                   {imagen ?
                     <Image
-                      src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
+                      src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
                       alt={`Service image for ${servicio.nombre}`}
                       fill
                       className="object-cover"

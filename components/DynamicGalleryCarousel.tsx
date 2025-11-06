@@ -155,8 +155,8 @@ export default function DynamicGalleryCarousel() {
             style={{ scrollBehavior: "smooth" }}
           >
             {galleryImages.map((imagen) => {
-              const imageUrl = base64ToDataURL(
-                imagen.base64Data,
+              const imageUrl = imagen.blobUrl || base64ToDataURL(
+                imagen.base64Data || '',
                 imagen.mimeType
               );
 
