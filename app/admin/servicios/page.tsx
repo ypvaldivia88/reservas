@@ -9,6 +9,7 @@ export default function ServiciosAdmin() {
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingServicio, setEditingServicio] = useState<Servicio | null>(null);
   const [formData, setFormData] = useState({
@@ -53,6 +54,7 @@ export default function ServiciosAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setSaving(true);
 
     try {
       const payload =
@@ -80,12 +82,15 @@ export default function ServiciosAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("¿Está seguro de eliminar este servicio?")) return;
 
+    setSaving(true);
     try {
       const res = await fetch(`/api/servicios?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -99,6 +104,8 @@ export default function ServiciosAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -167,7 +174,8 @@ export default function ServiciosAdmin() {
                 resetForm();
                 setShowModal(true);
               }}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
+              disabled={saving}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               + Nuevo Servicio
             </button>
@@ -228,15 +236,24 @@ export default function ServiciosAdmin() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEdit(servicio)}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                      disabled={saving}
+                      className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(servicio._id!)}
-                      className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700"
+                      disabled={saving}
+                      className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Eliminar
+                      {saving ? (
+                        <span className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          Eliminando...
+                        </span>
+                      ) : (
+                        "Eliminar"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -387,15 +404,24 @@ export default function ServiciosAdmin() {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                    disabled={saving}
+                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
+                    disabled={saving}
+                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingServicio ? "Actualizar" : "Crear"}
+                    {saving ? (
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                        {editingServicio ? "Actualizando..." : "Creando..."}
+                      </span>
+                    ) : (
+                      editingServicio ? "Actualizar" : "Crear"
+                    )}
                   </button>
                 </div>
               </form>

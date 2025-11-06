@@ -9,6 +9,7 @@ export default function CategoriasAdmin() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [imagenes, setImagenes] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(
     null
@@ -53,6 +54,7 @@ export default function CategoriasAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setSaving(true);
 
     try {
       const payload =
@@ -82,12 +84,15 @@ export default function CategoriasAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("¿Está seguro de eliminar esta categoría?")) return;
 
+    setSaving(true);
     try {
       const res = await fetch(`/api/categorias?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -101,6 +106,8 @@ export default function CategoriasAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -165,7 +172,8 @@ export default function CategoriasAdmin() {
                 resetForm();
                 setShowModal(true);
               }}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
+              disabled={saving}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               + Nueva Categoría
             </button>
@@ -224,15 +232,24 @@ export default function CategoriasAdmin() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEdit(categoria)}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                      disabled={saving}
+                      className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(categoria._id!)}
-                      className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700"
+                      disabled={saving}
+                      className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Eliminar
+                      {saving ? (
+                        <span className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          Eliminando...
+                        </span>
+                      ) : (
+                        "Eliminar"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -345,15 +362,24 @@ export default function CategoriasAdmin() {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                    disabled={saving}
+                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
+                    disabled={saving}
+                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingCategoria ? "Actualizar" : "Crear"}
+                    {saving ? (
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                        {editingCategoria ? "Actualizando..." : "Creando..."}
+                      </span>
+                    ) : (
+                      editingCategoria ? "Actualizar" : "Crear"
+                    )}
                   </button>
                 </div>
               </form>

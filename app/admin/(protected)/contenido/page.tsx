@@ -947,23 +947,12 @@ export default function ContenidoAdmin() {
               </button>
               <button
                 type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget.closest("form");
-                  if (form) {
-                    const event = new Event("submit", {
-                      bubbles: true,
-                      cancelable: true,
-                    });
-                    form.dispatchEvent(event);
-                  }
-                }}
                 disabled={saving}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
               >
                 {saving ?
                   <>
-                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>
                       Subiendo
                       {uploadedFiles.length > 1 ?
@@ -1200,23 +1189,12 @@ export default function ContenidoAdmin() {
               </button>
               <button
                 type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget.closest("form");
-                  if (form) {
-                    const event = new Event("submit", {
-                      bubbles: true,
-                      cancelable: true,
-                    });
-                    form.dispatchEvent(event);
-                  }
-                }}
                 disabled={saving}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
               >
                 {saving ?
                   <>
-                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Actualizando...</span>
                   </>
                 : <>

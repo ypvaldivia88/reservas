@@ -71,6 +71,7 @@ export default function AdminSchedulePage() {
   const handleToggleWorkingDay = async (dayOfWeek: DayOfWeek) => {
     if (!schedule) return;
 
+    setSaving(true);
     const updatedSchedule = { ...schedule };
     const dayIndex = updatedSchedule.schedule.findIndex(
       (d) => d.dayOfWeek === dayOfWeek
@@ -95,6 +96,7 @@ export default function AdminSchedulePage() {
 
       await saveSchedule(updatedSchedule);
     }
+    setSaving(false);
   };
 
   const handleEditSlots = (dayOfWeek: DayOfWeek) => {
@@ -352,6 +354,7 @@ export default function AdminSchedulePage() {
       return;
     }
 
+    setSaving(true);
     try {
       const res = await fetch(`/api/special-days?date=${date}`, {
         method: "DELETE",
@@ -368,6 +371,8 @@ export default function AdminSchedulePage() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -442,10 +447,11 @@ export default function AdminSchedulePage() {
                       {DAY_NAMES[day.dayOfWeek]}
                     </span>
                   </td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                  <td className="px-4 py-4 text-center">
                     <button
                       onClick={() => handleToggleWorkingDay(day.dayOfWeek)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${
+                      disabled={saving}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed ${
                         day.isWorkingDay ? "bg-green-600" : (
                           "bg-gray-300 dark:bg-gray-600"
                         )
@@ -497,7 +503,8 @@ export default function AdminSchedulePage() {
                     {day.isWorkingDay && (
                       <button
                         onClick={() => handleEditSlots(day.dayOfWeek)}
-                        className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all touch-manipulation shadow-md hover:shadow-lg"
+                        disabled={saving}
+                        className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all touch-manipulation shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Agregar horario"
                         aria-label="Agregar nuevo horario"
                       >
@@ -642,7 +649,8 @@ export default function AdminSchedulePage() {
           </h2>
           <button
             onClick={handleOpenSpecialDayModal}
-            className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px]"
+            disabled={saving}
+            className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             + Agregar Día Especial
           </button>
@@ -701,11 +709,16 @@ export default function AdminSchedulePage() {
                 </div>
                 <button
                   onClick={() => handleDeleteSpecialDay(day.date)}
-                  className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  disabled={saving}
+                  className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Eliminar"
                   aria-label="Eliminar día especial"
                 >
-                  🗑️
+                  {saving ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
+                  ) : (
+                    "🗑️"
+                  )}
                 </button>
               </div>
             ))}

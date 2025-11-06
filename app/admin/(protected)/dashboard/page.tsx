@@ -471,7 +471,8 @@ function DashboardContent() {
                                   );
                                   setOpenMenuReservaId(null);
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-300 font-medium transition-colors flex items-center gap-3"
+                                disabled={saving}
+                                className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <span className="text-lg">✅</span>
                                 Confirmar
@@ -484,7 +485,8 @@ function DashboardContent() {
                                   );
                                   setOpenMenuReservaId(null);
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                                disabled={saving}
+                                className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <span className="text-lg">❌</span>
                                 Cancelar
@@ -498,7 +500,8 @@ function DashboardContent() {
                                   setEditingReserva(reserva);
                                   setOpenMenuReservaId(null);
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium transition-colors flex items-center gap-3"
+                                disabled={saving}
+                                className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <span className="text-lg">✔️</span>
                                 Completar
@@ -511,7 +514,8 @@ function DashboardContent() {
                                   );
                                   setOpenMenuReservaId(null);
                                 }}
-                                className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                                disabled={saving}
+                                className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <span className="text-lg">❌</span>
                                 Cancelar
@@ -553,7 +557,8 @@ function DashboardContent() {
                                 true
                               );
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            disabled={saving}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <span>✅</span>
                             <span>Confirmar</span>
@@ -565,7 +570,8 @@ function DashboardContent() {
                                 true
                               );
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            disabled={saving}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <span>❌</span>
                             <span>Cancelar</span>
@@ -576,7 +582,8 @@ function DashboardContent() {
                         <>
                           <button
                             onClick={() => setEditingReserva(reserva)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            disabled={saving}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Completar reserva (debe agregar el costo)"
                           >
                             <span>✔️</span>
@@ -589,7 +596,8 @@ function DashboardContent() {
                                 true
                               );
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                            disabled={saving}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <span>❌</span>
                             <span>Cancelar</span>
@@ -598,14 +606,16 @@ function DashboardContent() {
                       )}
                       <button
                         onClick={() => setEditingReserva(reserva)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span>✏️</span>
                         <span>Editar</span>
                       </button>
                       <button
                         onClick={() => setDeletingReserva(reserva)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span>🗑️</span>
                         <span>Eliminar</span>
@@ -628,7 +638,8 @@ function DashboardContent() {
           </h2>
           <button
             onClick={() => setCreatingCliente(true)}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            disabled={saving}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             ➕ Nuevo Cliente
           </button>
@@ -734,14 +745,16 @@ function DashboardContent() {
                     <div className="hidden md:flex gap-2 flex-wrap">
                       <button
                         onClick={() => setEditingCliente(cliente)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span>✏️</span>
                         <span>Editar</span>
                       </button>
                       <button
                         onClick={() => setDeletingCliente(cliente)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                        disabled={saving}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span>🗑️</span>
                         <span>Eliminar</span>
@@ -1091,7 +1104,7 @@ function DashboardContent() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                   >
                     {saving ?
                       <span className="flex items-center justify-center">
