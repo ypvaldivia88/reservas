@@ -572,20 +572,6 @@ export default function ContenidoAdmin() {
         </div>
       )}
 
-      {/* Action Button */}
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={() => {
-            resetForm();
-            setShowUploadModal(true);
-          }}
-          disabled={saving}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-        >
-          ➕ Nueva Imagen
-        </button>
-      </div>
-
       {/* Filters and Quick Actions */}
       <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 mb-6 border border-gray-200 dark:border-white/20">
         <div className="flex flex-col justify-between items-start gap-4">
@@ -644,22 +630,34 @@ export default function ContenidoAdmin() {
             >
               + Servicio
             </button>
+            <button
+              onClick={() => {
+                resetForm();
+                setShowUploadModal(true);
+              }}
+              disabled={saving}
+              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-purple-100 dark:bg-purple-600/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              ➕ Nueva Imagen
+            </button>
           </div>
         </div>
 
         {/* Filter summary */}
         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-          Mostrando {filteredImages.filter(img => img.blobUrl).length} de {imagenes.length} imágenes
-          {imagenes.some(img => !img.blobUrl) && (
+          Mostrando {filteredImages.filter((img) => img.blobUrl).length} de{" "}
+          {imagenes.length} imágenes
+          {imagenes.some((img) => !img.blobUrl) && (
             <span className="ml-2 text-orange-600 dark:text-orange-400 font-semibold">
-              ⚠️ {imagenes.filter(img => !img.blobUrl).length} imágenes sin migrar (no se muestran)
+              ⚠️ {imagenes.filter((img) => !img.blobUrl).length} imágenes sin
+              migrar (no se muestran)
             </span>
           )}
         </div>
       </div>
 
       {/* Migration Warning Banner */}
-      {imagenes.some(img => !img.blobUrl) && (
+      {imagenes.some((img) => !img.blobUrl) && (
         <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-xl">
           <div className="flex items-start space-x-3">
             <span className="text-2xl">⚠️</span>
@@ -668,8 +666,9 @@ export default function ContenidoAdmin() {
                 Imágenes antiguas detectadas
               </h3>
               <p className="text-sm text-orange-800 dark:text-orange-300 mb-3">
-                Tienes {imagenes.filter(img => !img.blobUrl).length} imágenes que usan el sistema antiguo (base64 en MongoDB).
-                Estas imágenes NO se mostrarán hasta que sean migradas a Vercel Blob.
+                Tienes {imagenes.filter((img) => !img.blobUrl).length} imágenes
+                que usan el sistema antiguo (base64 en MongoDB). Estas imágenes
+                NO se mostrarán hasta que sean migradas a Vercel Blob.
               </p>
               <a
                 href="/api/migrate-images"
@@ -680,7 +679,8 @@ export default function ContenidoAdmin() {
                 🚀 Migrar imágenes ahora
               </a>
               <p className="text-xs text-orange-700 dark:text-orange-400 mt-2">
-                La migración puede tardar unos minutos. Abre el enlace en una nueva pestaña para ver el progreso.
+                La migración puede tardar unos minutos. Abre el enlace en una
+                nueva pestaña para ver el progreso.
               </p>
             </div>
           </div>
@@ -705,112 +705,114 @@ export default function ContenidoAdmin() {
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-          {filteredImages.filter(img => img.blobUrl).map((imagen) => (
-            <div
-              key={imagen._id}
-              className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
-            >
-              {/* Image */}
+          {filteredImages
+            .filter((img) => img.blobUrl)
+            .map((imagen) => (
               <div
-                className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 cursor-pointer relative overflow-hidden"
-                onClick={() => openViewModal(imagen)}
+                key={imagen._id}
+                className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
               >
-                {loadingImages.has(imagen._id!) && (
-                  <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
-                )}
-                <Image
-                  src={imagen.blobUrl}
-                  alt={imagen.nombre}
-                  className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
-                  fill
-                  loading="lazy"
-                  onLoad={() => {
-                    setLoadingImages((prev) => {
-                      const next = new Set(prev);
-                      next.delete(imagen._id!);
-                      return next;
-                    });
-                  }}
-                />
-                {/* Gallery badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
-                  {imagen.enGaleriaDashboard && (
-                    <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
-                      💼 Dashboard
-                    </span>
+                {/* Image */}
+                <div
+                  className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 cursor-pointer relative overflow-hidden"
+                  onClick={() => openViewModal(imagen)}
+                >
+                  {loadingImages.has(imagen._id!) && (
+                    <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
                   )}
-                  {imagen.enGaleriaInspiracion && (
-                    <span className="px-2.5 py-1 bg-violet-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
-                      ✨ Inspiración
-                    </span>
-                  )}
+                  <Image
+                    src={imagen.blobUrl}
+                    alt={imagen.nombre}
+                    className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+                    fill
+                    loading="lazy"
+                    onLoad={() => {
+                      setLoadingImages((prev) => {
+                        const next = new Set(prev);
+                        next.delete(imagen._id!);
+                        return next;
+                      });
+                    }}
+                  />
+                  {/* Gallery badges */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                    {imagen.enGaleriaDashboard && (
+                      <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
+                        💼 Dashboard
+                      </span>
+                    )}
+                    {imagen.enGaleriaInspiracion && (
+                      <span className="px-2.5 py-1 bg-violet-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
+                        ✨ Inspiración
+                      </span>
+                    )}
+                  </div>
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
 
-              {/* Info */}
-              <div className="p-3 sm:p-4">
-                <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate mb-1.5">
-                  {imagen.nombre}
-                </h3>
-                {imagen.titulo && (
-                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-3">
-                    {imagen.titulo}
-                  </p>
-                )}
+                {/* Info */}
+                <div className="p-3 sm:p-4">
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate mb-1.5">
+                    {imagen.nombre}
+                  </h3>
+                  {imagen.titulo && (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-3">
+                      {imagen.titulo}
+                    </p>
+                  )}
 
-                {/* Action buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openEditModal(imagen)}
-                    disabled={saving}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditModal(imagen)}
+                      disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Editar</span>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(imagen._id!)}
-                    disabled={saving}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    {saving ?
-                      <div className="w-4 h-4 border-2 border-red-700 dark:border-red-300 border-t-transparent rounded-full animate-spin"></div>
-                    : <>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        <span className="hidden sm:inline">Eliminar</span>
-                      </>
-                    }
-                  </button>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">Editar</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(imagen._id!)}
+                      disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {saving ?
+                        <div className="w-4 h-4 border-2 border-red-700 dark:border-red-300 border-t-transparent rounded-full animate-spin"></div>
+                      : <>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                          <span className="hidden sm:inline">Eliminar</span>
+                        </>
+                      }
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
