@@ -7,6 +7,15 @@ import {
   AvailabilityOverride,
 } from "@/lib/types";
 import TimePickerInput from "@/components/TimePickerInput";
+import { Button } from "@/components/ui/Button";
+import {
+  PlusIcon,
+  EditIcon,
+  TrashIcon,
+  SaveIcon,
+  CloseIcon,
+  CheckIcon,
+} from "@/components/ui/Icons";
 
 export default function AdminSchedulePage() {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
@@ -501,27 +510,15 @@ export default function AdminSchedulePage() {
                   <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
                     {/* Botón para agregar nuevo horario */}
                     {day.isWorkingDay && (
-                      <button
+                      <Button
                         onClick={() => handleEditSlots(day.dayOfWeek)}
                         disabled={saving}
-                        className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all touch-manipulation shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="sm"
+                        icon={<PlusIcon />}
                         title="Agregar horario"
                         aria-label="Agregar nuevo horario"
-                      >
-                        <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
-                      </button>
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full"
+                      />
                     )}
                   </td>
                 </tr>
@@ -549,25 +546,13 @@ export default function AdminSchedulePage() {
                 : "Agregar Horario"}{" "}
                 - {DAY_NAMES[editingDay]}
               </h3>
-              <button
+              <Button
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -597,44 +582,38 @@ export default function AdminSchedulePage() {
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
               {editingSlotIndex !== null ?
                 <>
-                  <button
+                  <Button
                     onClick={handleDeleteSlot}
                     disabled={saving}
-                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="outlined-danger"
+                    loading={saving}
+                    icon={<TrashIcon />}
+                    fullWidth
                     title="Eliminar horario"
                   >
-                    {saving ?
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Eliminando...
-                      </span>
-                    : "🗑️ Eliminar"}
-                  </button>
-                  <button
+                    Eliminar
+                  </Button>
+                  <Button
                     onClick={handleSaveSlots}
                     disabled={saving}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={saving}
+                    icon={<SaveIcon />}
+                    fullWidth
                   >
-                    {saving ?
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Guardando...
-                      </span>
-                    : "💾 Guardar"}
-                  </button>
+                    Guardar
+                  </Button>
                 </>
-              : <button
+              : <Button
                   onClick={handleSaveSlots}
                   disabled={saving}
-                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="primary"
+                  loading={saving}
+                  icon={<CheckIcon />}
+                  fullWidth
                 >
-                  {saving ?
-                    <span className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                      Agregando...
-                    </span>
-                  : "✅ Agregar Horarios"}
-                </button>
+                  Agregar Horarios
+                </Button>
               }
             </div>
           </div>
@@ -647,13 +626,13 @@ export default function AdminSchedulePage() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             📌 Gestión de Días Especiales
           </h2>
-          <button
+          <Button
             onClick={handleOpenSpecialDayModal}
             disabled={saving}
-            className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+            icon={<PlusIcon />}
           >
-            + Agregar Día Especial
-          </button>
+            Agregar Día Especial
+          </Button>
         </div>
 
         <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
@@ -707,19 +686,19 @@ export default function AdminSchedulePage() {
                     </div>
                   )}
                 </div>
-                <button
+                <Button
                   onClick={() => handleDeleteSpecialDay(day.date)}
                   disabled={saving}
-                  className="ml-4 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="ghost"
+                  size="sm"
+                  loading={saving}
+                  icon={
+                    <TrashIcon className="text-red-600 dark:text-red-400" />
+                  }
                   title="Eliminar"
                   aria-label="Eliminar día especial"
-                >
-                  {saving ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
-                  ) : (
-                    "🗑️"
-                  )}
-                </button>
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                />
               </div>
             ))}
           </div>
@@ -741,25 +720,13 @@ export default function AdminSchedulePage() {
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 Agregar Día Especial
               </h3>
-              <button
+              <Button
                 onClick={handleCloseSpecialDayModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -843,18 +810,16 @@ export default function AdminSchedulePage() {
 
             {/* Actions */}
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
+              <Button
                 onClick={handleAddSpecialDay}
                 disabled={saving}
-                className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={saving}
+                variant="primary"
+                icon={<SaveIcon />}
+                fullWidth
               >
-                {saving ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Guardando...
-                  </span>
-                : "💾 Guardar Día Especial"}
-              </button>
+                Guardar Día Especial
+              </Button>
             </div>
           </div>
         </div>

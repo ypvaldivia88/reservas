@@ -2,6 +2,14 @@
 import { useState, useEffect } from "react";
 import { Servicio, ImageData } from "@/lib/types";
 import Image from "next/image";
+import { Button } from "@/components/ui/Button";
+import {
+  PlusIcon,
+  EditIcon,
+  TrashIcon,
+  SaveIcon,
+  CloseIcon,
+} from "@/components/ui/Icons";
 
 export default function ServiciosAdmin() {
   const [servicios, setServicios] = useState<Servicio[]>([]);
@@ -54,11 +62,16 @@ export default function ServiciosAdmin() {
   };
 
   const handleInitServicios = async () => {
-    if (!confirm("¿Deseas crear los 4 servicios por defecto (Gel/Softgel, Base Rubber, Gel Dipping, Pedicure)?")) return;
-    
+    if (
+      !confirm(
+        "¿Deseas crear los 4 servicios por defecto (Gel/Softgel, Base Rubber, Gel Dipping, Pedicure)?"
+      )
+    )
+      return;
+
     setSaving(true);
     setMessage("⏳ Inicializando servicios...");
-    
+
     try {
       const res = await fetch("/api/servicios/init", { method: "POST" });
       const data = await res.json();
@@ -209,29 +222,16 @@ export default function ServiciosAdmin() {
               Administra los servicios que se muestran en la página principal
             </p>
           </div>
-          <button
+          <Button
             onClick={() => {
               resetForm();
               setShowModal(true);
             }}
             disabled={saving}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
+            icon={<PlusIcon />}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <span>Nuevo Servicio</span>
-          </button>
+            Nuevo Servicio
+          </Button>
         </div>
       </div>
       {/* Init Banner */}
@@ -261,50 +261,40 @@ export default function ServiciosAdmin() {
                 Pedicure) o crear los tuyos propios desde cero.
               </p>
               <div className="flex gap-3">
-                <button
+                <Button
                   onClick={handleInitServicios}
                   disabled={saving}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
+                  variant="primary"
+                  icon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                      />
+                    </svg>
+                  }
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                    />
-                  </svg>
-                  <span>Inicializar Servicios por Defecto</span>
-                </button>
-                <button
+                  Inicializar Servicios por Defecto
+                </Button>
+                <Button
                   onClick={() => {
                     resetForm();
                     setShowModal(true);
                     setShowInitBanner(false);
                   }}
                   disabled={saving}
-                  className="px-6 py-3 bg-white dark:bg-gray-700 text-gray-700 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
+                  variant="outlined-secondary"
+                  icon={<PlusIcon />}
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  <span>Crear Servicio Personalizado</span>
-                </button>
+                  Crear Servicio Personalizado
+                </Button>
               </div>
             </div>
           </div>
@@ -403,25 +393,26 @@ export default function ServiciosAdmin() {
                   </span>
                 </div>
                 <div className="flex space-x-2">
-                  <button
+                  <Button
                     onClick={() => handleEdit(servicio)}
                     disabled={saving}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    size="sm"
+                    icon={<EditIcon />}
+                    fullWidth
                   >
                     Editar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => handleDelete(servicio._id!)}
                     disabled={saving}
-                    className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="outlined-danger"
+                    size="sm"
+                    loading={saving}
+                    icon={<TrashIcon />}
+                    fullWidth
                   >
-                    {saving ?
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Eliminando...
-                      </span>
-                    : "Eliminar"}
-                  </button>
+                    Eliminar
+                  </Button>
                 </div>
               </div>
             </div>
@@ -470,28 +461,16 @@ export default function ServiciosAdmin() {
                   {editingServicio ? "Editar Servicio" : "Nuevo Servicio"}
                 </span>
               </h3>
-              <button
+              <Button
                 onClick={() => {
                   setShowModal(false);
                   resetForm();
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="w-6 h-6" />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -724,32 +703,29 @@ export default function ServiciosAdmin() {
 
             {/* Footer */}
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex flex-col-reverse sm:flex-row gap-3 sticky bottom-0">
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   setShowModal(false);
                   resetForm();
                 }}
                 disabled={saving}
-                className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all touch-manipulation"
+                variant="outlined-secondary"
+                fullWidth
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 form="servicio-form"
                 disabled={saving}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-semibold hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                variant="primary"
+                loading={saving}
+                icon={<SaveIcon />}
+                fullWidth
               >
-                {saving ?
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    {editingServicio ? "Actualizando..." : "Creando..."}
-                  </span>
-                : editingServicio ?
-                  "💾 Actualizar Servicio"
-                : "✨ Crear Servicio"}
-              </button>
+                {editingServicio ? "Actualizar Servicio" : "Crear Servicio"}
+              </Button>
             </div>
           </div>
         </div>

@@ -3,6 +3,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Categoria, ImageData } from "@/lib/types";
 import Image from "next/image";
+import { Button } from "@/components/ui/Button";
+import {
+  PlusIcon,
+  EditIcon,
+  TrashIcon,
+  SaveIcon,
+  CloseIcon,
+} from "@/components/ui/Icons";
 
 export default function CategoriasAdmin() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -156,26 +164,27 @@ export default function CategoriasAdmin() {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <button
+              <Button
                 onClick={() => router.push("/admin/dashboard")}
-                className="text-blue-600 hover:text-blue-700"
+                variant="ghost"
+                size="sm"
               >
                 ← Volver
-              </button>
+              </Button>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 📁 Gestión de Categorías
               </h1>
             </div>
-            <button
+            <Button
               onClick={() => {
                 resetForm();
                 setShowModal(true);
               }}
               disabled={saving}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              icon={<PlusIcon />}
             >
-              + Nueva Categoría
-            </button>
+              Nueva Categoría
+            </Button>
           </div>
         </div>
       </header>
@@ -229,27 +238,26 @@ export default function CategoriasAdmin() {
                     </p>
                   )}
                   <div className="flex space-x-2">
-                    <button
+                    <Button
                       onClick={() => handleEdit(categoria)}
                       disabled={saving}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      icon={<EditIcon />}
+                      size="sm"
+                      className="flex-1"
                     >
                       Editar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => handleDelete(categoria._id!)}
                       disabled={saving}
-                      className="flex-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      loading={saving}
+                      variant="outlined-danger"
+                      icon={<TrashIcon />}
+                      size="sm"
+                      className="flex-1"
                     >
-                      {saving ? (
-                        <span className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          Eliminando...
-                        </span>
-                      ) : (
-                        "Eliminar"
-                      )}
-                    </button>
+                      Eliminar
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -355,31 +363,29 @@ export default function CategoriasAdmin() {
                 </div>
                 {message && <p className="text-sm">{message}</p>}
                 <div className="flex space-x-3 pt-4">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => {
                       setShowModal(false);
                       resetForm();
                     }}
                     disabled={saving}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="outlined-secondary"
+                    icon={<CloseIcon />}
+                    className="flex-1"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    loading={saving}
+                    variant="primary"
+                    icon={<SaveIcon />}
+                    className="flex-1"
                   >
-                    {saving ? (
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                        {editingCategoria ? "Actualizando..." : "Creando..."}
-                      </span>
-                    ) : (
-                      editingCategoria ? "Actualizar" : "Crear"
-                    )}
-                  </button>
+                    {editingCategoria ? "Actualizar" : "Crear"}
+                  </Button>
                 </div>
               </form>
             </div>

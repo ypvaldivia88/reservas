@@ -3,6 +3,18 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
+import { Button } from "@/components/ui/Button";
+import {
+  CheckIcon,
+  XIcon,
+  EditIcon,
+  TrashIcon,
+  PlusIcon,
+  CheckCircleIcon,
+  ExclamationIcon,
+  SaveIcon,
+  CloseIcon,
+} from "@/components/ui/Icons";
 
 // Componente interno que usa useSearchParams
 function DashboardContent() {
@@ -670,7 +682,7 @@ function DashboardContent() {
                     <div className="hidden md:flex gap-2 flex-wrap">
                       {reserva.estado === "pendiente" && (
                         <>
-                          <button
+                          <Button
                             onClick={() => {
                               handleUpdateReserva(
                                 { ...reserva, estado: "confirmada" },
@@ -678,12 +690,13 @@ function DashboardContent() {
                               );
                             }}
                             disabled={saving}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="outlined-success"
+                            size="sm"
+                            icon={<CheckIcon />}
                           >
-                            <span>✅</span>
-                            <span>Confirmar</span>
-                          </button>
-                          <button
+                            Confirmar
+                          </Button>
+                          <Button
                             onClick={() => {
                               handleUpdateReserva(
                                 { ...reserva, estado: "cancelada" },
@@ -691,25 +704,27 @@ function DashboardContent() {
                               );
                             }}
                             disabled={saving}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="outlined-danger"
+                            size="sm"
+                            icon={<XIcon />}
                           >
-                            <span>❌</span>
-                            <span>Cancelar</span>
-                          </button>
+                            Cancelar
+                          </Button>
                         </>
                       )}
                       {reserva.estado === "confirmada" && (
                         <>
-                          <button
+                          <Button
                             onClick={() => setEditingReserva(reserva)}
                             disabled={saving}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="outlined-primary"
+                            size="sm"
+                            icon={<CheckCircleIcon />}
                             title="Completar reserva (debe agregar el costo)"
                           >
-                            <span>✔️</span>
-                            <span>Completar</span>
-                          </button>
-                          <button
+                            Completar
+                          </Button>
+                          <Button
                             onClick={() => {
                               handleUpdateReserva(
                                 { ...reserva, estado: "cancelada" },
@@ -717,29 +732,30 @@ function DashboardContent() {
                               );
                             }}
                             disabled={saving}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="outlined-danger"
+                            size="sm"
+                            icon={<XIcon />}
                           >
-                            <span>❌</span>
-                            <span>Cancelar</span>
-                          </button>
+                            Cancelar
+                          </Button>
                         </>
                       )}
-                      <button
+                      <Button
                         onClick={() => setEditingReserva(reserva)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="sm"
+                        icon={<EditIcon />}
                       >
-                        <span>✏️</span>
-                        <span>Editar</span>
-                      </button>
-                      <button
+                        Editar
+                      </Button>
+                      <Button
                         onClick={() => setDeletingReserva(reserva)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="sm"
+                        icon={<TrashIcon />}
                       >
-                        <span>🗑️</span>
-                        <span>Eliminar</span>
-                      </button>
+                        Eliminar
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -756,13 +772,13 @@ function DashboardContent() {
             <span className="text-3xl">👥</span>
             Clientes Registrados
           </h2>
-          <button
+          <Button
             onClick={() => setCreatingCliente(true)}
             disabled={saving}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            icon={<PlusIcon />}
           >
-            ➕ Nuevo Cliente
-          </button>
+            Nuevo Cliente
+          </Button>
         </div>
         <div className="overflow-x-auto -mx-6 sm:-mx-8 px-6 sm:px-8">
           <table className="w-full min-w-full">
@@ -844,7 +860,19 @@ function DashboardContent() {
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-3"
                           >
-                            <span className="text-lg">✏️</span>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
                             Editar
                           </button>
                           <button
@@ -854,7 +882,19 @@ function DashboardContent() {
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
                           >
-                            <span className="text-lg">🗑️</span>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
                             Eliminar
                           </button>
                         </div>
@@ -863,22 +903,22 @@ function DashboardContent() {
 
                     {/* Desktop: Botones con Iconos y Texto */}
                     <div className="hidden md:flex gap-2 flex-wrap">
-                      <button
+                      <Button
                         onClick={() => setEditingCliente(cliente)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="sm"
+                        icon={<EditIcon />}
                       >
-                        <span>✏️</span>
-                        <span>Editar</span>
-                      </button>
-                      <button
+                        Editar
+                      </Button>
+                      <Button
                         onClick={() => setDeletingCliente(cliente)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        size="sm"
+                        icon={<TrashIcon />}
                       >
-                        <span>🗑️</span>
-                        <span>Eliminar</span>
-                      </button>
+                        Eliminar
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -901,28 +941,16 @@ function DashboardContent() {
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span className="text-2xl">✏️</span>
+                <EditIcon className="w-6 h-6" />
                 Editar Reserva
               </h3>
-              <button
+              <Button
                 onClick={() => setEditingReserva(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="w-6 h-6" />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -1213,26 +1241,23 @@ function DashboardContent() {
                 )}
 
                 <div className="flex gap-3 justify-end pt-4">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setEditingReserva(null)}
                     disabled={saving}
-                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="outlined-secondary"
                   >
                     Cerrar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={saving}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                    variant="primary"
+                    loading={saving}
+                    icon={<SaveIcon />}
                   >
-                    {saving ?
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Guardando...
-                      </span>
-                    : "Guardar Cambios"}
-                  </button>
+                    Guardar Cambios
+                  </Button>
                 </div>
               </form>
             </div>
@@ -1253,28 +1278,16 @@ function DashboardContent() {
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span className="text-2xl">⚠️</span>
+                <ExclamationIcon className="w-6 h-6 text-yellow-500" />
                 Confirmar Eliminación
               </h3>
-              <button
+              <Button
                 onClick={() => setDeletingReserva(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="w-6 h-6" />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -1290,25 +1303,23 @@ function DashboardContent() {
 
             {/* Actions */}
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
+              <Button
                 onClick={() => setDeletingReserva(null)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outlined-secondary"
+                fullWidth
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => handleDeleteReserva(deletingReserva._id!)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="danger"
+                loading={saving}
+                fullWidth
               >
-                {saving ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Eliminando...
-                  </span>
-                : "Eliminar"}
-              </button>
+                Eliminar
+              </Button>
             </div>
           </div>
         </div>
@@ -1327,28 +1338,16 @@ function DashboardContent() {
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span className="text-2xl">➕</span>
+                <PlusIcon className="w-6 h-6" />
                 Crear Nuevo Cliente
               </h3>
-              <button
+              <Button
                 onClick={() => setCreatingCliente(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="w-6 h-6" />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -1394,15 +1393,16 @@ function DashboardContent() {
 
             {/* Actions */}
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => setCreatingCliente(false)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outlined-secondary"
+                fullWidth
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 onClick={(e) => {
                   e.preventDefault();
@@ -1418,15 +1418,11 @@ function DashboardContent() {
                   }
                 }}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={saving}
+                fullWidth
               >
-                {saving ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Creando...
-                  </span>
-                : "Crear Cliente"}
-              </button>
+                Crear Cliente
+              </Button>
             </div>
           </div>
         </div>
@@ -1445,28 +1441,16 @@ function DashboardContent() {
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span className="text-2xl">✏️</span>
+                <EditIcon className="w-6 h-6" />
                 Editar Cliente
               </h3>
-              <button
+              <Button
                 onClick={() => setEditingCliente(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="w-6 h-6" />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -1518,27 +1502,26 @@ function DashboardContent() {
 
             {/* Actions */}
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => setEditingCliente(null)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outlined-secondary"
+                fullWidth
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => handleUpdateCliente(editingCliente)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                loading={saving}
+                icon={<SaveIcon />}
+                fullWidth
               >
-                {saving ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Guardando...
-                  </span>
-                : "Guardar Cambios"}
-              </button>
+                Guardar Cambios
+              </Button>
             </div>
           </div>
         </div>
@@ -1557,28 +1540,16 @@ function DashboardContent() {
             {/* Header */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span className="text-2xl">⚠️</span>
+                <ExclamationIcon className="w-6 h-6 text-yellow-500" />
                 Confirmar Eliminación
               </h3>
-              <button
+              <Button
                 onClick={() => setDeletingCliente(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="w-6 h-6" />}
                 aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+              />
             </div>
 
             {/* Content */}
@@ -1595,25 +1566,23 @@ function DashboardContent() {
 
             {/* Actions */}
             <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
+              <Button
                 onClick={() => setDeletingCliente(null)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outlined-secondary"
+                fullWidth
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => handleDeleteCliente(deletingCliente._id!)}
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="danger"
+                loading={saving}
+                fullWidth
               >
-                {saving ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Eliminando...
-                  </span>
-                : "Eliminar"}
-              </button>
+                Eliminar
+              </Button>
             </div>
           </div>
         </div>

@@ -14,6 +14,8 @@ import {
   openWhatsAppNotification,
   openClientCancellationWhatsApp,
 } from "@/lib/whatsapp";
+import { Button } from "./ui/Button";
+import { XIcon, CheckIcon } from "./ui/Icons";
 
 interface FormErrors {
   nombre?: string;
@@ -1498,36 +1500,38 @@ export default function ReservaForm() {
           {/* Navigation Buttons */}
           <div className="flex gap-3 pt-3 sm:pt-4">
             {currentStep > 1 && (
-              <button
+              <Button
                 type="button"
                 onClick={handlePrevious}
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                variant="outlined-secondary"
+                fullWidth
+                size="lg"
               >
                 ← Anterior
-              </button>
+              </Button>
             )}
             {currentStep < totalSteps ?
-              <button
+              <Button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-600 dark:from-blue-500 dark:to-blue-500 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300"
+                variant="primary"
+                fullWidth
+                size="lg"
               >
                 Siguiente →
-              </button>
-            : <button
+              </Button>
+            : <Button
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-600 dark:from-blue-500 dark:to-blue-500 text-white rounded-lg sm:rounded-xl text-base sm:text-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-              >
-                {isSubmitting ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent mr-2"></div>
-                    <span className="text-sm sm:text-base">Procesando...</span>
-                  </span>
-                : <span className="flex items-center justify-center text-sm sm:text-base">
+                variant="primary"
+                loading={isSubmitting}
+                fullWidth
+                size="lg"
+                icon={
+                  !isSubmitting && (
                     <svg
-                      className="w-5 h-5 mr-2"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1539,10 +1543,11 @@ export default function ReservaForm() {
                         d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
                       />
                     </svg>
-                    Confirmar Reserva
-                  </span>
+                  )
                 }
-              </button>
+              >
+                Confirmar Reserva
+              </Button>
             }
           </div>
 
@@ -1631,7 +1636,7 @@ export default function ReservaForm() {
             </div>
 
             <div className="flex gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   setShowCancelModal(false);
@@ -1639,23 +1644,21 @@ export default function ReservaForm() {
                   setCancellationReason("");
                 }}
                 disabled={isCancelling}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="outlined-secondary"
+                fullWidth
               >
                 Volver
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={confirmCancellation}
                 disabled={isCancelling}
-                className="flex-1 px-4 py-3 bg-red-600 dark:bg-red-500 text-white rounded-xl font-semibold hover:bg-red-700 dark:hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="danger"
+                loading={isCancelling}
+                fullWidth
               >
-                {isCancelling ?
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Cancelando...
-                  </span>
-                : "Sí, Cancelar"}
-              </button>
+                Sí, Cancelar
+              </Button>
             </div>
           </div>
         </div>

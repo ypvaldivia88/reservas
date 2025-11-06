@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -97,20 +98,16 @@ export default function AdminLogin() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            variant="primary"
+            loading={loading}
+            fullWidth
+            size="lg"
           >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                Iniciando sesión...
-              </span>
-            ) : (
-              "Iniciar Sesión"
-            )}
-          </button>
+            Iniciar Sesión
+          </Button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
