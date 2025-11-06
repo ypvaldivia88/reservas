@@ -58,7 +58,7 @@ function DashboardContent() {
       if (reserva) {
         setEditingReserva(reserva);
         setActionMessage(
-          "📱 Reserva abierta desde WhatsApp. Puedes confirmar, editar o descartar."
+          "Reserva abierta desde WhatsApp. Puedes confirmar, editar o descartar."
         );
         setTimeout(() => setActionMessage(""), 5000);
       }
@@ -310,8 +310,20 @@ function DashboardContent() {
       <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8">
         <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
           <div className="flex flex-col items-center text-center">
-            <div className="text-3xl sm:text-5xl mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
-              📅
+            <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
+              <svg
+                className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
             </div>
             <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
               Reservas
@@ -323,8 +335,20 @@ function DashboardContent() {
         </div>
         <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
           <div className="flex flex-col items-center text-center">
-            <div className="text-3xl sm:text-5xl mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
-              👥
+            <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
+              <svg
+                className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
             </div>
             <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
               Clientes
@@ -336,8 +360,20 @@ function DashboardContent() {
         </div>
         <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
           <div className="flex flex-col items-center text-center">
-            <div className="text-3xl sm:text-5xl mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
-              ⏳
+            <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
+              <svg
+                className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
             <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
               Pendientes
@@ -352,7 +388,19 @@ function DashboardContent() {
       {/* Reservas Table */}
       <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-          <span className="text-3xl">📋</span>
+          <svg
+            className="w-8 h-8 text-blue-600 dark:text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+            />
+          </svg>
           Reservas Recientes
         </h2>
         <div className="overflow-x-auto -mx-6 sm:-mx-8 px-6 sm:px-8">
@@ -474,7 +522,19 @@ function DashboardContent() {
                                 disabled={saving}
                                 className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <span className="text-lg">✅</span>
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
                                 Confirmar
                               </button>
                               <button
@@ -488,7 +548,19 @@ function DashboardContent() {
                                 disabled={saving}
                                 className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <span className="text-lg">❌</span>
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
                                 Cancelar
                               </button>
                             </>
@@ -503,7 +575,19 @@ function DashboardContent() {
                                 disabled={saving}
                                 className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <span className="text-lg">✔️</span>
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
                                 Completar
                               </button>
                               <button
@@ -517,7 +601,19 @@ function DashboardContent() {
                                 disabled={saving}
                                 className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                <span className="text-lg">❌</span>
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
                                 Cancelar
                               </button>
                             </>
@@ -529,7 +625,19 @@ function DashboardContent() {
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-3 border-t border-gray-200 dark:border-gray-700"
                           >
-                            <span className="text-lg">✏️</span>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
                             Editar
                           </button>
                           <button
@@ -539,7 +647,19 @@ function DashboardContent() {
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
                           >
-                            <span className="text-lg">🗑️</span>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
                             Eliminar
                           </button>
                         </div>
