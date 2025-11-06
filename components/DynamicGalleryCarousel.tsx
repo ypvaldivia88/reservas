@@ -138,9 +138,9 @@ export default function DynamicGalleryCarousel() {
 
         {/* Scrollable row */}
         <div className="relative">
-          {/* soft fade edges to mask scrollbar/thumb on wide screens */}
-          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 z-10 hidden md:block bg-gradient-to-r from-white/100 dark:from-gray-900/100" />
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10 hidden md:block bg-gradient-to-l from-white/100 dark:from-gray-900/100" />
+          {/* soft fade edges using gradient from the section background color */}
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 z-10 hidden md:block bg-gradient-to-r from-blue-100 dark:from-blue-900/30" />
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10 hidden md:block bg-gradient-to-l from-blue-100 dark:from-blue-900/30" />
 
           <div
             ref={carouselRef}
@@ -200,31 +200,43 @@ export default function DynamicGalleryCarousel() {
         </div>
       </div>
 
-      {/* Lightbox modal (mobile tap / desktop click) */}
+      {/* Lightbox modal (mobile tap / desktop click) with blur background */}
       {selected && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xl bg-black/60 p-4 sm:p-6 md:p-8"
           onClick={() => setSelected(null)}
+          style={{
+            backgroundImage: `url('${selected}')`,
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+          }}
         >
+          {/* Close button */}
+          <button
+            aria-label="Cerrar"
+            onClick={() => setSelected(null)}
+            className="absolute top-4 right-4 z-30 w-12 h-12 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:scale-110 transition-all text-gray-900 dark:text-white font-bold text-xl"
+          >
+            ✕
+          </button>
+
+          {/* Full screen image container */}
           <div
-            className="relative max-w-3xl w-full rounded-2xl overflow-hidden animate-fade-in"
+            className="relative w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              aria-label="Cerrar"
-              onClick={() => setSelected(null)}
-              className="absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 flex items-center justify-center shadow-md hover:scale-105 transition-transform"
-            >
-              ✕
-            </button>
-            <div className="relative w-full h-[70vh] sm:h-[60vh] bg-black">
+            <div className="relative w-full h-full max-w-7xl max-h-full">
               <Image
                 src={selected}
                 alt="Foto grande"
-                className="w-full h-full object-contain"
+                className="object-contain drop-shadow-2xl"
                 fill
+                sizes="100vw"
+                quality={100}
+                priority
               />
             </div>
           </div>
