@@ -217,17 +217,18 @@ export default function GaleriaAdmin() {
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
               >
                 <div className="relative aspect-square bg-gray-200 dark:bg-gray-700">
-                  {imagen ?
+                  {imagen && imagen.blobUrl ? (
                     <Image
                       src={imagen.blobUrl}
                       alt={`Gallery image: ${item.titulo}`}
                       className="w-full h-full object-cover"
                       fill
                     />
-                  : <div className="w-full h-full flex items-center justify-center text-4xl">
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl">
                       🎨
                     </div>
-                  }
+                  )}
                   {item.destacado && (
                     <span className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
                       ⭐ Destacado

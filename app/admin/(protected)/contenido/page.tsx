@@ -649,9 +649,43 @@ export default function ContenidoAdmin() {
 
         {/* Filter summary */}
         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-          Mostrando {filteredImages.length} de {imagenes.length} imágenes
+          Mostrando {filteredImages.filter(img => img.blobUrl).length} de {imagenes.length} imágenes
+          {imagenes.some(img => !img.blobUrl) && (
+            <span className="ml-2 text-orange-600 dark:text-orange-400 font-semibold">
+              ⚠️ {imagenes.filter(img => !img.blobUrl).length} imágenes sin migrar (no se muestran)
+            </span>
+          )}
         </div>
       </div>
+
+      {/* Migration Warning Banner */}
+      {imagenes.some(img => !img.blobUrl) && (
+        <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-xl">
+          <div className="flex items-start space-x-3">
+            <span className="text-2xl">⚠️</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-orange-900 dark:text-orange-200 mb-2">
+                Imágenes antiguas detectadas
+              </h3>
+              <p className="text-sm text-orange-800 dark:text-orange-300 mb-3">
+                Tienes {imagenes.filter(img => !img.blobUrl).length} imágenes que usan el sistema antiguo (base64 en MongoDB).
+                Estas imágenes NO se mostrarán hasta que sean migradas a Vercel Blob.
+              </p>
+              <a
+                href="/api/migrate-images"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-semibold transition-colors"
+              >
+                🚀 Migrar imágenes ahora
+              </a>
+              <p className="text-xs text-orange-700 dark:text-orange-400 mt-2">
+                La migración puede tardar unos minutos. Abre el enlace en una nueva pestaña para ver el progreso.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Images Grid */}
       <div className="relative">
@@ -671,7 +705,7 @@ export default function ContenidoAdmin() {
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-          {filteredImages.map((imagen) => (
+          {filteredImages.filter(img => img.blobUrl).map((imagen) => (
             <div
               key={imagen._id}
               className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
