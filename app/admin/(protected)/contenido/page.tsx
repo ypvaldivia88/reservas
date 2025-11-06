@@ -736,7 +736,11 @@ export default function ContenidoAdmin() {
 
             {/* Content */}
             <div className="px-4 sm:px-6 py-6">
-              <form onSubmit={handleUploadSubmit} className="space-y-6">
+              <form
+                onSubmit={handleUploadSubmit}
+                className="space-y-6"
+                id="upload-form"
+              >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {uploadedFiles.length > 0 ?
@@ -929,46 +933,46 @@ export default function ContenidoAdmin() {
                     {message}
                   </div>
                 )}
-              </form>
-            </div>
 
-            {/* Actions */}
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3 sticky bottom-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUploadModal(false);
-                  resetForm();
-                }}
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-              >
-                {saving ?
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>
-                      Subiendo
-                      {uploadedFiles.length > 1 ?
-                        ` (${uploadedFiles.length})`
-                      : ""}
-                      ...
-                    </span>
-                  </>
-                : <>
-                    <span>📤</span>
-                    <span>
-                      Subir Imagen{uploadedFiles.length > 1 ? "es" : ""}
-                    </span>
-                  </>
-                }
-              </button>
+                {/* Actions - Moved inside form */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUploadModal(false);
+                      resetForm();
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  >
+                    {saving ?
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>
+                          Subiendo
+                          {uploadedFiles.length > 1 ?
+                            ` (${uploadedFiles.length})`
+                          : ""}
+                          ...
+                        </span>
+                      </>
+                    : <>
+                        <span>📤</span>
+                        <span>
+                          Subir Imagen{uploadedFiles.length > 1 ? "es" : ""}
+                        </span>
+                      </>
+                    }
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -1171,38 +1175,38 @@ export default function ContenidoAdmin() {
                     {message}
                   </div>
                 )}
-              </form>
-            </div>
 
-            {/* Actions */}
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3 sticky bottom-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowEditModal(false);
-                  resetForm();
-                }}
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-              >
-                {saving ?
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Actualizando...</span>
-                  </>
-                : <>
-                    <span>💾</span>
-                    <span>Actualizar</span>
-                  </>
-                }
-              </button>
+                {/* Actions - Moved inside form */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      resetForm();
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  >
+                    {saving ?
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Actualizando...</span>
+                      </>
+                    : <>
+                        <span>💾</span>
+                        <span>Actualizar</span>
+                      </>
+                    }
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -1358,49 +1362,38 @@ export default function ContenidoAdmin() {
                     rows={2}
                   />
                 </div>
-              </form>
-            </div>
 
-            {/* Actions */}
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCategoriaModal(false);
-                  setCategoriaForm({ nombre: "", descripcion: "" });
-                }}
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget.closest("form");
-                  if (form) {
-                    const event = new Event("submit", {
-                      bubbles: true,
-                      cancelable: true,
-                    });
-                    form.dispatchEvent(event);
-                  }
-                }}
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
-              >
-                {saving ?
-                  <>
-                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creando...</span>
-                  </>
-                : <>
-                    <span>➕</span>
-                    <span>Crear</span>
-                  </>
-                }
-              </button>
+                {/* Actions - Moved inside form */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCategoriaModal(false);
+                      setCategoriaForm({ nombre: "", descripcion: "" });
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+                  >
+                    {saving ?
+                      <>
+                        <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Creando...</span>
+                      </>
+                    : <>
+                        <span>➕</span>
+                        <span>Crear</span>
+                      </>
+                    }
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -1479,49 +1472,38 @@ export default function ContenidoAdmin() {
                     rows={2}
                   />
                 </div>
-              </form>
-            </div>
 
-            {/* Actions */}
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowServicioModal(false);
-                  setServicioForm({ nombre: "", descripcion: "" });
-                }}
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget.closest("form");
-                  if (form) {
-                    const event = new Event("submit", {
-                      bubbles: true,
-                      cancelable: true,
-                    });
-                    form.dispatchEvent(event);
-                  }
-                }}
-                disabled={saving}
-                className="flex-1 px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
-              >
-                {saving ?
-                  <>
-                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creando...</span>
-                  </>
-                : <>
-                    <span>➕</span>
-                    <span>Crear</span>
-                  </>
-                }
-              </button>
+                {/* Actions - Moved inside form */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowServicioModal(false);
+                      setServicioForm({ nombre: "", descripcion: "" });
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+                  >
+                    {saving ?
+                      <>
+                        <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Creando...</span>
+                      </>
+                    : <>
+                        <span>➕</span>
+                        <span>Crear</span>
+                      </>
+                    }
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
