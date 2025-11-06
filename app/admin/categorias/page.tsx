@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Categoria, ImageData } from "@/lib/types";
-import { base64ToDataURL } from "@/lib/imageUtils";
 import Image from "next/image";
 
 export default function CategoriasAdmin() {
@@ -199,7 +198,7 @@ export default function CategoriasAdmin() {
                 <div className="h-40 bg-gray-200 dark:bg-gray-700">
                   {imagen ?
                     <Image
-                      src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
+                      src={imagen.blobUrl}
                       alt={`Category image for ${categoria.nombre}`}
                       className="w-full h-full object-cover"
                       fill

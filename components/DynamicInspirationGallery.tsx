@@ -1,19 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ImageData, Categoria } from "@/lib/types";
-import { base64ToDataURL } from "@/lib/imageUtils";
 import Image from "next/image";
 
 // Gallery item card component
 const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
-  const imageUrl = imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType);
-
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700">
       {/* Image preview */}
       <div className="aspect-square">
         <Image
-          src={imageUrl}
+          src={imagen.blobUrl}
           alt={imagen.titulo || imagen.nombre}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           fill

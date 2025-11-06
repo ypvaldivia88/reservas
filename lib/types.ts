@@ -70,10 +70,7 @@ export interface ImageData {
   _id?: string;
   nombre: string;
   descripcion?: string;
-  // Legacy support - will be removed after migration
-  base64Data?: string; // Imagen codificada en base64 (deprecated)
-  // New Vercel Blob storage
-  blobUrl?: string; // URL de Vercel Blob Storage
+  blobUrl: string; // URL de Vercel Blob Storage (REQUIRED)
   mimeType: string; // image/jpeg, image/png, etc.
   size?: number; // Tamaño en bytes
   titulo?: string; // Título para mostrar en galerías

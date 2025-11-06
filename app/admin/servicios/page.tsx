@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Servicio, ImageData } from "@/lib/types";
-import { base64ToDataURL } from "@/lib/imageUtils";
 import Image from "next/image";
 
 export default function ServiciosAdmin() {
@@ -201,7 +200,7 @@ export default function ServiciosAdmin() {
                 <div className="h-48 bg-gray-200 dark:bg-gray-700">
                   {imagen ?
                     <Image
-                      src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
+                      src={imagen.blobUrl}
                       alt={`Service image for ${servicio.nombre}`}
                       fill
                       className="object-cover"

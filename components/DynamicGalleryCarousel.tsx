@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { ImageData } from "@/lib/types";
-import { base64ToDataURL } from "@/lib/imageUtils";
 import Image from "next/image";
 
 export default function DynamicGalleryCarousel() {
@@ -155,11 +154,6 @@ export default function DynamicGalleryCarousel() {
             style={{ scrollBehavior: "smooth" }}
           >
             {galleryImages.map((imagen) => {
-              const imageUrl = imagen.blobUrl || base64ToDataURL(
-                imagen.base64Data || '',
-                imagen.mimeType
-              );
-
               return (
                 <div
                   key={imagen._id}
@@ -171,11 +165,11 @@ export default function DynamicGalleryCarousel() {
                       movedRef.current = false;
                       return;
                     }
-                    setSelected(imageUrl);
+                    setSelected(imagen.blobUrl);
                   }}
                   onKeyDown={(e) =>
                     (e.key === "Enter" || e.key === " ") &&
-                    setSelected(imageUrl)
+                    setSelected(imagen.blobUrl)
                   }
                   className="snap-center flex-shrink-0 group cursor-pointer rounded-2xl overflow-hidden bg-white/5 shadow-sm"
                   style={{
@@ -186,7 +180,7 @@ export default function DynamicGalleryCarousel() {
                 >
                   <div className="relative w-full h-full">
                     <Image
-                      src={imageUrl}
+                      src={imagen.blobUrl}
                       alt={imagen.titulo || imagen.nombre}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
                       onDragStart={(e) => e.preventDefault()} // prevent image drag interfering with carousel drag

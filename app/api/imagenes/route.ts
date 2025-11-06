@@ -29,8 +29,7 @@ export async function GET(request: NextRequest) {
           nombre: imagen.nombre,
           titulo: imagen.titulo,
           descripcion: imagen.descripcion,
-          base64Data: imagen.base64Data, // Legacy support
-          blobUrl: imagen.blobUrl, // New Vercel Blob URL
+          blobUrl: imagen.blobUrl, // Only Vercel Blob URL
           mimeType: imagen.mimeType,
           size: imagen.size,
           enGaleriaDashboard: imagen.enGaleriaDashboard || false,
@@ -55,8 +54,7 @@ export async function GET(request: NextRequest) {
       nombre: img.nombre,
       titulo: img.titulo,
       descripcion: img.descripcion,
-      base64Data: img.base64Data, // Legacy support
-      blobUrl: img.blobUrl, // New Vercel Blob URL
+      blobUrl: img.blobUrl, // Only Vercel Blob URL
       mimeType: img.mimeType,
       size: img.size,
       enGaleriaDashboard: img.enGaleriaDashboard || false,

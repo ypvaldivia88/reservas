@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GaleriaItem, ImageData, Categoria, Servicio } from "@/lib/types";
-import { base64ToDataURL } from "@/lib/imageUtils";
 import Image from "next/image";
 
 export default function GaleriaAdmin() {
@@ -220,7 +219,7 @@ export default function GaleriaAdmin() {
                 <div className="relative aspect-square bg-gray-200 dark:bg-gray-700">
                   {imagen ?
                     <Image
-                      src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
+                      src={imagen.blobUrl}
                       alt={`Gallery image: ${item.titulo}`}
                       className="w-full h-full object-cover"
                       fill

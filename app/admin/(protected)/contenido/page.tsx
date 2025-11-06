@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ImageData, Categoria, Servicio } from "@/lib/types";
-import { preprocessImage, base64ToDataURL, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
+import { preprocessImage, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
 import Image from "next/image";
 
 export default function ContenidoAdmin() {
@@ -685,7 +685,7 @@ export default function ContenidoAdmin() {
                   <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
                 )}
                 <Image
-                  src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
+                  src={imagen.blobUrl}
                   alt={imagen.nombre}
                   className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
                   fill
@@ -1512,10 +1512,7 @@ export default function ContenidoAdmin() {
               <div className="relative max-w-full max-h-[80vh]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={selectedImage.blobUrl || base64ToDataURL(
-                    selectedImage.base64Data || '',
-                    selectedImage.mimeType
-                  )}
+                  src={selectedImage.blobUrl}
                   alt={selectedImage.nombre}
                   className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-2xl shadow-2xl"
                 />
