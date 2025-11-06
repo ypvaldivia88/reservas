@@ -9,7 +9,9 @@ export default function ContenidoAdmin() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
 
   // Filter states
   const [filterCategoria, setFilterCategoria] = useState<string>("");
@@ -49,6 +51,13 @@ export default function ContenidoAdmin() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    // Initialize loading state for all images
+    if (imagenes.length > 0) {
+      setLoadingImages(new Set(imagenes.map((img) => img._id!)));
+    }
+  }, [imagenes]);
 
   const loadData = async () => {
     try {
@@ -104,6 +113,7 @@ export default function ContenidoAdmin() {
       return;
     }
 
+    setSaving(true);
     try {
       const imageData = await preprocessImage(uploadedFile);
 
@@ -137,6 +147,8 @@ export default function ContenidoAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -146,6 +158,7 @@ export default function ContenidoAdmin() {
 
     if (!selectedImage) return;
 
+    setSaving(true);
     try {
       let imageData = null;
       if (uploadedFile) {
@@ -183,12 +196,15 @@ export default function ContenidoAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("¿Está seguro de eliminar esta imagen?")) return;
 
+    setSaving(true);
     try {
       const res = await fetch(`/api/imagenes?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -205,6 +221,8 @@ export default function ContenidoAdmin() {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
       setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -245,6 +263,7 @@ export default function ContenidoAdmin() {
 
   const handleCreateCategoria = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     try {
       const res = await fetch("/api/categorias", {
         method: "POST",
@@ -265,11 +284,14 @@ export default function ContenidoAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleCreateServicio = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     try {
       const res = await fetch("/api/servicios", {
         method: "POST",
@@ -290,6 +312,8 @@ export default function ContenidoAdmin() {
     } catch (error) {
       console.error("Error:", error);
       setMessage("❌ Error de conexión");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -375,150 +399,235 @@ export default function ContenidoAdmin() {
 
       {/* Filters and Quick Actions */}
       <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 mb-6 border border-gray-200 dark:border-white/20">
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <select
-                value={filterGaleria}
-                onChange={(e) => setFilterGaleria(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">Todas las galerías</option>
-                <option value="dashboard">Nuestros Trabajos</option>
-                <option value="inspiracion">Galería Inspiración</option>
-              </select>
-
-              <select
-                value={filterCategoria}
-                onChange={(e) => setFilterCategoria(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">Todas las categorías</option>
-                {categorias.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.nombre}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={filterServicio}
-                onChange={(e) => setFilterServicio(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">Todos los servicios</option>
-                {servicios.map((srv) => (
-                  <option key={srv._id} value={srv._id}>
-                    {srv.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setShowCategoriaModal(true)}
-                className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50"
-              >
-                + Categoría
-              </button>
-              <button
-                onClick={() => setShowServicioModal(true)}
-                className="flex-1 sm:flex-none px-3 py-2 text-sm bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50"
-              >
-                + Servicio
-              </button>
-            </div>
-          </div>
-
-          {/* Filter summary */}
-          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-            Mostrando {filteredImages.length} de {imagenes.length} imágenes
-          </div>
-        </div>
-
-        {/* Images Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          {filteredImages.map((imagen) => (
-            <div
-              key={imagen._id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden group"
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <select
+              value={filterGaleria}
+              onChange={(e) => setFilterGaleria(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
-              {/* Image */}
-              <div
-                className="aspect-square bg-gray-200 dark:bg-gray-700 cursor-pointer relative"
-                onClick={() => openViewModal(imagen)}
-              >
-                <Image
-                  src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
-                  alt={imagen.nombre}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  fill
-                />
-                {/* Gallery badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                  {imagen.enGaleriaDashboard && (
-                    <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded">
-                      Dashboard
-                    </span>
-                  )}
-                  {imagen.enGaleriaInspiracion && (
-                    <span className="px-2 py-0.5 bg-violet-500 text-white text-xs rounded">
-                      Inspiración
-                    </span>
-                  )}
-                </div>
-              </div>
+              <option value="">Todas las galerías</option>
+              <option value="dashboard">Nuestros Trabajos</option>
+              <option value="inspiracion">Galería Inspiración</option>
+            </select>
 
-              {/* Info */}
-              <div className="p-2 sm:p-3">
-                <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate mb-1">
-                  {imagen.nombre}
-                </h3>
-                {imagen.titulo && (
-                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                    {imagen.titulo}
-                  </p>
-                )}
+            <select
+              value={filterCategoria}
+              onChange={(e) => setFilterCategoria(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">Todas las categorías</option>
+              {categorias.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.nombre}
+                </option>
+              ))}
+            </select>
 
-                {/* Action buttons */}
-                <div className="flex gap-1 mt-2">
-                  <button
-                    onClick={() => openEditModal(imagen)}
-                    className="flex-1 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(imagen._id!)}
-                    className="flex-1 px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            <select
+              value={filterServicio}
+              onChange={(e) => setFilterServicio(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">Todos los servicios</option>
+              {servicios.map((srv) => (
+                <option key={srv._id} value={srv._id}>
+                  {srv.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setShowCategoriaModal(true)}
+              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50"
+            >
+              + Categoría
+            </button>
+            <button
+              onClick={() => setShowServicioModal(true)}
+              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50"
+            >
+              + Servicio
+            </button>
+          </div>
         </div>
 
-        {filteredImages.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400">
-              No hay imágenes que coincidan con los filtros.
-            </p>
+        {/* Filter summary */}
+        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+          Mostrando {filteredImages.length} de {imagenes.length} imágenes
+        </div>
+      </div>
+
+      {/* Images Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+        {filteredImages.map((imagen) => (
+          <div
+            key={imagen._id}
+            className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
+          >
+            {/* Image */}
+            <div
+              className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 cursor-pointer relative overflow-hidden"
+              onClick={() => openViewModal(imagen)}
+            >
+              {loadingImages.has(imagen._id!) && (
+                <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
+              )}
+              <Image
+                src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
+                alt={imagen.nombre}
+                className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+                fill
+                loading="lazy"
+                onLoad={() => {
+                  setLoadingImages((prev) => {
+                    const next = new Set(prev);
+                    next.delete(imagen._id!);
+                    return next;
+                  });
+                }}
+              />
+              {/* Gallery badges */}
+              <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                {imagen.enGaleriaDashboard && (
+                  <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
+                    💼 Dashboard
+                  </span>
+                )}
+                {imagen.enGaleriaInspiracion && (
+                  <span className="px-2.5 py-1 bg-violet-600 text-white text-xs font-semibold rounded-lg shadow-lg backdrop-blur-sm">
+                    ✨ Inspiración
+                  </span>
+                )}
+              </div>
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+
+            {/* Info */}
+            <div className="p-3 sm:p-4">
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate mb-1.5">
+                {imagen.nombre}
+              </h3>
+              {imagen.titulo && (
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-3">
+                  {imagen.titulo}
+                </p>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => openEditModal(imagen)}
+                  disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  <span>✏️</span>
+                  <span className="hidden sm:inline">Editar</span>
+                </button>
+                <button
+                  onClick={() => handleDelete(imagen._id!)}
+                  disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  {saving ?
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  : <>
+                      <span>🗑️</span>
+                      <span className="hidden sm:inline">Eliminar</span>
+                    </>
+                  }
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        ))}
+      </div>
+
+      {filteredImages.length === 0 && !loading && (
+        <div className="text-center py-20 px-4">
+          <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800 rounded-full mb-6">
+            <svg
+              className="w-16 h-16 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            No hay imágenes
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {filterCategoria || filterServicio || filterGaleria ?
+              "No se encontraron imágenes con los filtros seleccionados"
+            : "Comienza subiendo tu primera imagen"}
+          </p>
+          {!filterCategoria && !filterServicio && !filterGaleria && (
+            <button
+              onClick={() => {
+                resetForm();
+                setShowUploadModal(true);
+              }}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 inline-flex items-center gap-2"
+            >
+              <span>➕</span>
+              <span>Subir Primera Imagen</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setShowUploadModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">🖼️</span>
                 Nueva Imagen
-              </h2>
-              <form onSubmit={handleUploadSubmit} className="space-y-4">
+              </h3>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <form onSubmit={handleUploadSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Archivo *
@@ -670,41 +779,105 @@ export default function ContenidoAdmin() {
                   </div>
                 )}
 
-                {message && <p className="text-sm">{message}</p>}
-
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowUploadModal(false);
-                      resetForm();
-                    }}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                {message && (
+                  <div
+                    className={`p-3 rounded-lg text-sm font-medium ${
+                      message.includes("✅") ?
+                        "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                      : "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                    }`}
                   >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
-                  >
-                    Subir Imagen
-                  </button>
-                </div>
+                    {message}
+                  </div>
+                )}
               </form>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3 sticky bottom-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUploadModal(false);
+                  resetForm();
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget.closest("form");
+                  if (form) {
+                    const event = new Event("submit", {
+                      bubbles: true,
+                      cancelable: true,
+                    });
+                    form.dispatchEvent(event);
+                  }
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                {saving ?
+                  <>
+                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Subiendo...</span>
+                  </>
+                : <>
+                    <span>📤</span>
+                    <span>Subir Imagen</span>
+                  </>
+                }
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Modal - Similar to Upload but with update logic */}
+      {/* Edit Modal */}
       {showEditModal && selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">✏️</span>
                 Editar Imagen
-              </h2>
-              <form onSubmit={handleEditSubmit} className="space-y-4">
+              </h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <form onSubmit={handleEditSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Reemplazar imagen (opcional)
@@ -851,27 +1024,60 @@ export default function ContenidoAdmin() {
                   </div>
                 )}
 
-                {message && <p className="text-sm">{message}</p>}
-
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      resetForm();
-                    }}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                {message && (
+                  <div
+                    className={`p-3 rounded-lg text-sm font-medium ${
+                      message.includes("✅") ?
+                        "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                      : "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                    }`}
                   >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-lg hover:shadow-lg transition-all"
-                  >
-                    Actualizar
-                  </button>
-                </div>
+                    {message}
+                  </div>
+                )}
               </form>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3 sticky bottom-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditModal(false);
+                  resetForm();
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget.closest("form");
+                  if (form) {
+                    const event = new Event("submit", {
+                      bubbles: true,
+                      cancelable: true,
+                    });
+                    form.dispatchEvent(event);
+                  }
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                {saving ?
+                  <>
+                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Actualizando...</span>
+                  </>
+                : <>
+                    <span>💾</span>
+                    <span>Actualizar</span>
+                  </>
+                }
+              </button>
             </div>
           </div>
         </div>
@@ -880,53 +1086,119 @@ export default function ContenidoAdmin() {
       {/* View Modal - Full size image */}
       {showViewModal && selectedImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowViewModal(false)}
         >
-          <div className="max-w-4xl w-full">
-            <div className="relative">
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="absolute -top-12 right-0 text-white text-2xl hover:text-gray-300"
+          <div className="relative max-w-6xl w-full max-h-[90vh] flex flex-col">
+            {/* Close button */}
+            <button
+              onClick={() => setShowViewModal(false)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-md"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                ✕ Cerrar
-              </button>
-              <Image
-                src={base64ToDataURL(
-                  selectedImage.base64Data,
-                  selectedImage.mimeType
-                )}
-                alt={selectedImage.nombre}
-                className="w-full h-auto rounded-lg"
-                fill
-              />
-              {(selectedImage.titulo || selectedImage.descripcion) && (
-                <div className="mt-4 bg-white dark:bg-gray-800 p-4 rounded-lg">
-                  {selectedImage.titulo && (
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      {selectedImage.titulo}
-                    </h3>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              <span className="text-sm font-semibold">Cerrar</span>
+            </button>
+
+            {/* Image container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative max-w-full max-h-[80vh]">
+                <Image
+                  src={base64ToDataURL(
+                    selectedImage.base64Data,
+                    selectedImage.mimeType
                   )}
-                  {selectedImage.descripcion && (
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {selectedImage.descripcion}
-                    </p>
+                  alt={selectedImage.nombre}
+                  className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-2xl shadow-2xl"
+                  fill
+                />
+              </div>
+            </div>
+
+            {/* Image info */}
+            {(selectedImage.titulo || selectedImage.descripcion) && (
+              <div className="mt-6 bg-white/10 dark:bg-gray-800/50 backdrop-blur-xl p-6 rounded-2xl border border-white/20">
+                {selectedImage.titulo && (
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {selectedImage.titulo}
+                  </h3>
+                )}
+                {selectedImage.descripcion && (
+                  <p className="text-gray-200 dark:text-gray-300 leading-relaxed">
+                    {selectedImage.descripcion}
+                  </p>
+                )}
+                <div className="mt-4 flex gap-2">
+                  {selectedImage.enGaleriaDashboard && (
+                    <span className="px-3 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-lg">
+                      💼 Dashboard
+                    </span>
+                  )}
+                  {selectedImage.enGaleriaInspiracion && (
+                    <span className="px-3 py-1.5 bg-violet-600 text-white text-sm font-semibold rounded-lg">
+                      ✨ Inspiración
+                    </span>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Categoria Modal */}
       {showCategoriaModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setShowCategoriaModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">🏷️</span>
                 Nueva Categoría
-              </h2>
+              </h3>
+              <button
+                onClick={() => setShowCategoriaModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
               <form onSubmit={handleCreateCategoria} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -961,25 +1233,49 @@ export default function ContenidoAdmin() {
                     rows={2}
                   />
                 </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCategoriaModal(false);
-                      setCategoriaForm({ nombre: "", descripcion: "" });
-                    }}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Crear
-                  </button>
-                </div>
               </form>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCategoriaModal(false);
+                  setCategoriaForm({ nombre: "", descripcion: "" });
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget.closest("form");
+                  if (form) {
+                    const event = new Event("submit", {
+                      bubbles: true,
+                      cancelable: true,
+                    });
+                    form.dispatchEvent(event);
+                  }
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+              >
+                {saving ?
+                  <>
+                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creando...</span>
+                  </>
+                : <>
+                    <span>➕</span>
+                    <span>Crear</span>
+                  </>
+                }
+              </button>
             </div>
           </div>
         </div>
@@ -987,12 +1283,43 @@ export default function ContenidoAdmin() {
 
       {/* Servicio Modal */}
       {showServicioModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setShowServicioModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">💅</span>
                 Nuevo Servicio
-              </h2>
+              </h3>
+              <button
+                onClick={() => setShowServicioModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
               <form onSubmit={handleCreateServicio} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1027,25 +1354,49 @@ export default function ContenidoAdmin() {
                     rows={2}
                   />
                 </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowServicioModal(false);
-                      setServicioForm({ nombre: "", descripcion: "" });
-                    }}
-                    className="flex-1 px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-                  >
-                    Crear
-                  </button>
-                </div>
               </form>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowServicioModal(false);
+                  setServicioForm({ nombre: "", descripcion: "" });
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget.closest("form");
+                  if (form) {
+                    const event = new Event("submit", {
+                      bubbles: true,
+                      cancelable: true,
+                    });
+                    form.dispatchEvent(event);
+                  }
+                }}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+              >
+                {saving ?
+                  <>
+                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creando...</span>
+                  </>
+                : <>
+                    <span>➕</span>
+                    <span>Crear</span>
+                  </>
+                }
+              </button>
             </div>
           </div>
         </div>
