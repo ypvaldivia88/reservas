@@ -32,9 +32,9 @@ export async function convertImageToBase64(file: File): Promise<string> {
  */
 export async function resizeImage(
   file: File,
-  maxWidth: number = 800,
-  maxHeight: number = 800,
-  quality: number = 0.8
+  maxWidth: number = 1200,
+  maxHeight: number = 1200,
+  quality: number = 0.85
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
