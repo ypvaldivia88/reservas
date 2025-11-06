@@ -199,7 +199,7 @@ export default function CategoriasAdmin() {
                 <div className="h-40 bg-gray-200 dark:bg-gray-700">
                   {imagen ?
                     <Image
-                      src={base64ToDataURL(imagen.base64Data, imagen.mimeType)}
+                      src={imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType)}
                       alt={`Category image for ${categoria.nombre}`}
                       className="w-full h-full object-cover"
                       fill

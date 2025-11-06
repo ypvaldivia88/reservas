@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { ImageData, ApiResponse } from '@/lib/types';
+import { uploadBase64ToBlob, deleteImageFromBlob } from '@/lib/blobStorage';
 
 // GET - Obtener todas las imágenes o una específica
 export async function GET(request: NextRequest) {
@@ -28,7 +29,8 @@ export async function GET(request: NextRequest) {
           nombre: imagen.nombre,
           titulo: imagen.titulo,
           descripcion: imagen.descripcion,
-          base64Data: imagen.base64Data,
+          base64Data: imagen.base64Data, // Legacy support
+          blobUrl: imagen.blobUrl, // New Vercel Blob URL
           mimeType: imagen.mimeType,
           size: imagen.size,
           enGaleriaDashboard: imagen.enGaleriaDashboard || false,
@@ -53,7 +55,8 @@ export async function GET(request: NextRequest) {
       nombre: img.nombre,
       titulo: img.titulo,
       descripcion: img.descripcion,
-      base64Data: img.base64Data,
+      base64Data: img.base64Data, // Legacy support
+      blobUrl: img.blobUrl, // New Vercel Blob URL
       mimeType: img.mimeType,
       size: img.size,
       enGaleriaDashboard: img.enGaleriaDashboard || false,
@@ -105,6 +108,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Upload to Vercel Blob
+    const blob = await uploadBase64ToBlob(base64Data, nombre, mimeType);
+
     const db = await getDatabase();
     const now = new Date();
 
@@ -112,7 +118,9 @@ export async function POST(request: NextRequest) {
       nombre,
       titulo: titulo || '',
       descripcion: descripcion || '',
-      base64Data,
+      blobUrl: blob.url, // Store Blob URL
+      // Keep base64Data for legacy support during transition (optional, can remove later)
+      // base64Data,
       mimeType,
       size: size || 0,
       enGaleriaDashboard: enGaleriaDashboard || false,
@@ -172,11 +180,33 @@ export async function PATCH(request: NextRequest) {
       fechaActualizacion: new Date(),
     };
 
+    // If new image data is provided, upload to blob and delete old blob
+    if (base64Data && mimeType) {
+      // Get existing image to delete old blob
+      const existingImage = await db
+        .collection('imagenes')
+        .findOne({ _id: new ObjectId(_id) });
+
+      if (existingImage && existingImage.blobUrl) {
+        try {
+          await deleteImageFromBlob(existingImage.blobUrl);
+        } catch (error) {
+          console.error('Error deleting old blob:', error);
+          // Continue with update even if delete fails
+        }
+      }
+
+      // Upload new image to blob
+      const blob = await uploadBase64ToBlob(base64Data, nombre || existingImage?.nombre || 'image', mimeType);
+      updateData.blobUrl = blob.url;
+      updateData.mimeType = mimeType;
+      // Remove base64Data from updates - no longer storing in DB
+      // updateData.base64Data = base64Data;
+    }
+
     if (nombre !== undefined) updateData.nombre = nombre;
     if (titulo !== undefined) updateData.titulo = titulo;
     if (descripcion !== undefined) updateData.descripcion = descripcion;
-    if (base64Data) updateData.base64Data = base64Data;
-    if (mimeType) updateData.mimeType = mimeType;
     if (size !== undefined) updateData.size = size;
     if (enGaleriaDashboard !== undefined) updateData.enGaleriaDashboard = enGaleriaDashboard;
     if (enGaleriaInspiracion !== undefined) updateData.enGaleriaInspiracion = enGaleriaInspiracion;
@@ -238,6 +268,26 @@ export async function DELETE(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // Get image to delete blob before deleting from database
+    const imagen = await db.collection('imagenes').findOne({ _id: new ObjectId(id) });
+
+    if (!imagen) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Imagen no encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Delete from Vercel Blob if blobUrl exists
+    if (imagen.blobUrl) {
+      try {
+        await deleteImageFromBlob(imagen.blobUrl);
+      } catch (error) {
+        console.error('Error deleting blob:', error);
+        // Continue with database deletion even if blob deletion fails
+      }
     }
 
     const result = await db.collection('imagenes').deleteOne({ _id: new ObjectId(id) });

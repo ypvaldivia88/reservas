@@ -6,7 +6,7 @@ import Image from "next/image";
 
 // Gallery item card component
 const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
-  const imageUrl = base64ToDataURL(imagen.base64Data, imagen.mimeType);
+  const imageUrl = imagen.blobUrl || base64ToDataURL(imagen.base64Data || '', imagen.mimeType);
 
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/30 transition-all duration-300 border border-gray-100 dark:border-gray-700">
