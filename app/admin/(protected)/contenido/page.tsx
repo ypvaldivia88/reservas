@@ -31,7 +31,6 @@ export default function ContenidoAdmin() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showCategoriaModal, setShowCategoriaModal] = useState(false);
-  const [showServicioModal, setShowServicioModal] = useState(false);
 
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -57,10 +56,6 @@ export default function ContenidoAdmin() {
   });
 
   const [categoriaForm, setCategoriaForm] = useState({
-    nombre: "",
-    descripcion: "",
-  });
-  const [servicioForm, setServicioForm] = useState({
     nombre: "",
     descripcion: "",
   });
@@ -484,34 +479,6 @@ export default function ContenidoAdmin() {
     }
   };
 
-  const handleCreateServicio = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const res = await fetch("/api/servicios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...servicioForm, activo: true, orden: 0 }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setMessage("✅ Servicio creado");
-        setServicioForm({ nombre: "", descripcion: "" });
-        setShowServicioModal(false);
-        await loadData(true);
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        setMessage(`❌ ${data.error}`);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setMessage("❌ Error de conexión");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const toggleCategoria = (id: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -781,13 +748,6 @@ export default function ContenidoAdmin() {
               className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               + Categoría
-            </button>
-            <button
-              onClick={() => setShowServicioModal(true)}
-              disabled={saving}
-              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              + Servicio
             </button>
             <button
               onClick={() => {
@@ -1918,116 +1878,6 @@ export default function ContenidoAdmin() {
                     type="submit"
                     disabled={saving}
                     className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
-                  >
-                    {saving ?
-                      <>
-                        <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Creando...</span>
-                      </>
-                    : <>
-                        <span>➕</span>
-                        <span>Crear</span>
-                      </>
-                    }
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Servicio Modal */}
-      {showServicioModal && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-          onClick={() => setShowServicioModal(false)}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span className="text-2xl">💅</span>
-                Nuevo Servicio
-              </h3>
-              <button
-                onClick={() => setShowServicioModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                aria-label="Cerrar"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="px-4 sm:px-6 py-6">
-              <form onSubmit={handleCreateServicio} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    value={servicioForm.nombre}
-                    onChange={(e) =>
-                      setServicioForm({
-                        ...servicioForm,
-                        nombre: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Descripción
-                  </label>
-                  <textarea
-                    value={servicioForm.descripcion}
-                    onChange={(e) =>
-                      setServicioForm({
-                        ...servicioForm,
-                        descripcion: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows={2}
-                  />
-                </div>
-
-                {/* Actions - Moved inside form */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowServicioModal(false);
-                      setServicioForm({ nombre: "", descripcion: "" });
-                    }}
-                    disabled={saving}
-                    className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="flex-1 px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
                   >
                     {saving ?
                       <>

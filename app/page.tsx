@@ -4,6 +4,7 @@ import TestimonialCarousel from "@/components/TestimonialCarousel";
 import StatsSection from "@/components/StatsSection";
 import ProcessSection from "@/components/ProcessSection";
 import DynamicGalleryCarousel from "@/components/DynamicGalleryCarousel";
+import DynamicServicesSection from "@/components/DynamicServicesSection";
 
 export default function Home() {
   return (
@@ -71,89 +72,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Section - Mobile First */}
-      <section
-        id="servicios"
-        className="py-12 sm:py-16 md:py-20 bg-white/50 dark:bg-gray-800/30"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-              Nuestros Servicios
-            </h2>
-            <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl mx-auto px-4">
-              Ofrecemos una amplia gama de servicios para el cuidado y
-              embellecimiento de tus uñas
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {[
-              {
-                title: "Gel / Softgel",
-                desc: "Gel ligero y flexible, ideal para acabado natural y cómodo.",
-                fondo: "gel.png",
-              },
-              {
-                title: "Base Rubber / Gel Builder",
-                desc: "Gel reforzado para uñas débiles, perfecto para mayor resistencia y durabilidad.",
-                fondo: "rubber.png",
-              },
-              {
-                title: "Gel Dipping",
-                desc: "Sistema sin monómero con polvo aclírico, uñas fuertes y acabado elegante.",
-                fondo: "dipping.png",
-              },
-              {
-                title: "Pedicure",
-                desc: "Un servicio completo para pies suaves, saludables y bien cuidados.",
-                fondo: "pedicure.png",
-              },
-            ].map((service, index) => (
-              <div
-                key={index}
-                className="group relative rounded-2xl overflow-hidden transition-transform duration-500 transform-gpu will-change-transform hover:scale-105 hover:-translate-y-2 hover:rotate-1 hover:shadow-2xl cursor-pointer"
-                style={{
-                  backgroundImage: `url('/images/servicios/${service.fondo}')`,
-                  backgroundPosition: "center",
-                  backgroundSize: "cover",
-                  backgroundRepeat: "no-repeat",
-                  backgroundColor: "#fff",
-                }}
-              >
-                {/* decorative sparkle that appears on hover */}
-                <svg
-                  className="absolute top-3 right-3 w-8 h-8 text-white opacity-0 translate-y-2 group-hover:opacity-90 group-hover:translate-y-0 transition-all duration-400"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
-                </svg>
-
-                {/* overlay to improve text contrast */}
-                <div
-                  className="absolute inset-0 bg-black/30 group-hover:bg-black/45 transition-colors duration-300"
-                  aria-hidden
-                />
-
-                <div className="p-4 sm:p-6 relative z-10 h-56 flex flex-col justify-center items-center text-center">
-                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
-                    {service.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-white/90 mb-4">
-                    {service.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Services Section - Now Dynamic */}
+      <DynamicServicesSection />
 
       {/* Features Section - Mobile First */}
       <section className="py-12 sm:py-16 md:py-20 bg-gray-50 dark:bg-gray-800/50">
