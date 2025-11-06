@@ -9,6 +9,7 @@ function DashboardContent() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [clientes, setClientes] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Modal states for Reservas
   const [editingReserva, setEditingReserva] = useState<Reserva | null>(null);
@@ -70,7 +71,11 @@ function DashboardContent() {
   };
 
   // CRUD Handlers for Reservas
-  const handleUpdateReserva = async (reserva: Reserva, openWhatsApp: boolean = false) => {
+  const handleUpdateReserva = async (
+    reserva: Reserva,
+    openWhatsApp: boolean = false
+  ) => {
+    setSaving(true);
     try {
       const res = await fetch(`/api/reservas/${reserva._id}`, {
         method: "PATCH",
@@ -94,7 +99,7 @@ function DashboardContent() {
         setActionMessage("✅ Reserva actualizada exitosamente");
         setEditingReserva(null);
         loadData();
-        
+
         // Open WhatsApp if requested (for confirm/cancel actions)
         if (openWhatsApp) {
           setTimeout(() => {
@@ -121,7 +126,7 @@ function DashboardContent() {
             }
           }, 500);
         }
-        
+
         setTimeout(() => setActionMessage(""), 3000);
       } else {
         setActionMessage("❌ " + (data.error || "Error al actualizar reserva"));
@@ -131,10 +136,13 @@ function DashboardContent() {
       console.error("Error:", error);
       setActionMessage("❌ Error de conexión");
       setTimeout(() => setActionMessage(""), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDeleteReserva = async (id: string) => {
+    setSaving(true);
     try {
       const res = await fetch(`/api/reservas/${id}`, {
         method: "DELETE",
@@ -155,11 +163,14 @@ function DashboardContent() {
       console.error("Error:", error);
       setActionMessage("❌ Error de conexión");
       setTimeout(() => setActionMessage(""), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
   // CRUD Handlers for Clientes
   const handleCreateCliente = async (nombre: string, telefono: string) => {
+    setSaving(true);
     try {
       const res = await fetch("/api/clientes", {
         method: "POST",
@@ -184,10 +195,13 @@ function DashboardContent() {
       console.error("Error:", error);
       setActionMessage("❌ Error de conexión");
       setTimeout(() => setActionMessage(""), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleUpdateCliente = async (cliente: User) => {
+    setSaving(true);
     try {
       const res = await fetch(`/api/clientes/${cliente._id}`, {
         method: "PATCH",
@@ -213,10 +227,13 @@ function DashboardContent() {
       console.error("Error:", error);
       setActionMessage("❌ Error de conexión");
       setTimeout(() => setActionMessage(""), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDeleteCliente = async (id: string) => {
+    setSaving(true);
     try {
       const res = await fetch(`/api/clientes/${id}`, {
         method: "DELETE",
@@ -239,6 +256,8 @@ function DashboardContent() {
       console.error("Error:", error);
       setActionMessage("❌ Error de conexión");
       setTimeout(() => setActionMessage(""), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -267,50 +286,44 @@ function DashboardContent() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="group bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
-                Total Reservas
-              </p>
-              <p className="text-4xl font-bold text-gray-900 dark:text-white">
-                {reservas.length}
-              </p>
-            </div>
-            <div className="text-5xl opacity-80 group-hover:scale-110 transition-transform">
+      <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8">
+        <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl sm:text-5xl mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               📅
             </div>
+            <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
+              Reservas
+            </p>
+            <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+              {reservas.length}
+            </p>
           </div>
         </div>
-        <div className="group bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
-                Total Clientes
-              </p>
-              <p className="text-4xl font-bold text-gray-900 dark:text-white">
-                {clientes.length}
-              </p>
-            </div>
-            <div className="text-5xl opacity-80 group-hover:scale-110 transition-transform">
+        <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl sm:text-5xl mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               👥
             </div>
+            <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
+              Clientes
+            </p>
+            <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+              {clientes.length}
+            </p>
           </div>
         </div>
-        <div className="group bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
-                Pendientes
-              </p>
-              <p className="text-4xl font-bold text-gray-900 dark:text-white">
-                {reservas.filter((r) => r.estado === "pendiente").length}
-              </p>
-            </div>
-            <div className="text-5xl opacity-80 group-hover:scale-110 transition-transform">
+        <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl sm:text-5xl mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               ⏳
             </div>
+            <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
+              Pendientes
+            </p>
+            <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+              {reservas.filter((r) => r.estado === "pendiente").length}
+            </p>
           </div>
         </div>
       </div>
@@ -489,8 +502,8 @@ function DashboardContent() {
                 Gestión Unificada de Contenido
               </h3>
               <p className="text-sm text-gray-700 dark:text-blue-200">
-                Administra imágenes, galerías, categorías y servicios en un
-                solo lugar
+                Administra imágenes, galerías, categorías y servicios en un solo
+                lugar
               </p>
             </div>
             <div className="text-3xl text-gray-700 dark:text-white opacity-60 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
@@ -574,334 +587,420 @@ function DashboardContent() {
 
       {/* Edit Reserva Modal */}
       {editingReserva && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-white/20 animate-fadeInUp">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-              <span className="text-2xl">✏️</span>
-              Editar Reserva
-            </h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleUpdateReserva(editingReserva);
-              }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    value={editingReserva.nombre}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        nombre: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    required
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setEditingReserva(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">✏️</span>
+                Editar Reserva
+              </h3>
+              <button
+                onClick={() => setEditingReserva(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    value={editingReserva.telefono}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        telefono: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Forma
-                  </label>
-                  <select
-                    value={editingReserva.forma}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        forma: e.target.value as
-                          | "coffin"
-                          | "almond"
-                          | "stiletto"
-                          | "square",
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
-                  >
-                    <option value="coffin">Coffin</option>
-                    <option value="almond">Almond</option>
-                    <option value="stiletto">Stiletto</option>
-                    <option value="square">Square</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Largo
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="8"
-                    value={editingReserva.largo}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        largo: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Fecha Cita
-                  </label>
-                  <input
-                    type="date"
-                    value={editingReserva.fechaCita}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        fechaCita: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Hora Cita
-                  </label>
-                  <input
-                    type="time"
-                    value={editingReserva.horaCita}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        horaCita: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Estado
-                  </label>
-                  <select
-                    value={editingReserva.estado}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        estado: e.target.value as
-                          | "pendiente"
-                          | "confirmada"
-                          | "cancelada"
-                          | "completada",
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
-                  >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="confirmada">Confirmada</option>
-                    <option value="cancelada">Cancelada</option>
-                    <option value="completada">Completada</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Decoración
-                  </label>
-                  <textarea
-                    value={editingReserva.decoracion || ""}
-                    onChange={(e) =>
-                      setEditingReserva({
-                        ...editingReserva,
-                        decoracion: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    rows={3}
-                  />
-                </div>
-                {(editingReserva.estado === "completada" ||
-                  editingReserva.estado === "confirmada") && (
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleUpdateReserva(editingReserva);
+                }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Costo{" "}
-                      {editingReserva.estado === "completada" ?
-                        "(requerido)"
-                      : "(opcional)"}
+                      Nombre
                     </label>
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editingReserva.costo || ""}
+                      type="text"
+                      value={editingReserva.nombre}
                       onChange={(e) =>
                         setEditingReserva({
                           ...editingReserva,
-                          costo:
-                            e.target.value ?
-                              parseFloat(e.target.value)
-                            : undefined,
+                          nombre: e.target.value,
                         })
                       }
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                      required={editingReserva.estado === "completada"}
+                      required
                     />
                   </div>
-                )}
-              </div>
-
-              {/* Quick Action Buttons */}
-              {editingReserva.estado === "pendiente" && (
-                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
-                  <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
-                    Acciones Rápidas:
-                  </h4>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUpdateReserva(
-                          {
-                            ...editingReserva,
-                            estado: "confirmada",
-                          },
-                          true
-                        );
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
-                    >
-                      ✅ Confirmar Reserva
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUpdateReserva(
-                          {
-                            ...editingReserva,
-                            estado: "cancelada",
-                          },
-                          true
-                        );
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
-                    >
-                      ❌ Cancelar Reserva
-                    </button>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Teléfono
+                    </label>
+                    <input
+                      type="tel"
+                      value={editingReserva.telefono}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          telefono: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                      required
+                    />
                   </div>
-                </div>
-              )}
-
-              {editingReserva.estado === "confirmada" && (
-                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
-                  <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
-                    Acciones Rápidas:
-                  </h4>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (editingReserva.costo == null) {
-                          setActionMessage(
-                            "❌ Por favor ingresa el costo antes de completar la reserva"
-                          );
-                          setTimeout(() => setActionMessage(""), 3000);
-                          return;
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Forma
+                    </label>
+                    <select
+                      value={editingReserva.forma}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          forma: e.target.value as
+                            | "coffin"
+                            | "almond"
+                            | "stiletto"
+                            | "square",
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
+                    >
+                      <option value="coffin">Coffin</option>
+                      <option value="almond">Almond</option>
+                      <option value="stiletto">Stiletto</option>
+                      <option value="square">Square</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Largo
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="8"
+                      value={editingReserva.largo}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          largo: parseInt(e.target.value),
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Fecha Cita
+                    </label>
+                    <input
+                      type="date"
+                      value={editingReserva.fechaCita}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          fechaCita: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Hora Cita
+                    </label>
+                    <input
+                      type="time"
+                      value={editingReserva.horaCita}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          horaCita: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Estado
+                    </label>
+                    <select
+                      value={editingReserva.estado}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          estado: e.target.value as
+                            | "pendiente"
+                            | "confirmada"
+                            | "cancelada"
+                            | "completada",
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
+                    >
+                      <option value="pendiente">Pendiente</option>
+                      <option value="confirmada">Confirmada</option>
+                      <option value="cancelada">Cancelada</option>
+                      <option value="completada">Completada</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Decoración
+                    </label>
+                    <textarea
+                      value={editingReserva.decoracion || ""}
+                      onChange={(e) =>
+                        setEditingReserva({
+                          ...editingReserva,
+                          decoracion: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                      rows={3}
+                    />
+                  </div>
+                  {(editingReserva.estado === "completada" ||
+                    editingReserva.estado === "confirmada") && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Costo{" "}
+                        {editingReserva.estado === "completada" ?
+                          "(requerido)"
+                        : "(opcional)"}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editingReserva.costo || ""}
+                        onChange={(e) =>
+                          setEditingReserva({
+                            ...editingReserva,
+                            costo:
+                              e.target.value ?
+                                parseFloat(e.target.value)
+                              : undefined,
+                          })
                         }
-                        handleUpdateReserva(
-                          {
-                            ...editingReserva,
-                            estado: "completada",
-                          },
-                          false
-                        );
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
-                    >
-                      ✔️ Completar Reserva
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUpdateReserva(
-                          {
-                            ...editingReserva,
-                            estado: "cancelada",
-                          },
-                          true
-                        );
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
-                    >
-                      ❌ Cancelar Reserva
-                    </button>
-                  </div>
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                        required={editingReserva.estado === "completada"}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <div className="flex gap-3 justify-end pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingReserva(null)}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
-                >
-                  Cerrar
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                  Guardar Cambios
-                </button>
-              </div>
-            </form>
+                {/* Quick Action Buttons */}
+                {editingReserva.estado === "pendiente" && (
+                  <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
+                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
+                      Acciones Rápidas:
+                    </h4>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleUpdateReserva(
+                            {
+                              ...editingReserva,
+                              estado: "confirmada",
+                            },
+                            true
+                          );
+                        }}
+                        disabled={saving}
+                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        ✅ Confirmar Reserva
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleUpdateReserva(
+                            {
+                              ...editingReserva,
+                              estado: "cancelada",
+                            },
+                            true
+                          );
+                        }}
+                        disabled={saving}
+                        className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        ❌ Cancelar Reserva
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {editingReserva.estado === "confirmada" && (
+                  <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
+                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
+                      Acciones Rápidas:
+                    </h4>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (editingReserva.costo == null) {
+                            setActionMessage(
+                              "❌ Por favor ingresa el costo antes de completar la reserva"
+                            );
+                            setTimeout(() => setActionMessage(""), 3000);
+                            return;
+                          }
+                          handleUpdateReserva(
+                            {
+                              ...editingReserva,
+                              estado: "completada",
+                            },
+                            false
+                          );
+                        }}
+                        disabled={saving}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        ✔️ Completar Reserva
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleUpdateReserva(
+                            {
+                              ...editingReserva,
+                              estado: "cancelada",
+                            },
+                            true
+                          );
+                        }}
+                        disabled={saving}
+                        className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        ❌ Cancelar Reserva
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 justify-end pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditingReserva(null)}
+                    disabled={saving}
+                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ?
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Guardando...
+                      </span>
+                    : "Guardar Cambios"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* Delete Reserva Modal */}
       {deletingReserva && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-white/20 animate-fadeInUp">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
-              Confirmar Eliminación
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              ¿Estás seguro de que deseas eliminar la reserva de{" "}
-              <strong className="text-gray-900 dark:text-white">{deletingReserva.nombre}</strong>?
-              Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3 justify-end">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setDeletingReserva(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">⚠️</span>
+                Confirmar Eliminación
+              </h3>
               <button
                 onClick={() => setDeletingReserva(null)}
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                ¿Estás seguro de que deseas eliminar la reserva de{" "}
+                <strong className="text-gray-900 dark:text-white">
+                  {deletingReserva.nombre}
+                </strong>
+                ? Esta acción no se puede deshacer.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                onClick={() => setDeletingReserva(null)}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDeleteReserva(deletingReserva._id!)}
-                className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Eliminar
+                {saving ?
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Eliminando...
+                  </span>
+                : "Eliminar"}
               </button>
             </div>
           </div>
@@ -910,164 +1009,303 @@ function DashboardContent() {
 
       {/* Create Cliente Modal */}
       {creatingCliente && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-white/20 animate-fadeInUp">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-              <span className="text-2xl">➕</span>
-              Crear Nuevo Cliente
-            </h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                handleCreateCliente(
-                  formData.get("nombre") as string,
-                  formData.get("telefono") as string
-                );
-              }}
-              className="space-y-6"
-            >
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                  minLength={2}
-                  placeholder="Nombre del cliente"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  name="telefono"
-                  placeholder="+53 12345678"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 justify-end pt-4">
-                <button
-                  type="button"
-                  onClick={() => setCreatingCliente(false)}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setCreatingCliente(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">➕</span>
+                Crear Nuevo Cliente
+              </h3>
+              <button
+                onClick={() => setCreatingCliente(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                  Crear Cliente
-                </button>
-              </div>
-            </form>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  handleCreateCliente(
+                    formData.get("nombre") as string,
+                    formData.get("telefono") as string
+                  );
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                    minLength={2}
+                    placeholder="Nombre del cliente"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Teléfono
+                  </label>
+                  <input
+                    type="tel"
+                    name="telefono"
+                    placeholder="+53 12345678"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                  />
+                </div>
+              </form>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setCreatingCliente(false)}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget
+                    .closest("div")
+                    ?.previousElementSibling?.querySelector("form");
+                  if (form) {
+                    const formData = new FormData(form as HTMLFormElement);
+                    handleCreateCliente(
+                      formData.get("nombre") as string,
+                      formData.get("telefono") as string
+                    );
+                  }
+                }}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ?
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Creando...
+                  </span>
+                : "Crear Cliente"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Edit Cliente Modal */}
       {editingCliente && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-white/20 animate-fadeInUp">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-              <span className="text-2xl">✏️</span>
-              Editar Cliente
-            </h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleUpdateCliente(editingCliente);
-              }}
-              className="space-y-6"
-            >
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  value={editingCliente.nombre}
-                  onChange={(e) =>
-                    setEditingCliente({
-                      ...editingCliente,
-                      nombre: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                  minLength={2}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  value={editingCliente.telefono}
-                  onChange={(e) =>
-                    setEditingCliente({
-                      ...editingCliente,
-                      telefono: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 justify-end pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingCliente(null)}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setEditingCliente(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">✏️</span>
+                Editar Cliente
+              </h3>
+              <button
+                onClick={() => setEditingCliente(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                  Guardar Cambios
-                </button>
-              </div>
-            </form>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleUpdateCliente(editingCliente);
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCliente.nombre}
+                    onChange={(e) =>
+                      setEditingCliente({
+                        ...editingCliente,
+                        nombre: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                    minLength={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Teléfono
+                  </label>
+                  <input
+                    type="tel"
+                    value={editingCliente.telefono}
+                    onChange={(e) =>
+                      setEditingCliente({
+                        ...editingCliente,
+                        telefono: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                  />
+                </div>
+              </form>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setEditingCliente(null)}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateCliente(editingCliente)}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ?
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Guardando...
+                  </span>
+                : "Guardar Cambios"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Delete Cliente Modal */}
       {deletingCliente && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 dark:border-white/20 animate-fadeInUp">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
-              Confirmar Eliminación
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              ¿Estás seguro de que deseas eliminar al cliente{" "}
-              <strong className="text-gray-900 dark:text-white">{deletingCliente.nombre}</strong>?
-              Esta acción no se puede deshacer. No se puede eliminar un cliente
-              con reservas activas.
-            </p>
-            <div className="flex gap-3 justify-end">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setDeletingCliente(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span className="text-2xl">⚠️</span>
+                Confirmar Eliminación
+              </h3>
               <button
                 onClick={() => setDeletingCliente(null)}
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-4 sm:px-6 py-6">
+              <p className="text-gray-600 dark:text-gray-300">
+                ¿Estás seguro de que deseas eliminar al cliente{" "}
+                <strong className="text-gray-900 dark:text-white">
+                  {deletingCliente.nombre}
+                </strong>
+                ? Esta acción no se puede deshacer. No se puede eliminar un
+                cliente con reservas activas.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex gap-3">
+              <button
+                onClick={() => setDeletingCliente(null)}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-all font-medium touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDeleteCliente(deletingCliente._id!)}
-                className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Eliminar
+                {saving ?
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Eliminando...
+                  </span>
+                : "Eliminar"}
               </button>
             </div>
           </div>
