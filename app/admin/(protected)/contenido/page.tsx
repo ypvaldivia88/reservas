@@ -27,6 +27,7 @@ export default function ContenidoAdmin() {
 
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -89,25 +90,102 @@ export default function ContenidoAdmin() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    const validFiles: File[] = [];
+
+    for (const file of fileArray) {
       if (!isValidImageFile(file)) {
-        setMessage("❌ Tipo de archivo no válido. Use JPEG, PNG, GIF o WebP");
+        setMessage(
+          `❌ ${file.name}: Tipo de archivo no válido. Use JPEG, PNG, GIF o WebP`
+        );
         return;
       }
       if (!isValidFileSize(file, 5)) {
-        setMessage("❌ El archivo es demasiado grande. Máximo 5MB");
+        setMessage(
+          `❌ ${file.name}: El archivo es demasiado grande. Máximo 5MB`
+        );
         return;
       }
-      setUploadedFile(file);
-      setMessage("");
+      validFiles.push(file);
     }
+
+    if (validFiles.length === 1) {
+      setUploadedFile(validFiles[0]);
+      setUploadedFiles([]);
+    } else {
+      setUploadedFile(null);
+      setUploadedFiles(validFiles);
+    }
+    setMessage("");
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
 
+    // Multiple files upload
+    if (uploadedFiles.length > 0) {
+      setSaving(true);
+      try {
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < uploadedFiles.length; i++) {
+          const file = uploadedFiles[i];
+          const imageData = await preprocessImage(file);
+
+          // Auto-generate name from filename without extension
+          const autoName = file.name.replace(/\.[^/.]+$/, "");
+
+          const payload = {
+            nombre: autoName,
+            titulo: formData.titulo || undefined,
+            descripcion: formData.descripcion || undefined,
+            enGaleriaDashboard: formData.enGaleriaDashboard,
+            enGaleriaInspiracion: formData.enGaleriaInspiracion,
+            categoriaIds: formData.categoriaIds,
+            servicioIds: formData.servicioIds,
+            ...imageData,
+          };
+
+          const res = await fetch("/api/imagenes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        }
+
+        if (errorCount === 0) {
+          setMessage(
+            `✅ ${successCount} ${successCount === 1 ? "imagen subida" : "imágenes subidas"} exitosamente`
+          );
+        } else {
+          setMessage(`⚠️ ${successCount} subidas, ${errorCount} errores`);
+        }
+
+        resetForm();
+        loadData();
+        setTimeout(() => setShowUploadModal(false), 1500);
+      } catch (error) {
+        console.error("Error:", error);
+        setMessage("❌ Error de conexión");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // Single file upload (original logic)
     if (!uploadedFile) {
       setMessage("❌ Debe seleccionar una imagen");
       return;
@@ -257,6 +335,7 @@ export default function ContenidoAdmin() {
       servicioIds: [],
     });
     setUploadedFile(null);
+    setUploadedFiles([]);
     setSelectedImage(null);
     setMessage("");
   };
@@ -391,7 +470,8 @@ export default function ContenidoAdmin() {
             resetForm();
             setShowUploadModal(true);
           }}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+          disabled={saving}
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5"
         >
           ➕ Nueva Imagen
         </button>
@@ -399,7 +479,7 @@ export default function ContenidoAdmin() {
 
       {/* Filters and Quick Actions */}
       <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 mb-6 border border-gray-200 dark:border-white/20">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div className="flex flex-col justify-between items-start gap-4">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <select
@@ -443,13 +523,15 @@ export default function ContenidoAdmin() {
           <div className="flex gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowCategoriaModal(true)}
-              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50"
+              disabled={saving}
+              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               + Categoría
             </button>
             <button
               onClick={() => setShowServicioModal(true)}
-              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50"
+              disabled={saving}
+              className="flex-1 sm:flex-none px-3 py-2 text-sm bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               + Servicio
             </button>
@@ -524,20 +606,44 @@ export default function ContenidoAdmin() {
                 <button
                   onClick={() => openEditModal(imagen)}
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  <span>✏️</span>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
                   <span className="hidden sm:inline">Editar</span>
                 </button>
                 <button
                   onClick={() => handleDelete(imagen._id!)}
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {saving ?
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-red-700 dark:border-red-300 border-t-transparent rounded-full animate-spin"></div>
                   : <>
-                      <span>🗑️</span>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
                       <span className="hidden sm:inline">Eliminar</span>
                     </>
                   }
@@ -579,7 +685,8 @@ export default function ContenidoAdmin() {
                 resetForm();
                 setShowUploadModal(true);
               }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 inline-flex items-center gap-2"
+              disabled={saving}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 inline-flex items-center gap-2"
             >
               <span>➕</span>
               <span>Subir Primera Imagen</span>
@@ -602,7 +709,9 @@ export default function ContenidoAdmin() {
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
                 <span className="text-2xl">🖼️</span>
-                Nueva Imagen
+                {uploadedFiles.length > 0 ?
+                  `Nueva${uploadedFiles.length > 1 ? "s" : ""} Imagen${uploadedFiles.length > 1 ? "es" : ""} (${uploadedFiles.length})`
+                : "Nueva Imagen"}
               </h3>
               <button
                 onClick={() => setShowUploadModal(false)}
@@ -630,38 +739,68 @@ export default function ContenidoAdmin() {
               <form onSubmit={handleUploadSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Archivo *
+                    {uploadedFiles.length > 0 ?
+                      `Archivos (${uploadedFiles.length}) *`
+                    : "Archivo(s) *"}
                   </label>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleFileChange}
                     className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                     required
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Máximo 5MB. Formatos: JPEG, PNG, GIF, WebP
+                    Máximo 5MB por imagen. Formatos: JPEG, PNG, GIF, WebP.
+                    Puedes seleccionar múltiples archivos.
                   </p>
+                  {uploadedFiles.length > 0 && (
+                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
+                        📋 {uploadedFiles.length}{" "}
+                        {uploadedFiles.length === 1 ?
+                          "archivo seleccionado"
+                        : "archivos seleccionados"}
+                        :
+                      </p>
+                      <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1 max-h-32 overflow-y-auto">
+                        {uploadedFiles.map((file, index) => (
+                          <li key={index} className="truncate">
+                            • {file.name}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-blue-700 dark:text-blue-400 mt-2 italic">
+                        Los nombres se generarán automáticamente desde los
+                        nombres de archivo
+                      </p>
+                    </div>
+                  )}
                 </div>
+
+                {uploadedFiles.length === 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Nombre del archivo *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nombre}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nombre: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      required={uploadedFiles.length === 0}
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nombre del archivo *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nombre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Título (para galerías)
+                    Título{" "}
+                    {uploadedFiles.length > 0 &&
+                      "(aplicará a todas las imágenes)"}
                   </label>
                   <input
                     type="text"
@@ -825,11 +964,19 @@ export default function ContenidoAdmin() {
                 {saving ?
                   <>
                     <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Subiendo...</span>
+                    <span>
+                      Subiendo
+                      {uploadedFiles.length > 1 ?
+                        ` (${uploadedFiles.length})`
+                      : ""}
+                      ...
+                    </span>
                   </>
                 : <>
                     <span>📤</span>
-                    <span>Subir Imagen</span>
+                    <span>
+                      Subir Imagen{uploadedFiles.length > 1 ? "es" : ""}
+                    </span>
                   </>
                 }
               </button>
@@ -1117,14 +1264,14 @@ export default function ContenidoAdmin() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative max-w-full max-h-[80vh]">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={base64ToDataURL(
                     selectedImage.base64Data,
                     selectedImage.mimeType
                   )}
                   alt={selectedImage.nombre}
                   className="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-2xl shadow-2xl"
-                  fill
                 />
               </div>
             </div>
