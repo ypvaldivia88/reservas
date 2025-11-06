@@ -89,9 +89,10 @@ export default function DynamicServicesSection() {
               key={servicio._id}
               className="group relative rounded-2xl overflow-hidden transition-all duration-500 transform-gpu will-change-transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl cursor-pointer h-64 sm:h-72 lg:h-80"
               style={{
-                backgroundImage: servicio.imagen?.blobUrl
-                  ? `url('${servicio.imagen.blobUrl}')`
-                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundImage:
+                  servicio.imagen?.blobUrl ?
+                    `url('${servicio.imagen.blobUrl}')`
+                  : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 backgroundPosition: "center",
                 backgroundSize: "cover",
                 backgroundRepeat: "no-repeat",
@@ -112,12 +113,15 @@ export default function DynamicServicesSection() {
                 <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
               </svg>
 
-              {/* Text container with blur background - full width footer */}
-              <div className="absolute bottom-0 left-0 right-0 backdrop-blur-md bg-white/20 dark:bg-black/30 p-4 sm:p-5 lg:p-6 transition-all duration-300 group-hover:backdrop-blur-lg group-hover:bg-white/30 dark:group-hover:bg-black/40">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 drop-shadow-lg">
+              {/* Text container with blur background - expands on hover/tap */}
+              <div className="absolute bottom-0 left-0 right-0 backdrop-blur-md bg-white/20 dark:bg-black/30 px-4 sm:px-5 lg:px-6 py-3 sm:py-4 transition-all duration-500 group-hover:py-5 group-hover:sm:py-6 group-hover:backdrop-blur-lg group-hover:bg-white/30 dark:group-hover:bg-black/40 group-active:py-5 group-active:sm:py-6">
+                {/* Título - siempre visible */}
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white drop-shadow-lg mb-0 group-hover:mb-2 group-active:mb-2 transition-all duration-300">
                   {servicio.nombre}
                 </h3>
-                <p className="text-sm sm:text-base text-white/95 drop-shadow-md leading-relaxed">
+
+                {/* Descripción - se muestra en hover/tap con animación */}
+                <p className="text-sm sm:text-base text-white/95 drop-shadow-md leading-relaxed max-h-0 opacity-0 overflow-hidden group-hover:max-h-32 group-hover:opacity-100 group-active:max-h-32 group-active:opacity-100 transition-all duration-500 ease-in-out">
                   {servicio.descripcion}
                 </p>
               </div>
