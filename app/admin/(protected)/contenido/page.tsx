@@ -14,6 +14,13 @@ export default function ContenidoAdmin() {
   const [message, setMessage] = useState("");
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
 
+  // Bulk operations states
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [bulkEditType, setBulkEditType] = useState<
+    "categorias" | "servicios" | "galerias" | null
+  >(null);
+
   // Filter states
   const [filterCategoria, setFilterCategoria] = useState<string>("");
   const [filterServicio, setFilterServicio] = useState<string>("");
@@ -548,6 +555,158 @@ export default function ContenidoAdmin() {
     return true;
   });
 
+  // Bulk operations handlers
+  const toggleImageSelection = (id: string) => {
+    setSelectedImages((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const displayedImageIds = filteredImages
+      .filter((img) => img.blobUrl)
+      .map((img) => img._id!);
+
+    if (selectedImages.size === displayedImageIds.length) {
+      setSelectedImages(new Set());
+    } else {
+      setSelectedImages(new Set(displayedImageIds));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedImages.size === 0) return;
+
+    if (
+      !confirm(
+        `¿Está seguro de eliminar ${selectedImages.size} imagen(es) seleccionada(s)?`
+      )
+    )
+      return;
+
+    setSaving(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const id of selectedImages) {
+      try {
+        const res = await fetch(`/api/imagenes?id=${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        console.error(`Error deleting image ${id}:`, error);
+        errorCount++;
+      }
+    }
+
+    if (errorCount === 0) {
+      setMessage(`✅ ${successCount} imagen(es) eliminada(s) exitosamente`);
+    } else {
+      setMessage(`⚠️ ${successCount} eliminadas, ${errorCount} errores`);
+    }
+
+    setSelectedImages(new Set());
+    await loadData(true);
+    setTimeout(() => setMessage(""), 3000);
+    setSaving(false);
+  };
+
+  const openBulkEditModal = (type: "categorias" | "servicios" | "galerias") => {
+    if (selectedImages.size === 0) {
+      setMessage("❌ Debe seleccionar al menos una imagen");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+    setBulkEditType(type);
+    setShowBulkEditModal(true);
+  };
+
+  const handleBulkEdit = async (action: "add" | "remove", values: any) => {
+    if (selectedImages.size === 0) return;
+
+    setSaving(true);
+    try {
+      const updates: any[] = [];
+
+      for (const id of selectedImages) {
+        const imagen = imagenes.find((img) => img._id === id);
+        if (!imagen) continue;
+
+        let updateData: Partial<ImageData> = { _id: id };
+
+        if (bulkEditType === "categorias") {
+          const currentCategorias = imagen.categoriaIds || [];
+          updateData.categoriaIds =
+            action === "add" ?
+              [...new Set([...currentCategorias, ...values])]
+            : currentCategorias.filter((c) => !values.includes(c));
+        } else if (bulkEditType === "servicios") {
+          const currentServicios = imagen.servicioIds || [];
+          updateData.servicioIds =
+            action === "add" ?
+              [...new Set([...currentServicios, ...values])]
+            : currentServicios.filter((s) => !values.includes(s));
+        } else if (bulkEditType === "galerias") {
+          updateData.enGaleriaDashboard = values.dashboard;
+          updateData.enGaleriaInspiracion = values.inspiracion;
+        }
+
+        updates.push(updateData);
+      }
+
+      // Execute all updates
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const update of updates) {
+        try {
+          const res = await fetch("/api/imagenes", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(update),
+          });
+          const data = await res.json();
+          if (data.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error("Error updating image:", error);
+          errorCount++;
+        }
+      }
+
+      if (errorCount === 0) {
+        setMessage(`✅ ${successCount} imagen(es) actualizada(s) exitosamente`);
+      } else {
+        setMessage(`⚠️ ${successCount} actualizadas, ${errorCount} errores`);
+      }
+
+      setSelectedImages(new Set());
+      setShowBulkEditModal(false);
+      setBulkEditType(null);
+      await loadData(true);
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      console.error("Error in bulk edit:", error);
+      setMessage("❌ Error al actualizar imágenes");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -643,6 +802,71 @@ export default function ContenidoAdmin() {
           </div>
         </div>
 
+        {/* Selection and Bulk Actions Bar */}
+        {filteredImages.filter((img) => img.blobUrl).length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    selectedImages.size > 0 &&
+                    selectedImages.size ===
+                      filteredImages.filter((img) => img.blobUrl).length
+                  }
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {selectedImages.size === 0 ?
+                    "Seleccionar todo"
+                  : `${selectedImages.size} seleccionada(s)`}
+                </span>
+              </div>
+
+              {selectedImages.size > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => openBulkEditModal("categorias")}
+                    disabled={saving}
+                    className="px-3 py-1.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 transition-all font-semibold"
+                  >
+                    📂 Categorías
+                  </button>
+                  <button
+                    onClick={() => openBulkEditModal("servicios")}
+                    disabled={saving}
+                    className="px-3 py-1.5 text-xs bg-violet-500 hover:bg-violet-600 text-white rounded-lg disabled:opacity-50 transition-all font-semibold"
+                  >
+                    💅 Servicios
+                  </button>
+                  <button
+                    onClick={() => openBulkEditModal("galerias")}
+                    disabled={saving}
+                    className="px-3 py-1.5 text-xs bg-purple-500 hover:bg-purple-600 text-white rounded-lg disabled:opacity-50 transition-all font-semibold"
+                  >
+                    🖼️ Galerías
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={saving}
+                    className="px-3 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg disabled:opacity-50 transition-all font-semibold"
+                  >
+                    🗑️ Eliminar
+                  </button>
+                  <button
+                    onClick={() => setSelectedImages(new Set())}
+                    disabled={saving}
+                    className="px-3 py-1.5 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-lg disabled:opacity-50 transition-all font-semibold"
+                  >
+                    ✕ Cancelar
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Filter summary */}
         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
           Mostrando {filteredImages.filter((img) => img.blobUrl).length} de{" "}
@@ -710,13 +934,30 @@ export default function ContenidoAdmin() {
             .map((imagen) => (
               <div
                 key={imagen._id}
-                className="group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-white/10 hover:scale-105"
+                className={`group bg-white dark:bg-gray-800/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 ${
+                  selectedImages.has(imagen._id!) ?
+                    "border-blue-500 dark:border-blue-400"
+                  : "border-gray-200 dark:border-white/10"
+                } hover:scale-105`}
               >
                 {/* Image */}
                 <div
                   className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 cursor-pointer relative overflow-hidden"
                   onClick={() => openViewModal(imagen)}
                 >
+                  {/* Selection Checkbox */}
+                  <div
+                    className="absolute top-2 right-2 z-20"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedImages.has(imagen._id!)}
+                      onChange={() => toggleImageSelection(imagen._id!)}
+                      className="w-5 h-5 text-blue-600 bg-white border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-lg"
+                    />
+                  </div>
+
                   {loadingImages.has(imagen._id!) && (
                     <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></div>
                   )}
@@ -1805,6 +2046,327 @@ export default function ContenidoAdmin() {
           </div>
         </div>
       )}
+
+      {/* Bulk Edit Modal */}
+      {showBulkEditModal && bulkEditType && (
+        <BulkEditModal
+          type={bulkEditType}
+          categorias={categorias}
+          servicios={servicios}
+          selectedCount={selectedImages.size}
+          onClose={() => {
+            setShowBulkEditModal(false);
+            setBulkEditType(null);
+          }}
+          onApply={handleBulkEdit}
+          saving={saving}
+        />
+      )}
     </>
+  );
+}
+
+// Bulk Edit Modal Component
+function BulkEditModal({
+  type,
+  categorias,
+  servicios,
+  selectedCount,
+  onClose,
+  onApply,
+  saving,
+}: {
+  type: "categorias" | "servicios" | "galerias";
+  categorias: Categoria[];
+  servicios: Servicio[];
+  selectedCount: number;
+  onClose: () => void;
+  onApply: (action: "add" | "remove", values: any) => void;
+  saving: boolean;
+}) {
+  const [action, setAction] = useState<"add" | "remove">("add");
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [gallerySettings, setGallerySettings] = useState({
+    dashboard: false,
+    inspiracion: false,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (type === "galerias") {
+      onApply(action, gallerySettings);
+    } else {
+      if (selectedItems.length === 0) {
+        alert("Debe seleccionar al menos un elemento");
+        return;
+      }
+      onApply(action, selectedItems);
+    }
+  };
+
+  const toggleItem = (id: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const getTitle = () => {
+    switch (type) {
+      case "categorias":
+        return "📂 Editar Categorías en Masa";
+      case "servicios":
+        return "💅 Editar Servicios en Masa";
+      case "galerias":
+        return "🖼️ Editar Galerías en Masa";
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 z-10">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              {getTitle()}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {selectedCount} imagen(es) seleccionada(s)
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Cerrar"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-4 sm:px-6 py-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {type !== "galerias" && (
+              <>
+                {/* Action Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Acción
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="add"
+                        checked={action === "add"}
+                        onChange={(e) => setAction(e.target.value as "add")}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        ➕ Agregar a las seleccionadas
+                      </span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="remove"
+                        checked={action === "remove"}
+                        onChange={(e) => setAction(e.target.value as "remove")}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        ➖ Quitar de las seleccionadas
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Items Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Seleccionar{" "}
+                    {type === "categorias" ? "categorías" : "servicios"}
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                    {type === "categorias" ?
+                      categorias.map((cat) => (
+                        <label
+                          key={cat._id}
+                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedItems.includes(cat._id!) ?
+                              "bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(cat._id!)}
+                            onChange={() => toggleItem(cat._id!)}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {cat.nombre}
+                            </span>
+                            {cat.descripcion && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                {cat.descripcion}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      ))
+                    : servicios.map((srv) => (
+                        <label
+                          key={srv._id}
+                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedItems.includes(srv._id!) ?
+                              "bg-violet-100 dark:bg-violet-900/30 border-violet-500 dark:border-violet-400"
+                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-violet-300 dark:hover:border-violet-600"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(srv._id!)}
+                            onChange={() => toggleItem(srv._id!)}
+                            className="w-4 h-4 text-violet-600 rounded focus:ring-violet-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {srv.nombre}
+                            </span>
+                            {srv.descripcion && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                {srv.descripcion}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      ))
+                    }
+                  </div>
+                  {selectedItems.length > 0 && (
+                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
+                      ✓ {selectedItems.length}{" "}
+                      {type === "categorias" ? "categoría(s)" : "servicio(s)"}{" "}
+                      seleccionada(s)
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {type === "galerias" && (
+              <>
+                {/* Gallery Settings */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Configuración de Galerías
+                  </label>
+                  <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={gallerySettings.dashboard}
+                        onChange={(e) =>
+                          setGallerySettings({
+                            ...gallerySettings,
+                            dashboard: e.target.checked,
+                          })
+                        }
+                        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          💼 Nuestros Trabajos (Dashboard)
+                        </span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Mostrar en la galería principal del dashboard
+                        </p>
+                      </div>
+                    </label>
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={gallerySettings.inspiracion}
+                        onChange={(e) =>
+                          setGallerySettings({
+                            ...gallerySettings,
+                            inspiracion: e.target.checked,
+                          })
+                        }
+                        className="w-5 h-5 text-violet-600 rounded focus:ring-violet-500 mt-0.5"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          ✨ Galería de Inspiración (Reserva)
+                        </span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Mostrar en la galería de inspiración para clientes
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
+                    ⚠️ Nota: Esta configuración se aplicará a todas las imágenes
+                    seleccionadas, reemplazando su configuración actual de
+                    galerías.
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={saving}
+                className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-white rounded-xl transition-all font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  saving || (type !== "galerias" && selectedItems.length === 0)
+                }
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+              >
+                {saving ?
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Aplicando...</span>
+                  </>
+                : <>
+                    <span>✓</span>
+                    <span>Aplicar a {selectedCount} imagen(es)</span>
+                  </>
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
