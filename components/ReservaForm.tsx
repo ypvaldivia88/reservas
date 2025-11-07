@@ -17,6 +17,7 @@ import {
 import { Button } from "./ui/Button";
 import { XIcon, CheckIcon } from "./ui/Icons";
 import { phoneUtils } from "@/lib/utils";
+import InspirationGalleryAccordion from "./InspirationGalleryAccordion";
 
 interface FormErrors {
   nombre?: string;
@@ -34,7 +35,7 @@ export default function ReservaForm() {
 
   // Wizard step state
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 7; // Aumentado de 4 a 7
 
   // Predefined colors
   const PREDEFINED_COLORS = [
@@ -79,6 +80,7 @@ export default function ReservaForm() {
   const [customColor, setCustomColor] = useState("");
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
   const [customDecoration, setCustomDecoration] = useState("");
+  const [selectedImageUrl, setSelectedImageUrl] = useState(""); // URL de imagen de galería
   const [isNameEnabled, setIsNameEnabled] = useState(false);
 
   // Client lookup state
@@ -96,6 +98,26 @@ export default function ReservaForm() {
   );
   const [cancellationReason, setCancellationReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+
+  // Cargar datos del localStorage al iniciar
+  useEffect(() => {
+    const savedNombre = localStorage.getItem("clienteNombre");
+    const savedTelefono = localStorage.getItem("clienteTelefono");
+
+    if (savedNombre || savedTelefono) {
+      setForm((prev) => ({
+        ...prev,
+        nombre: savedNombre || "",
+        telefono: savedTelefono || "",
+      }));
+
+      // Si hay teléfono guardado, buscar información del cliente
+      if (savedTelefono) {
+        checkClientByPhone(savedTelefono);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo ejecutar al montar
 
   const validateField = useCallback(
     (name: keyof ReservaFormData, value: string): string | undefined => {
@@ -198,6 +220,19 @@ export default function ReservaForm() {
     setForm((prev) => ({ ...prev, decoracion: allDecorations.join(", ") }));
   }, [selectedDecorations, customDecoration]);
 
+  // Guardar nombre y teléfono en localStorage cuando cambien
+  useEffect(() => {
+    if (form.nombre) {
+      localStorage.setItem("clienteNombre", form.nombre);
+    }
+  }, [form.nombre]);
+
+  useEffect(() => {
+    if (form.telefono) {
+      localStorage.setItem("clienteTelefono", form.telefono);
+    }
+  }, [form.telefono]);
+
   const handleChange = useCallback(
     (
       e: React.ChangeEvent<
@@ -274,17 +309,22 @@ export default function ReservaForm() {
             }
           });
           break;
-        case 3: // Diseño
-          ["forma", "largo"].forEach((field) => {
-            const error = validateField(
-              field as keyof ReservaFormData,
-              form[field as keyof ReservaFormData]
-            );
-            if (error) {
-              newErrors[field as keyof FormErrors] = error;
-              isValid = false;
-            }
-          });
+        case 3: // Forma de Uñas
+          const formaError = validateField("forma", form.forma);
+          if (formaError) {
+            newErrors.forma = formaError;
+            isValid = false;
+          }
+          break;
+        case 4: // Largo de Uñas
+          const largoError = validateField("largo", form.largo);
+          if (largoError) {
+            newErrors.largo = largoError;
+            isValid = false;
+          }
+          break;
+        case 5: // Colores (opcional, siempre válido)
+        case 6: // Decoración (opcional, siempre válido)
           break;
       }
 
@@ -359,15 +399,19 @@ export default function ReservaForm() {
               forma: form.forma,
               largo: parseInt(form.largo),
               decoracion: form.decoracion,
+              imagenReferencia: selectedImageUrl || undefined, // Incluir URL de imagen si existe
             },
             reservaId
           );
         }, WHATSAPP_OPEN_DELAY_MS);
 
-        // Reset form
+        // Reset form pero mantener nombre y teléfono
+        const savedNombre = form.nombre;
+        const savedTelefono = form.telefono;
+
         setForm({
-          nombre: "",
-          telefono: "",
+          nombre: savedNombre, // Mantener nombre
+          telefono: savedTelefono, // Mantener teléfono
           forma: "",
           largo: "1",
           colores: "",
@@ -380,9 +424,15 @@ export default function ReservaForm() {
         setCustomColor("");
         setSelectedDecorations([]);
         setCustomDecoration("");
-        setClientInfo(null);
-        setShowClientInfo(false);
-        setCurrentStep(1);
+        setSelectedImageUrl(""); // Limpiar imagen seleccionada
+        setCurrentStep(1); // Volver al inicio
+
+        // Recargar información del cliente para mostrar todas sus reservas
+        if (savedTelefono) {
+          setTimeout(() => {
+            checkClientByPhone(savedTelefono);
+          }, 500); // Pequeño delay para que se procese la nueva reserva
+        }
       } else {
         setMensaje(data.message || "Error al guardar la reserva");
       }
@@ -481,7 +531,10 @@ export default function ReservaForm() {
   const stepTitles = [
     "Información Personal",
     "Fecha y Hora",
-    "Diseño de Uñas",
+    "Forma de Uñas",
+    "Largo de Uñas",
+    "Colores",
+    "Decoración",
     "Confirmar Reserva",
   ];
 
@@ -520,6 +573,58 @@ export default function ReservaForm() {
           </svg>
         );
       case 3:
+        // Forma de uñas - icono de cursor/puntero (sugiere forma/selección)
+        return (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+            />
+          </svg>
+        );
+      case 4:
+        // Largo de uñas - icono de regla/medida
+        return (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+        );
+      case 5:
+        // Colores - icono de paleta de colores
+        return (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+            />
+          </svg>
+        );
+      case 6:
+        // Decoración - icono de brillos/estrellas
         return (
           <svg
             className="w-5 h-5"
@@ -535,7 +640,7 @@ export default function ReservaForm() {
             />
           </svg>
         );
-      case 4:
+      case 7:
         return (
           <svg
             className="w-5 h-5"
@@ -1005,7 +1110,7 @@ export default function ReservaForm() {
             </div>
           )}
 
-          {/* Step 3: Diseño */}
+          {/* Step 3: Forma de Uñas */}
           {currentStep === 3 && (
             <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
@@ -1113,7 +1218,12 @@ export default function ReservaForm() {
                   </p>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 4: Largo de Uñas */}
+          {currentStep === 4 && (
+            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
                 <label
                   htmlFor="largo"
@@ -1201,7 +1311,12 @@ export default function ReservaForm() {
                   </p>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 5: Colores */}
+          {currentStep === 5 && (
+            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                   Colores Preferidos
@@ -1332,7 +1447,12 @@ export default function ReservaForm() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 6: Decoración */}
+          {currentStep === 6 && (
+            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                   Decoración Especial (Opcional)
@@ -1411,11 +1531,25 @@ export default function ReservaForm() {
                   ayudarán a elegir el diseño perfecto
                 </p>
               </div>
+
+              {/* Galería de Inspiración - Solo en Step 6 */}
+              <div className="mt-6 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
+                <InspirationGalleryAccordion
+                  onImageSelect={(image) => {
+                    const designText =
+                      image.descripcion ?
+                        `${image.titulo || image.nombre} - ${image.descripcion}`
+                      : image.titulo || image.nombre;
+                    setCustomDecoration(designText);
+                    setSelectedImageUrl(image.blobUrl); // Guardar URL de la imagen
+                  }}
+                />
+              </div>
             </div>
           )}
 
-          {/* Step 4: Resumen */}
-          {currentStep === 4 && (
+          {/* Step 7: Confirmar Reserva */}
+          {currentStep === 7 && (
             <div className="space-y-4 animate-fadeIn">
               <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">

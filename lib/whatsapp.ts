@@ -21,6 +21,7 @@ export interface ReservaDetails {
   forma: string;
   largo: number;
   decoracion?: string;
+  imagenReferencia?: string; // URL de imagen de galería de inspiración
 }
 
 /**
@@ -34,9 +35,9 @@ export function generateWhatsAppNotificationLink(
   reservaId: string
 ): string {
   // Build the admin edit link
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
   const adminLink = `${baseUrl}/admin/dashboard?reserva=${reservaId}`;
-  
+
   // Build the message
   const message = `🆕 *Nueva Reserva de Uñas*
 
@@ -46,7 +47,8 @@ export function generateWhatsAppNotificationLink(
 🕐 *Hora:* ${reserva.horaCita}
 💅 *Forma:* ${reserva.forma}
 📏 *Largo:* ${reserva.largo}
-${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
+${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ""}
+${reserva.imagenReferencia ? `\n🖼️ *Imagen de Referencia:*\n${reserva.imagenReferencia}` : ""}
 
 🔗 *Gestionar reserva:*
 ${adminLink}
@@ -55,11 +57,11 @@ _Click en el link para confirmar, editar o cancelar la reserva._`;
 
   // Encode the message for URL
   const encodedMessage = encodeURIComponent(message);
-  
+
   // Generate WhatsApp link
   // Use api.whatsapp.com for better compatibility with mobile and desktop
   const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
-  
+
   return whatsappLink;
 }
 
