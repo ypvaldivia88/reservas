@@ -4,13 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/Button";
+import ReservasTable from "@/components/ReservasTable";
 import {
-  CheckIcon,
-  XIcon,
   EditIcon,
   TrashIcon,
   PlusIcon,
-  CheckCircleIcon,
   ExclamationIcon,
   SaveIcon,
   CloseIcon,
@@ -26,9 +24,6 @@ function DashboardContent() {
   // Modal states for Reservas
   const [editingReserva, setEditingReserva] = useState<Reserva | null>(null);
   const [deletingReserva, setDeletingReserva] = useState<Reserva | null>(null);
-  const [openMenuReservaId, setOpenMenuReservaId] = useState<string | null>(
-    null
-  );
 
   // Modal states for Clientes
   const [creatingCliente, setCreatingCliente] = useState(false);
@@ -37,13 +32,6 @@ function DashboardContent() {
   const [openMenuClienteId, setOpenMenuClienteId] = useState<string | null>(
     null
   );
-
-  // Pagination and filters for Reservas
-  const [reservasPage, setReservasPage] = useState(1);
-  const [reservasPerPage] = useState(10);
-  const [reservasSearch, setReservasSearch] = useState("");
-  const [reservasEstadoFilter, setReservasEstadoFilter] =
-    useState<string>("all");
 
   // Pagination and filters for Clientes
   const [clientesPage, setClientesPage] = useState(1);
@@ -61,9 +49,6 @@ function DashboardContent() {
   useEffect(() => {
     // Close dropdown when clicking outside
     const handleClickOutside = () => {
-      if (openMenuReservaId) {
-        setOpenMenuReservaId(null);
-      }
       if (openMenuClienteId) {
         setOpenMenuClienteId(null);
       }
@@ -71,7 +56,7 @@ function DashboardContent() {
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [openMenuReservaId, openMenuClienteId]);
+  }, [openMenuClienteId]);
 
   useEffect(() => {
     // Check if there's a reserva parameter in the URL
@@ -306,24 +291,6 @@ function DashboardContent() {
     }
   };
 
-  // Filter and paginate Reservas
-  const filteredReservas = reservas.filter((reserva) => {
-    const matchesSearch =
-      reserva.nombre.toLowerCase().includes(reservasSearch.toLowerCase()) ||
-      reserva.telefono.includes(reservasSearch);
-    const matchesEstado =
-      reservasEstadoFilter === "all" || reserva.estado === reservasEstadoFilter;
-    return matchesSearch && matchesEstado;
-  });
-
-  const totalReservasPages = Math.ceil(
-    filteredReservas.length / reservasPerPage
-  );
-  const paginatedReservas = filteredReservas.slice(
-    (reservasPage - 1) * reservasPerPage,
-    reservasPage * reservasPerPage
-  );
-
   // Filter and paginate Clientes
   const filteredClientes = clientes.filter((cliente) => {
     return (
@@ -456,591 +423,21 @@ function DashboardContent() {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          Reservas Recientes
+          Reservas
         </h2>
 
-        {/* Filters */}
-        <div className="mb-6 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search Input */}
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre o teléfono..."
-                  value={reservasSearch}
-                  onChange={(e) => {
-                    setReservasSearch(e.target.value);
-                    setReservasPage(1);
-                  }}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                />
-                <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Estado Filter */}
-            <div className="sm:w-48">
-              <select
-                value={reservasEstadoFilter}
-                onChange={(e) => {
-                  setReservasEstadoFilter(e.target.value);
-                  setReservasPage(1);
-                }}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="confirmada">Confirmada</option>
-                <option value="completada">Completada</option>
-                <option value="cancelada">Cancelada</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Results count */}
-          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>
-              Mostrando {paginatedReservas.length} de {filteredReservas.length}{" "}
-              reserva{filteredReservas.length !== 1 ? "s" : ""}
-            </span>
-            {(reservasSearch || reservasEstadoFilter !== "all") && (
-              <button
-                onClick={() => {
-                  setReservasSearch("");
-                  setReservasEstadoFilter("all");
-                  setReservasPage(1);
-                }}
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-              >
-                Limpiar filtros
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="overflow-x-auto -mx-6 sm:-mx-8 px-6 sm:px-8">
-          <table className="w-full min-w-full">
-            <thead>
-              <tr className="border-b-2 border-gray-200 dark:border-white/20">
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden sm:table-cell">
-                  Teléfono
-                </th>
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden md:table-cell">
-                  Forma
-                </th>
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider hidden md:table-cell">
-                  Largo
-                </th>
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
-                  Fecha Cita
-                </th>
-                <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedReservas.length === 0 ?
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-gray-500 dark:text-gray-400"
-                  >
-                    <div className="flex flex-col items-center gap-3">
-                      <svg
-                        className="w-16 h-16 text-gray-300 dark:text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      <p className="text-lg font-medium">
-                        No se encontraron reservas
-                      </p>
-                      {(reservasSearch || reservasEstadoFilter !== "all") && (
-                        <p className="text-sm">
-                          Intenta ajustar los filtros de búsqueda
-                        </p>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              : paginatedReservas.map((reserva, index) => (
-                  <tr
-                    key={reserva._id}
-                    onClick={() => setEditingReserva(reserva)}
-                    className={`border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors ${
-                      index % 2 === 0 ?
-                        "bg-gray-50 dark:bg-white/5"
-                      : "bg-white dark:bg-transparent"
-                    }`}
-                  >
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {reserva.nombre}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden sm:table-cell">
-                      {reserva.telefono}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden md:table-cell capitalize">
-                      {reserva.forma}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200 hidden md:table-cell">
-                      {reserva.largo}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide ${
-                          reserva.estado === "pendiente" ?
-                            "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-400/50"
-                          : reserva.estado === "confirmada" ?
-                            "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-400/50"
-                          : reserva.estado === "completada" ?
-                            "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-400/50"
-                          : "bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-400/50"
-                        }`}
-                      >
-                        {reserva.estado}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{reserva.fechaCita}</span>
-                        <span className="text-xs text-gray-500 dark:text-blue-300">
-                          {reserva.horaCita}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      className="px-4 py-4 text-sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Mobile: Dropdown Menu */}
-                      <div className="md:hidden relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuReservaId(
-                              openMenuReservaId === reserva._id ?
-                                null
-                              : reserva._id!
-                            );
-                          }}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                          aria-label="Menú de acciones"
-                        >
-                          <svg
-                            className="w-5 h-5 text-gray-600 dark:text-gray-300"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                          </svg>
-                        </button>
-
-                        {/* Dropdown Menu */}
-                        {openMenuReservaId === reserva._id && (
-                          <div
-                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {reserva.estado === "pendiente" && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    handleUpdateReserva(
-                                      { ...reserva, estado: "confirmada" },
-                                      true
-                                    );
-                                    setOpenMenuReservaId(null);
-                                  }}
-                                  disabled={saving}
-                                  className="w-full px-4 py-3 text-left hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                  Confirmar
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleUpdateReserva(
-                                      { ...reserva, estado: "cancelada" },
-                                      true
-                                    );
-                                    setOpenMenuReservaId(null);
-                                  }}
-                                  disabled={saving}
-                                  className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
-                                  Cancelar
-                                </button>
-                              </>
-                            )}
-                            {reserva.estado === "confirmada" && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setEditingReserva(reserva);
-                                    setOpenMenuReservaId(null);
-                                  }}
-                                  disabled={saving}
-                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  Completar
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleUpdateReserva(
-                                      { ...reserva, estado: "cancelada" },
-                                      true
-                                    );
-                                    setOpenMenuReservaId(null);
-                                  }}
-                                  disabled={saving}
-                                  className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
-                                  Cancelar
-                                </button>
-                              </>
-                            )}
-                            <button
-                              onClick={() => {
-                                setEditingReserva(reserva);
-                                setOpenMenuReservaId(null);
-                              }}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-3 border-t border-gray-200 dark:border-gray-700"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                              </svg>
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => {
-                                setDeletingReserva(reserva);
-                                setOpenMenuReservaId(null);
-                              }}
-                              className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                              Eliminar
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Desktop: Botones con Iconos y Texto */}
-                      <div className="hidden md:flex gap-2 flex-wrap">
-                        {reserva.estado === "pendiente" && (
-                          <>
-                            <Button
-                              onClick={() => {
-                                handleUpdateReserva(
-                                  { ...reserva, estado: "confirmada" },
-                                  true
-                                );
-                              }}
-                              disabled={saving}
-                              variant="outlined-success"
-                              size="sm"
-                              icon={<CheckIcon />}
-                            >
-                              Confirmar
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                handleUpdateReserva(
-                                  { ...reserva, estado: "cancelada" },
-                                  true
-                                );
-                              }}
-                              disabled={saving}
-                              variant="outlined-danger"
-                              size="sm"
-                              icon={<XIcon />}
-                            >
-                              Cancelar
-                            </Button>
-                          </>
-                        )}
-                        {reserva.estado === "confirmada" && (
-                          <>
-                            <Button
-                              onClick={() => setEditingReserva(reserva)}
-                              disabled={saving}
-                              variant="outlined-primary"
-                              size="sm"
-                              icon={<CheckCircleIcon />}
-                              title="Completar reserva (debe agregar el costo)"
-                            >
-                              Completar
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                handleUpdateReserva(
-                                  { ...reserva, estado: "cancelada" },
-                                  true
-                                );
-                              }}
-                              disabled={saving}
-                              variant="outlined-danger"
-                              size="sm"
-                              icon={<XIcon />}
-                            >
-                              Cancelar
-                            </Button>
-                          </>
-                        )}
-                        <Button
-                          onClick={() => setEditingReserva(reserva)}
-                          disabled={saving}
-                          size="sm"
-                          icon={<EditIcon />}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          onClick={() => setDeletingReserva(reserva)}
-                          disabled={saving}
-                          size="sm"
-                          icon={<TrashIcon />}
-                        >
-                          Eliminar
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination for Reservas */}
-        {totalReservasPages > 1 && (
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Página {reservasPage} de {totalReservasPages}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setReservasPage(1)}
-                disabled={reservasPage === 1}
-                className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Primera página"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setReservasPage((prev) => Math.max(1, prev - 1))}
-                disabled={reservasPage === 1}
-                className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Página anterior"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-
-              {/* Page numbers */}
-              <div className="hidden sm:flex items-center gap-1">
-                {Array.from({ length: totalReservasPages }, (_, i) => i + 1)
-                  .filter((page) => {
-                    if (totalReservasPages <= 7) return true;
-                    if (page === 1 || page === totalReservasPages) return true;
-                    if (page >= reservasPage - 1 && page <= reservasPage + 1)
-                      return true;
-                    return false;
-                  })
-                  .map((page, idx, arr) => (
-                    <div key={page} className="flex items-center">
-                      {idx > 0 && arr[idx - 1] !== page - 1 && (
-                        <span className="px-2 text-gray-500 dark:text-gray-400">
-                          ...
-                        </span>
-                      )}
-                      <button
-                        onClick={() => setReservasPage(page)}
-                        className={`px-3 py-2 rounded-lg transition-colors ${
-                          reservasPage === page ?
-                            "bg-blue-600 dark:bg-blue-500 text-white font-bold"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    </div>
-                  ))}
-              </div>
-
-              <button
-                onClick={() =>
-                  setReservasPage((prev) =>
-                    Math.min(totalReservasPages, prev + 1)
-                  )
-                }
-                disabled={reservasPage === totalReservasPages}
-                className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Página siguiente"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setReservasPage(totalReservasPages)}
-                disabled={reservasPage === totalReservasPages}
-                className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Última página"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
+        <ReservasTable
+          reservas={reservas}
+          saving={saving}
+          onEdit={setEditingReserva}
+          onDelete={setDeletingReserva}
+          onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
+            handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
+          }}
+        />
       </div>
 
       {/* Clientes Table */}
