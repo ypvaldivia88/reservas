@@ -4,6 +4,9 @@ import { ObjectId } from 'mongodb';
 import { ImageData, ApiResponse } from '@/lib/types';
 import { uploadBase64ToBlob, deleteImageFromBlob } from '@/lib/blobStorage';
 
+// Configure cache for better performance
+export const revalidate = 60; // Revalidate every 60 seconds
+
 // GET - Obtener todas las imágenes o una específica
 export async function GET(request: NextRequest) {
   try {
@@ -22,24 +25,31 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return NextResponse.json<ApiResponse<ImageData>>({
-        success: true,
-        data: {
-          _id: imagen._id.toString(),
-          nombre: imagen.nombre,
-          titulo: imagen.titulo,
-          descripcion: imagen.descripcion,
-          blobUrl: imagen.blobUrl, // Only Vercel Blob URL
-          mimeType: imagen.mimeType,
-          size: imagen.size,
-          enGaleriaDashboard: imagen.enGaleriaDashboard || false,
-          enGaleriaInspiracion: imagen.enGaleriaInspiracion || false,
-          categoriaIds: imagen.categoriaIds || [],
-          servicioIds: imagen.servicioIds || [],
-          fechaCreacion: imagen.fechaCreacion,
-          fechaActualizacion: imagen.fechaActualizacion,
+      return NextResponse.json<ApiResponse<ImageData>>(
+        {
+          success: true,
+          data: {
+            _id: imagen._id.toString(),
+            nombre: imagen.nombre,
+            titulo: imagen.titulo,
+            descripcion: imagen.descripcion,
+            blobUrl: imagen.blobUrl, // Only Vercel Blob URL
+            mimeType: imagen.mimeType,
+            size: imagen.size,
+            enGaleriaDashboard: imagen.enGaleriaDashboard || false,
+            enGaleriaInspiracion: imagen.enGaleriaInspiracion || false,
+            categoriaIds: imagen.categoriaIds || [],
+            servicioIds: imagen.servicioIds || [],
+            fechaCreacion: imagen.fechaCreacion,
+            fechaActualizacion: imagen.fechaActualizacion,
+          },
         },
-      });
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          },
+        }
+      );
     }
 
     // Obtener todas las imágenes
@@ -65,10 +75,17 @@ export async function GET(request: NextRequest) {
       fechaActualizacion: img.fechaActualizacion,
     }));
 
-    return NextResponse.json<ApiResponse<ImageData[]>>({
-      success: true,
-      data: imagenesData,
-    });
+    return NextResponse.json<ApiResponse<ImageData[]>>(
+      {
+        success: true,
+        data: imagenesData,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error en GET /api/imagenes:', error);
     return NextResponse.json<ApiResponse>(

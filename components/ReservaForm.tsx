@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import {
   ReservaFormData,
   FORMAS_UNAS,
@@ -17,7 +17,11 @@ import {
 import { Button } from "./ui/Button";
 import { XIcon, CheckIcon } from "./ui/Icons";
 import { phoneUtils } from "@/lib/utils";
-import InspirationGalleryAccordion from "./InspirationGalleryAccordion";
+
+// Lazy load the gallery accordion (only load when Step 6 is reached)
+const InspirationGalleryAccordion = lazy(
+  () => import("./InspirationGalleryAccordion")
+);
 
 interface FormErrors {
   nombre?: string;
@@ -1534,16 +1538,27 @@ export default function ReservaForm() {
 
               {/* Galería de Inspiración - Solo en Step 6 */}
               <div className="mt-6 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
-                <InspirationGalleryAccordion
-                  onImageSelect={(image) => {
-                    const designText =
-                      image.descripcion ?
-                        `${image.titulo || image.nombre} - ${image.descripcion}`
-                      : image.titulo || image.nombre;
-                    setCustomDecoration(designText);
-                    setSelectedImageUrl(image.blobUrl); // Guardar URL de la imagen
-                  }}
-                />
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center items-center py-12">
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+                      <span className="ml-3 text-gray-600 dark:text-gray-400">
+                        Cargando galería...
+                      </span>
+                    </div>
+                  }
+                >
+                  <InspirationGalleryAccordion
+                    onImageSelect={(image) => {
+                      const designText =
+                        image.descripcion ?
+                          `${image.titulo || image.nombre} - ${image.descripcion}`
+                        : image.titulo || image.nombre;
+                      setCustomDecoration(designText);
+                      setSelectedImageUrl(image.blobUrl); // Guardar URL de la imagen
+                    }}
+                  />
+                </Suspense>
               </div>
             </div>
           )}

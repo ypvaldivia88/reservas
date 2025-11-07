@@ -3,6 +3,9 @@ import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { Categoria, ApiResponse } from '@/lib/types';
 
+// Configure cache for better performance
+export const revalidate = 60; // Revalidate every 60 seconds
+
 // GET - Obtener todas las categorías
 export async function GET() {
   try {
@@ -24,10 +27,17 @@ export async function GET() {
       fechaActualizacion: cat.fechaActualizacion,
     }));
 
-    return NextResponse.json<ApiResponse<Categoria[]>>({
-      success: true,
-      data: categoriasData,
-    });
+    return NextResponse.json<ApiResponse<Categoria[]>>(
+      {
+        success: true,
+        data: categoriasData,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error en GET /api/categorias:', error);
     return NextResponse.json<ApiResponse>(
