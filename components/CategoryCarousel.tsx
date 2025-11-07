@@ -20,6 +20,12 @@ const CategoryCarousel = memo(
     const containerRef = useRef<HTMLDivElement>(null);
     const fullscreenContainerRef = useRef<HTMLDivElement>(null);
 
+    // Paginación: cargar imágenes progresivamente
+    const IMAGES_PER_PAGE = 5;
+    const [loadedCount, setLoadedCount] = useState(IMAGES_PER_PAGE);
+    const visibleImages = images.slice(0, loadedCount);
+    const hasMore = loadedCount < images.length;
+
     // Touch/Mouse drag state
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
@@ -41,7 +47,7 @@ const CategoryCarousel = memo(
       return () => window.removeEventListener("resize", updateImagesPerSlide);
     }, []);
 
-    const totalSlides = Math.ceil(images.length / imagesPerSlide);
+    const totalSlides = Math.ceil(visibleImages.length / imagesPerSlide);
 
     const nextSlide = useCallback(() => {
       setCurrentIndex((prev) => (prev + 1) % totalSlides);
@@ -64,7 +70,7 @@ const CategoryCarousel = memo(
 
     const getCurrentImages = () => {
       const start = currentIndex * imagesPerSlide;
-      return images.slice(start, start + imagesPerSlide);
+      return visibleImages.slice(start, start + imagesPerSlide);
     };
 
     const handleImageClick = (imagen: ImageData, index?: number) => {
@@ -80,6 +86,11 @@ const CategoryCarousel = memo(
         onImageSelect(imagen);
       }
     };
+
+    // Función para cargar más imágenes
+    const loadMoreImages = useCallback(() => {
+      setLoadedCount((prev) => Math.min(prev + IMAGES_PER_PAGE, images.length));
+    }, [images.length]);
 
     // Touch/Mouse drag handlers for main carousel
     const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -192,69 +203,74 @@ const CategoryCarousel = memo(
                 isDragging ? `translateX(${dragDistance}px)` : "translateX(0)",
             }}
           >
-            {getCurrentImages().map((imagen, idx) => (
-              <div
-                key={imagen._id}
-                className="relative bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden group"
-              >
-                {/* Image - Clickable for fullscreen */}
+            {getCurrentImages().map((imagen, idx) => {
+              const absoluteIdx = currentIndex * imagesPerSlide + idx;
+              const isVisible =
+                absoluteIdx >= currentIndex * imagesPerSlide - imagesPerSlide &&
+                absoluteIdx <=
+                  currentIndex * imagesPerSlide + imagesPerSlide * 2 - 1;
+
+              return (
                 <div
-                  className="relative aspect-square cursor-pointer"
-                  onClick={() =>
-                    !isDragging &&
-                    handleImageClick(
-                      imagen,
-                      currentIndex * imagesPerSlide + idx
-                    )
-                  }
+                  key={imagen._id}
+                  className="relative bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden group"
                 >
-                  <Image
-                    src={imagen.blobUrl}
-                    alt={imagen.titulo || imagen.nombre}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    loading="lazy"
-                    quality={75}
-                    draggable={false}
-                  />
+                  {/* Image - Clickable for fullscreen */}
+                  <div
+                    className="relative aspect-square cursor-pointer"
+                    onClick={() =>
+                      !isDragging && handleImageClick(imagen, absoluteIdx)
+                    }
+                  >
+                    <Image
+                      src={imagen.blobUrl}
+                      alt={imagen.titulo || imagen.nombre}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      loading={isVisible ? "eager" : "lazy"}
+                      priority={isVisible}
+                      quality={60}
+                      draggable={false}
+                    />
 
-                  {/* Info overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 via-30% to-transparent p-4 pt-12">
-                    <h4 className="font-semibold text-white text-sm mb-1 line-clamp-1">
-                      {imagen.titulo || imagen.nombre}
-                    </h4>
-                    {imagen.descripcion && (
-                      <p className="text-xs text-gray-200 line-clamp-1 mb-3">
-                        {imagen.descripcion}
-                      </p>
-                    )}
+                    {/* Info overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 via-30% to-transparent p-4 pt-12">
+                      <h4 className="font-semibold text-white text-sm mb-1 line-clamp-1">
+                        {imagen.titulo || imagen.nombre}
+                      </h4>
+                      {imagen.descripcion && (
+                        <p className="text-xs text-gray-200 line-clamp-1 mb-3">
+                          {imagen.descripcion}
+                        </p>
+                      )}
 
-                    {/* Select Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleSelectDesign(imagen, e)}
-                      className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      {/* Select Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleSelectDesign(imagen, e)}
+                        className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Seleccionar Diseño
-                    </button>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Seleccionar Diseño
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Navigation Arrows - Outside card, centered vertically */}
@@ -317,6 +333,32 @@ const CategoryCarousel = memo(
             </>
           )}
         </div>
+
+        {/* Load More Button */}
+        {hasMore && (
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={loadMoreImages}
+              className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold py-3 px-8 rounded-lg transition-all shadow-lg inline-flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Ver más diseños ({images.length - loadedCount} restantes)
+            </button>
+          </div>
+        )}
 
         {/* Fullscreen Modal with drag support */}
         {fullscreenImage && (
@@ -443,6 +485,7 @@ const CategoryCarousel = memo(
                     className="object-contain"
                     sizes="100vw"
                     priority
+                    quality={85}
                     draggable={false}
                   />
                 </div>

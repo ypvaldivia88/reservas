@@ -73,7 +73,7 @@ const AccordionItem = memo(
             isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
           } overflow-hidden`}
         >
-          <div className="sm:p-6 bg-white dark:bg-gray-900">
+          <div className="sm:p-6 bg-white dark:bg-gray-900 p-2">
             <CategoryCarousel
               images={images}
               categoryName={categoria.nombre}
