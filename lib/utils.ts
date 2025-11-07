@@ -2,13 +2,123 @@
  * Utilidades de validación para la aplicación
  */
 
+/**
+ * Utilidades para normalización de números de teléfono
+ */
+export const phoneUtils = {
+  /**
+   * Normaliza un número de teléfono eliminando espacios, guiones, paréntesis
+   * y asegurando que tenga el código de país +53 para Cuba
+   */
+  normalize: (phone: string): string => {
+    // Validación de entrada
+    if (!phone || typeof phone !== 'string') {
+      throw new Error('Teléfono inválido: debe ser una cadena de texto');
+    }
+
+    // Eliminar todos los espacios, guiones, paréntesis y otros caracteres
+    let normalized = phone.replace(/[\s\-()]/g, '');
+    
+    // Validar que tenga al menos dígitos
+    if (!/\d/.test(normalized)) {
+      throw new Error('Teléfono inválido: debe contener dígitos');
+    }
+    
+    // Si comienza con +53, mantenerlo
+    if (normalized.startsWith('+53')) {
+      return normalized;
+    }
+    
+    // Si comienza con 53 sin +, agregar el +
+    if (normalized.startsWith('53')) {
+      return '+' + normalized;
+    }
+    
+    // Si no tiene código de país, agregar +53 (Cuba)
+    if (normalized.length === 8) {
+      return '+53' + normalized;
+    }
+    
+    // Si ya tiene + pero no es +53, devolver tal cual
+    if (normalized.startsWith('+')) {
+      return normalized;
+    }
+    
+    // Por defecto, agregar +53
+    return '+53' + normalized;
+  },
+
+  /**
+   * Formatea un número de teléfono para mostrar de forma amigable
+   * Ejemplo: +53 5555 5555
+   */
+  format: (phone: string): string => {
+    if (!phone || typeof phone !== 'string') {
+      return '';
+    }
+
+    try {
+      const normalized = phoneUtils.normalize(phone);
+      
+      // Formato para números cubanos (+53 XXXX XXXX)
+      if (normalized.startsWith('+53') && normalized.length === 11) {
+        return `+53 ${normalized.slice(3, 7)} ${normalized.slice(7)}`;
+      }
+      
+      // Para otros formatos, devolver normalizado
+      return normalized;
+    } catch (error) {
+      return phone; // Retornar el original si hay error
+    }
+  },
+
+  /**
+   * Valida que un número de teléfono tenga el formato correcto
+   * Acepta números cubanos de 8 dígitos (con o sin +53)
+   */
+  isValid: (phone: string): boolean => {
+    if (!phone || typeof phone !== 'string') {
+      return false;
+    }
+
+    try {
+      const normalized = phoneUtils.normalize(phone);
+      
+      // Validar formato cubano: +53 seguido de 8 dígitos
+      const cubanPhoneRegex = /^\+53\d{8}$/;
+      
+      // También aceptar otros formatos internacionales básicos
+      const internationalPhoneRegex = /^\+\d{10,15}$/;
+      
+      return cubanPhoneRegex.test(normalized) || internationalPhoneRegex.test(normalized);
+    } catch (error) {
+      return false;
+    }
+  },
+
+  /**
+   * Obtiene una versión del teléfono para comparación (sin +, sin espacios)
+   * Útil para buscar duplicados
+   */
+  getComparisonKey: (phone: string): string => {
+    if (!phone || typeof phone !== 'string') {
+      return '';
+    }
+
+    try {
+      return phoneUtils.normalize(phone).replace(/\+/g, '');
+    } catch (error) {
+      return phone.replace(/[\s\-+()\+]/g, '');
+    }
+  }
+};
+
 export const validationUtils = {
   /**
-   * Valida un número de teléfono
+   * Valida un número de teléfono usando las utilidades de phoneUtils
    */
   isValidPhone: (phone: string): boolean => {
-    const phoneRegex = /^\+?[\d\s\-()]{8,15}$/;
-    return phoneRegex.test(phone.trim());
+    return phoneUtils.isValid(phone);
   },
 
   /**
@@ -41,7 +151,7 @@ export const validationUtils = {
 export const errorMessages = {
   required: 'Este campo es requerido',
   invalidName: 'El nombre debe tener entre 2 y 50 caracteres y solo contener letras',
-  invalidPhone: 'El formato del teléfono no es válido',
+  invalidPhone: 'Ingresa un número cubano válido de 8 dígitos',
   invalidEmail: 'El formato del email no es válido',
   invalidForm: 'Por favor, corrige los errores en el formulario',
   serverError: 'Error interno del servidor',
