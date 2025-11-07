@@ -17,6 +17,7 @@ import {
 import { Button } from "./ui/Button";
 import { XIcon, CheckIcon } from "./ui/Icons";
 import { phoneUtils } from "@/lib/utils";
+import InspirationGalleryAccordion from "./InspirationGalleryAccordion";
 
 interface FormErrors {
   nombre?: string;
@@ -34,7 +35,7 @@ export default function ReservaForm() {
 
   // Wizard step state
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 7; // Aumentado de 4 a 7
 
   // Predefined colors
   const PREDEFINED_COLORS = [
@@ -274,17 +275,22 @@ export default function ReservaForm() {
             }
           });
           break;
-        case 3: // Diseño
-          ["forma", "largo"].forEach((field) => {
-            const error = validateField(
-              field as keyof ReservaFormData,
-              form[field as keyof ReservaFormData]
-            );
-            if (error) {
-              newErrors[field as keyof FormErrors] = error;
-              isValid = false;
-            }
-          });
+        case 3: // Forma de Uñas
+          const formaError = validateField("forma", form.forma);
+          if (formaError) {
+            newErrors.forma = formaError;
+            isValid = false;
+          }
+          break;
+        case 4: // Largo de Uñas
+          const largoError = validateField("largo", form.largo);
+          if (largoError) {
+            newErrors.largo = largoError;
+            isValid = false;
+          }
+          break;
+        case 5: // Colores (opcional, siempre válido)
+        case 6: // Decoración (opcional, siempre válido)
           break;
       }
 
@@ -481,7 +487,10 @@ export default function ReservaForm() {
   const stepTitles = [
     "Información Personal",
     "Fecha y Hora",
-    "Diseño de Uñas",
+    "Forma de Uñas",
+    "Largo de Uñas",
+    "Colores",
+    "Decoración",
     "Confirmar Reserva",
   ];
 
@@ -520,6 +529,9 @@ export default function ReservaForm() {
           </svg>
         );
       case 3:
+      case 4:
+      case 5:
+      case 6:
         return (
           <svg
             className="w-5 h-5"
@@ -535,7 +547,7 @@ export default function ReservaForm() {
             />
           </svg>
         );
-      case 4:
+      case 7:
         return (
           <svg
             className="w-5 h-5"
@@ -1005,7 +1017,7 @@ export default function ReservaForm() {
             </div>
           )}
 
-          {/* Step 3: Diseño */}
+          {/* Step 3: Forma de Uñas */}
           {currentStep === 3 && (
             <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
@@ -1113,7 +1125,12 @@ export default function ReservaForm() {
                   </p>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 4: Largo de Uñas */}
+          {currentStep === 4 && (
+            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
                 <label
                   htmlFor="largo"
@@ -1201,7 +1218,12 @@ export default function ReservaForm() {
                   </p>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 5: Colores */}
+          {currentStep === 5 && (
+            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                   Colores Preferidos
@@ -1332,7 +1354,12 @@ export default function ReservaForm() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 6: Decoración */}
+          {currentStep === 6 && (
+            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                   Decoración Especial (Opcional)
@@ -1411,11 +1438,24 @@ export default function ReservaForm() {
                   ayudarán a elegir el diseño perfecto
                 </p>
               </div>
+
+              {/* Galería de Inspiración - Solo en Step 6 */}
+              <div className="mt-6 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
+                <InspirationGalleryAccordion
+                  onImageSelect={(image) => {
+                    const designText =
+                      image.descripcion ?
+                        `${image.titulo || image.nombre} - ${image.descripcion}`
+                      : image.titulo || image.nombre;
+                    setCustomDecoration(designText);
+                  }}
+                />
+              </div>
             </div>
           )}
 
-          {/* Step 4: Resumen */}
-          {currentStep === 4 && (
+          {/* Step 7: Confirmar Reserva */}
+          {currentStep === 7 && (
             <div className="space-y-4 animate-fadeIn">
               <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
