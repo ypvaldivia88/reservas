@@ -9,29 +9,31 @@ interface CategoryCarouselProps {
   onImageSelect?: (image: ImageData) => void;
 }
 
-const CategoryCarousel = ({ images, categoryName, onImageSelect }: CategoryCarouselProps) => {
+const CategoryCarousel = ({
+  images,
+  categoryName,
+  onImageSelect,
+}: CategoryCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [imagesPerSlide, setImagesPerSlide] = useState(3);
+  const [imagesPerSlide, setImagesPerSlide] = useState(1);
+  const [fullscreenImage, setFullscreenImage] = useState<ImageData | null>(
+    null
+  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Detectar tamaño de pantalla para ajustar imágenes por slide
   useEffect(() => {
     const updateImagesPerSlide = () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const width = window.innerWidth;
-        if (width < 640) {
-          setImagesPerSlide(1); // Mobile
-        } else if (width < 1024) {
-          setImagesPerSlide(2); // Tablet
-        } else {
-          setImagesPerSlide(3); // Desktop
-        }
+        // Siempre mostrar 1 imagen a la vez (mobile-first)
+        setImagesPerSlide(1);
       }
     };
 
     updateImagesPerSlide();
-    window.addEventListener('resize', updateImagesPerSlide);
-    return () => window.removeEventListener('resize', updateImagesPerSlide);
+    window.addEventListener("resize", updateImagesPerSlide);
+    return () => window.removeEventListener("resize", updateImagesPerSlide);
   }, []);
 
   const totalSlides = Math.ceil(images.length / imagesPerSlide);
@@ -49,6 +51,17 @@ const CategoryCarousel = ({ images, categoryName, onImageSelect }: CategoryCarou
     return images.slice(start, start + imagesPerSlide);
   };
 
+  const handleImageClick = (imagen: ImageData) => {
+    setFullscreenImage(imagen);
+  };
+
+  const handleSelectDesign = (imagen: ImageData, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onImageSelect) {
+      onImageSelect(imagen);
+    }
+  };
+
   if (images.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -59,17 +72,18 @@ const CategoryCarousel = ({ images, categoryName, onImageSelect }: CategoryCarou
 
   return (
     <div className="relative">
-      {/* Carousel container */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      {/* Carousel container - Single image */}
+      <div className="max-w-md mx-auto">
         {getCurrentImages().map((imagen) => (
-          <button
+          <div
             key={imagen._id}
-            type="button"
-            onClick={() => onImageSelect && onImageSelect(imagen)}
-            className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer text-left"
+            className="relative bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden group"
           >
-            {/* Image */}
-            <div className="relative aspect-square">
+            {/* Image - Clickable for fullscreen */}
+            <div
+              className="relative aspect-square cursor-pointer"
+              onClick={() => handleImageClick(imagen)}
+            >
               <Image
                 src={imagen.blobUrl}
                 alt={imagen.titulo || imagen.nombre}
@@ -77,40 +91,118 @@ const CategoryCarousel = ({ images, categoryName, onImageSelect }: CategoryCarou
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
-            </div>
 
-            {/* Info overlay */}
-            <div className="p-3 bg-gradient-to-t from-gray-900/90 via-gray-900/50 to-transparent absolute bottom-0 left-0 right-0 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-              <h4 className="font-semibold text-white text-sm mb-1">
-                {imagen.titulo || imagen.nombre}
-              </h4>
-              {imagen.descripcion && (
-                <p className="text-xs text-gray-200 line-clamp-2">
-                  {imagen.descripcion}
-                </p>
-              )}
-              <span className="inline-block mt-2 text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                ✓ Seleccionar
-              </span>
+              {/* Info overlay con blur progresivo más sutil */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 via-30% to-transparent p-4 pt-12">
+                <h4 className="font-semibold text-white text-sm mb-1 line-clamp-1">
+                  {imagen.titulo || imagen.nombre}
+                </h4>
+                {imagen.descripcion && (
+                  <p className="text-xs text-gray-200 line-clamp-1 mb-3">
+                    {imagen.descripcion}
+                  </p>
+                )}
+
+                {/* Navigation Controls - Inside card */}
+                {totalSlides > 1 && (
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevSlide();
+                      }}
+                      className="flex-shrink-0 p-2 rounded-full bg-white/90 hover:bg-white text-gray-900 transition-all shadow-lg backdrop-blur-sm"
+                      aria-label="Anterior"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    <div className="flex-1 text-center">
+                      <span className="text-xs font-bold text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm">
+                        {currentIndex + 1} / {totalSlides}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextSlide();
+                      }}
+                      className="flex-shrink-0 p-2 rounded-full bg-white/90 hover:bg-white text-gray-900 transition-all shadow-lg backdrop-blur-sm"
+                      aria-label="Siguiente"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Select Button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleSelectDesign(imagen, e)}
+                  className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Seleccionar Diseño
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 
-      {/* Navigation */}
-      {totalSlides > 1 && (
-        <div className="flex items-center justify-between mt-4">
+      {/* Fullscreen Modal */}
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setFullscreenImage(null)}
+        >
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              prevSlide();
-            }}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Anterior"
+            onClick={() => setFullscreenImage(null)}
+            className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm z-10"
+            aria-label="Cerrar"
           >
             <svg
-              className="w-5 h-5"
+              className="w-6 h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -119,61 +211,63 @@ const CategoryCarousel = ({ images, categoryName, onImageSelect }: CategoryCarou
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+                d="M6 18L18 6M6 6l12 12"
               />
             </svg>
           </button>
 
-          {/* Dots indicator */}
-          <div className="flex gap-2">
-            {Array.from({ length: totalSlides }).map((_, idx) => (
+          <div className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center gap-4">
+            {/* Imagen en fullscreen */}
+            <div className="relative w-full flex-1 flex items-center justify-center">
+              <div className="relative w-full h-full">
+                <Image
+                  src={fullscreenImage.blobUrl}
+                  alt={fullscreenImage.titulo || fullscreenImage.nombre}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Info en fullscreen - Más compacta */}
+            <div className="w-full max-w-2xl text-center bg-black/60 backdrop-blur-md rounded-xl p-4 flex-shrink-0">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                {fullscreenImage.titulo || fullscreenImage.nombre}
+              </h3>
+              {fullscreenImage.descripcion && (
+                <p className="text-sm text-gray-300 mb-4">
+                  {fullscreenImage.descripcion}
+                </p>
+              )}
               <button
-                key={idx}
                 type="button"
                 onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentIndex(idx);
+                  handleSelectDesign(fullscreenImage, e);
+                  setFullscreenImage(null);
                 }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentIndex
-                    ? "bg-blue-600 w-6"
-                    : "bg-gray-300 dark:bg-gray-600"
-                }`}
-                aria-label={`Ir a grupo ${idx + 1}`}
-              />
-            ))}
+                className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg inline-flex items-center gap-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Seleccionar Este Diseño
+              </button>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              nextSlide();
-            }}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Siguiente"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
         </div>
       )}
-
-      {/* Counter */}
-      <div className="text-center mt-3 text-sm text-gray-600 dark:text-gray-400">
-        Mostrando {getCurrentImages().length} de {images.length} diseños
-      </div>
     </div>
   );
 };
@@ -248,8 +342,8 @@ const AccordionItem = ({
         } overflow-hidden`}
       >
         <div className="p-4 sm:p-6 bg-white dark:bg-gray-900">
-          <CategoryCarousel 
-            images={images} 
+          <CategoryCarousel
+            images={images}
             categoryName={categoria.nombre}
             onImageSelect={onImageSelect}
           />
@@ -353,11 +447,11 @@ export default function InspirationGalleryAccordion({
           Galería de Inspiración
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Explora nuestros diseños por categoría (mostrando 3 imágenes a la vez)
+          Explora nuestros diseños por categoría
         </p>
       </div>
 
-      {galleryImages.length === 0 ? (
+      {galleryImages.length === 0 ?
         <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
           <svg
             className="w-16 h-16 mx-auto text-gray-400 mb-4"
@@ -376,8 +470,7 @@ export default function InspirationGalleryAccordion({
             No hay diseños disponibles en este momento
           </p>
         </div>
-      ) : (
-        <div className="space-y-3">
+      : <div className="space-y-3">
           {/* Categories with images */}
           {nonEmptyCategories.map((group) => (
             <AccordionItem
@@ -387,9 +480,9 @@ export default function InspirationGalleryAccordion({
               isOpen={openCategoryId === group.categoria._id}
               onToggle={() =>
                 setOpenCategoryId(
-                  openCategoryId === group.categoria._id
-                    ? null
-                    : group.categoria._id!
+                  openCategoryId === group.categoria._id ?
+                    null
+                  : group.categoria._id!
                 )
               }
               onImageSelect={onImageSelect}
@@ -414,27 +507,7 @@ export default function InspirationGalleryAccordion({
             />
           )}
         </div>
-      )}
-
-      {/* Call to action */}
-      {galleryImages.length > 0 && (
-        <div className="mt-6 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/20 dark:to-violet-900/20 rounded-xl p-4 sm:p-6 border border-blue-100 dark:border-blue-800">
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 text-center">
-            💡 <strong>Tip:</strong> Puedes describir cualquiera de estos
-            diseños en el campo de decoración
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <a
-              href="https://wa.me/+5363233073?text=Hola,%20quiero%20enviar%20una%20referencia%20de%20diseño"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-center bg-gradient-to-r from-blue-600 to-violet-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
-            >
-              📱 Enviar Referencia por WhatsApp
-            </a>
-          </div>
-        </div>
-      )}
+      }
     </div>
   );
 }
