@@ -389,119 +389,392 @@ export default function ReservasTable({
 
       {/* Vista de Mes: Calendario */}
       {viewMode === "month" && (
-        <div className="bg-white dark:bg-gray-800/30 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-4 max-w-md mx-auto">
-          {/* Header del calendario */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={previousMonth}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <svg
-                className="w-5 h-5 text-gray-600 dark:text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Calendario */}
+          <div className="bg-white dark:bg-gray-800/30 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-4 w-full lg:w-auto lg:flex-shrink-0">
+            {/* Header del calendario */}
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={previousMonth}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
-              {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-            </h3>
-            <button
-              onClick={nextMonth}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <svg
-                className="w-5 h-5 text-gray-600 dark:text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                <svg
+                  className="w-5 h-5 text-gray-600 dark:text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
+                {monthNames[currentMonth.getMonth()]}{" "}
+                {currentMonth.getFullYear()}
+              </h3>
+              <button
+                onClick={nextMonth}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+                <svg
+                  className="w-5 h-5 text-gray-600 dark:text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
 
-          {/* Días de la semana */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {dayNames.map((day, index) => (
-              <div
-                key={index}
-                className="text-center text-xs font-bold text-gray-500 dark:text-gray-400 py-2"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Días del mes */}
-          <div className="grid grid-cols-7 gap-1.5">
-            {getMonthCalendar().map((date, index) => {
-              if (!date) return <div key={index} />;
-
-              const dateStr = date.toISOString().split("T")[0];
-              const isCurrentMonth =
-                date.getMonth() === currentMonth.getMonth();
-              const isToday =
-                dateStr === new Date().toISOString().split("T")[0];
-              const isSelected = dateStr === selectedDate;
-              const hasReservas = reservasPorFecha[dateStr];
-              const reservasCount =
-                hasReservas ? reservasPorFecha[dateStr].length : 0;
-
-              return (
-                <button
+            {/* Días de la semana */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {dayNames.map((day, index) => (
+                <div
                   key={index}
-                  onClick={() => setSelectedDate(dateStr)}
-                  disabled={!isCurrentMonth}
-                  className={`
+                  className="text-center text-xs font-bold text-gray-500 dark:text-gray-400 py-2"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Días del mes */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {getMonthCalendar().map((date, index) => {
+                if (!date) return <div key={index} />;
+
+                const dateStr = date.toISOString().split("T")[0];
+                const isCurrentMonth =
+                  date.getMonth() === currentMonth.getMonth();
+                const isToday =
+                  dateStr === new Date().toISOString().split("T")[0];
+                const isSelected = dateStr === selectedDate;
+                const hasReservas = reservasPorFecha[dateStr];
+                const reservasCount =
+                  hasReservas ? reservasPorFecha[dateStr].length : 0;
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedDate(dateStr)}
+                    disabled={!isCurrentMonth}
+                    className={`
                     aspect-square p-1.5 sm:p-2 rounded-lg text-xs sm:text-sm font-medium transition-all relative
                     ${!isCurrentMonth ? "text-gray-300 dark:text-gray-600 cursor-not-allowed" : ""}
-                    ${isToday && isCurrentMonth ? "bg-green-500 text-white font-bold" : ""}
-                    ${isSelected && !isToday && isCurrentMonth ? "bg-blue-500 text-white" : ""}
+                    ${isToday && isCurrentMonth ? "border-2 border-green-500 dark:border-green-400 text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-500/10" : ""}
+                    ${isSelected && !isToday && isCurrentMonth ? "border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10" : ""}
                     ${!isSelected && !isToday && isCurrentMonth ? "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer" : ""}
                   `}
+                  >
+                    <span className="block">{date.getDate()}</span>
+                    {hasReservas && isCurrentMonth && (
+                      <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+                        {Array.from({ length: Math.min(reservasCount, 3) }).map(
+                          (_, i) => (
+                            <div
+                              key={i}
+                              className={`w-1 h-1 rounded-full ${
+                                isSelected || isToday ?
+                                  isSelected ? "bg-blue-500 dark:bg-blue-400"
+                                  : "bg-green-500 dark:bg-green-400"
+                                : "bg-blue-500 dark:bg-blue-400"
+                              }`}
+                            />
+                          )
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Lista de reservas del día seleccionado - A la derecha en desktop */}
+          <div className="flex-1 space-y-6">
+            {selectedDate && !reservasPorFecha[selectedDate] && (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <svg
+                  className="w-12 h-12 mx-auto mb-3 opacity-50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <span className="block">{date.getDate()}</span>
-                  {hasReservas && isCurrentMonth && (
-                    <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5">
-                      {Array.from({ length: Math.min(reservasCount, 3) }).map(
-                        (_, i) => (
-                          <div
-                            key={i}
-                            className={`w-1 h-1 rounded-full ${
-                              isSelected || isToday ? "bg-white" : (
-                                "bg-blue-500 dark:bg-blue-400"
-                              )
-                            }`}
-                          />
-                        )
-                      )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <p className="text-sm">No hay reservas para este día</p>
+              </div>
+            )}
+
+            {selectedDate && reservasPorFecha[selectedDate] && (
+              <div className="space-y-2">
+                {reservasPorFecha[selectedDate]
+                  .sort((a, b) => a.horaCita.localeCompare(b.horaCita))
+                  .map((reserva) => (
+                    <div
+                      key={reserva._id}
+                      className="group bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
+                    >
+                      <div className="flex items-center">
+                        {/* Indicador de estado (línea vertical) */}
+                        <div
+                          className={`w-1.5 h-full ${getEstadoColor(reserva.estado)}`}
+                        />
+
+                        {/* Contenido principal */}
+                        <div
+                          className="flex-1 p-3 sm:p-4 cursor-pointer min-w-0"
+                          onClick={() => onEdit(reserva)}
+                        >
+                          <div className="flex items-start justify-between gap-2 sm:gap-3">
+                            {/* Hora y nombre */}
+                            <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                              <div className="flex-shrink-0">
+                                <div className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                                  {reserva.horaCita}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
+                                    {reserva.nombre}
+                                  </h4>
+                                  <span
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold uppercase flex-shrink-0 w-fit ${
+                                      reserva.estado === "pendiente" ?
+                                        "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"
+                                      : reserva.estado === "confirmada" ?
+                                        "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300"
+                                      : reserva.estado === "completada" ?
+                                        "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300"
+                                      : "bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300"
+                                    }`}
+                                  >
+                                    {reserva.estado}
+                                  </span>
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                                  <span className="capitalize">
+                                    {reserva.forma}
+                                  </span>
+                                  {" • "}
+                                  <span>Largo {reserva.largo}</span>
+                                  {reserva.telefono && (
+                                    <>
+                                      {" • "}
+                                      <span className="hidden sm:inline">
+                                        {reserva.telefono}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                {reserva.decoracion && (
+                                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-1">
+                                    {reserva.decoracion}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Acciones (desktop) */}
+                            <div
+                              className="hidden lg:flex items-start gap-2 flex-wrap flex-shrink-0 max-w-md"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {reserva.estado === "pendiente" && (
+                                <>
+                                  <Button
+                                    onClick={() =>
+                                      onUpdateStatus(
+                                        reserva,
+                                        "confirmada",
+                                        true
+                                      )
+                                    }
+                                    disabled={saving}
+                                    variant="outlined-success"
+                                    size="sm"
+                                    icon={<CheckIcon />}
+                                    title="Confirmar reserva"
+                                  >
+                                    Confirmar
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      onUpdateStatus(reserva, "cancelada", true)
+                                    }
+                                    disabled={saving}
+                                    variant="outlined-danger"
+                                    size="sm"
+                                    icon={<XIcon />}
+                                    title="Cancelar reserva"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </>
+                              )}
+                              {reserva.estado === "confirmada" && (
+                                <>
+                                  <Button
+                                    onClick={() => onEdit(reserva)}
+                                    disabled={saving}
+                                    variant="outlined-primary"
+                                    size="sm"
+                                    icon={<CheckCircleIcon />}
+                                    title="Completar reserva"
+                                  >
+                                    Completar
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      onUpdateStatus(reserva, "cancelada", true)
+                                    }
+                                    disabled={saving}
+                                    variant="outlined-danger"
+                                    size="sm"
+                                    icon={<XIcon />}
+                                    title="Cancelar reserva"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                onClick={() => onEdit(reserva)}
+                                disabled={saving}
+                                variant="outlined-warning"
+                                size="sm"
+                                icon={<EditIcon />}
+                                title="Editar reserva"
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                onClick={() => onDelete(reserva)}
+                                disabled={saving}
+                                variant="outlined-danger"
+                                size="sm"
+                                icon={<TrashIcon />}
+                                title="Eliminar reserva"
+                              >
+                                Eliminar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Acciones móviles (expandible) */}
+                      <div
+                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 sm:px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex flex-col gap-2">
+                          {reserva.estado === "pendiente" && (
+                            <>
+                              <Button
+                                onClick={() =>
+                                  onUpdateStatus(reserva, "confirmada", true)
+                                }
+                                disabled={saving}
+                                variant="outlined-success"
+                                size="sm"
+                                icon={<CheckIcon />}
+                                fullWidth
+                              >
+                                Confirmar
+                              </Button>
+                              <Button
+                                onClick={() =>
+                                  onUpdateStatus(reserva, "cancelada", true)
+                                }
+                                disabled={saving}
+                                variant="outlined-danger"
+                                size="sm"
+                                icon={<XIcon />}
+                                fullWidth
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          {reserva.estado === "confirmada" && (
+                            <>
+                              <Button
+                                onClick={() => onEdit(reserva)}
+                                disabled={saving}
+                                variant="outlined-primary"
+                                size="sm"
+                                icon={<CheckCircleIcon />}
+                                fullWidth
+                              >
+                                Completar
+                              </Button>
+                              <Button
+                                onClick={() =>
+                                  onUpdateStatus(reserva, "cancelada", true)
+                                }
+                                disabled={saving}
+                                variant="outlined-danger"
+                                size="sm"
+                                icon={<XIcon />}
+                                fullWidth
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() => onEdit(reserva)}
+                              disabled={saving}
+                              variant="outlined-warning"
+                              size="sm"
+                              icon={<EditIcon />}
+                              fullWidth
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              onClick={() => onDelete(reserva)}
+                              disabled={saving}
+                              variant="outlined-danger"
+                              size="sm"
+                              icon={<TrashIcon />}
+                              fullWidth
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </button>
-              );
-            })}
+                  ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Lista de reservas */}
-      <div className="space-y-6">
-        {viewMode === "month" &&
-          selectedDate &&
-          !reservasPorFecha[selectedDate] && (
+      {/* Vista Agenda */}
+      {viewMode === "agenda" && (
+        <div className="space-y-6">
+          {fechasOrdenadas.length === 0 && (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <svg
                 className="w-12 h-12 mx-auto mb-3 opacity-50"
@@ -516,41 +789,16 @@ export default function ReservasTable({
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <p className="text-sm">No hay reservas para este día</p>
+              <p className="text-sm">No hay próximas reservas</p>
             </div>
           )}
 
-        {viewMode === "agenda" && fechasOrdenadas.length === 0 && (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <svg
-              className="w-12 h-12 mx-auto mb-3 opacity-50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <p className="text-sm">No hay próximas reservas</p>
-          </div>
-        )}
+          {fechasOrdenadas.map((fecha) => {
+            const reservasDelDia = reservasAgrupadas[fecha];
 
-        {fechasOrdenadas.map((fecha) => {
-          const reservasDelDia =
-            viewMode === "agenda" ?
-              reservasAgrupadas[fecha]
-            : reservasPorFecha[fecha].sort((a, b) =>
-                a.horaCita.localeCompare(b.horaCita)
-              );
-
-          return (
-            <div key={fecha}>
-              {/* Header de fecha (solo mostrar en vista agenda) */}
-              {viewMode === "agenda" && (
+            return (
+              <div key={fecha}>
+                {/* Header de fecha */}
                 <div className="mb-3 pb-2 border-b-2 border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
                     {formatearFecha(fecha)}
@@ -560,142 +808,231 @@ export default function ReservasTable({
                     {reservasDelDia.length !== 1 ? "s" : ""}
                   </p>
                 </div>
-              )}
 
-              {/* Lista de reservas del día */}
-              <div className="space-y-2">
-                {reservasDelDia.map((reserva) => (
-                  <div
-                    key={reserva._id}
-                    className="group bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
-                  >
-                    <div className="flex items-center">
-                      {/* Indicador de estado (línea vertical) */}
-                      <div
-                        className={`w-1.5 h-full ${getEstadoColor(reserva.estado)}`}
-                      />
+                {/* Lista de reservas del día */}
+                <div className="space-y-2">
+                  {reservasDelDia.map((reserva) => (
+                    <div
+                      key={reserva._id}
+                      className="group bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
+                    >
+                      <div className="flex items-center">
+                        {/* Indicador de estado (línea vertical) */}
+                        <div
+                          className={`w-1.5 h-full ${getEstadoColor(reserva.estado)}`}
+                        />
 
-                      {/* Contenido principal */}
-                      <div
-                        className="flex-1 p-3 sm:p-4 cursor-pointer min-w-0"
-                        onClick={() => onEdit(reserva)}
-                      >
-                        <div className="flex items-start justify-between gap-2 sm:gap-3">
-                          {/* Hora y nombre */}
-                          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                            <div className="flex-shrink-0">
-                              <div className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                                {reserva.horaCita}
+                        {/* Contenido principal */}
+                        <div
+                          className="flex-1 p-3 sm:p-4 cursor-pointer min-w-0"
+                          onClick={() => onEdit(reserva)}
+                        >
+                          <div className="flex items-start justify-between gap-2 sm:gap-3">
+                            {/* Hora y nombre */}
+                            <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                              <div className="flex-shrink-0">
+                                <div className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                                  {reserva.horaCita}
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                                <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
-                                  {reserva.nombre}
-                                </h4>
-                                <span
-                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold uppercase flex-shrink-0 w-fit ${
-                                    reserva.estado === "pendiente" ?
-                                      "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"
-                                    : reserva.estado === "confirmada" ?
-                                      "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300"
-                                    : reserva.estado === "completada" ?
-                                      "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300"
-                                    : "bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300"
-                                  }`}
-                                >
-                                  {reserva.estado}
-                                </span>
-                              </div>
-                              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                                <span className="capitalize">
-                                  {reserva.forma}
-                                </span>
-                                {" • "}
-                                <span>Largo {reserva.largo}</span>
-                                {reserva.telefono && (
-                                  <>
-                                    {" • "}
-                                    <span className="hidden sm:inline">
-                                      {reserva.telefono}
-                                    </span>
-                                  </>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
+                                    {reserva.nombre}
+                                  </h4>
+                                  <span
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold uppercase flex-shrink-0 w-fit ${
+                                      reserva.estado === "pendiente" ?
+                                        "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"
+                                      : reserva.estado === "confirmada" ?
+                                        "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300"
+                                      : reserva.estado === "completada" ?
+                                        "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300"
+                                      : "bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300"
+                                    }`}
+                                  >
+                                    {reserva.estado}
+                                  </span>
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                                  <span className="capitalize">
+                                    {reserva.forma}
+                                  </span>
+                                  {" • "}
+                                  <span>Largo {reserva.largo}</span>
+                                  {reserva.telefono && (
+                                    <>
+                                      {" • "}
+                                      <span className="hidden sm:inline">
+                                        {reserva.telefono}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                {reserva.decoracion && (
+                                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-1">
+                                    {reserva.decoracion}
+                                  </div>
                                 )}
                               </div>
-                              {reserva.decoracion && (
-                                <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-1">
-                                  {reserva.decoracion}
-                                </div>
+                            </div>
+
+                            {/* Acciones (desktop) */}
+                            <div
+                              className="hidden lg:flex items-start gap-2 flex-wrap flex-shrink-0 max-w-md"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {reserva.estado === "pendiente" && (
+                                <>
+                                  <Button
+                                    onClick={() =>
+                                      onUpdateStatus(
+                                        reserva,
+                                        "confirmada",
+                                        true
+                                      )
+                                    }
+                                    disabled={saving}
+                                    variant="outlined-success"
+                                    size="sm"
+                                    icon={<CheckIcon />}
+                                    title="Confirmar reserva"
+                                  >
+                                    Confirmar
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      onUpdateStatus(reserva, "cancelada", true)
+                                    }
+                                    disabled={saving}
+                                    variant="outlined-danger"
+                                    size="sm"
+                                    icon={<XIcon />}
+                                    title="Cancelar reserva"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </>
                               )}
+                              {reserva.estado === "confirmada" && (
+                                <>
+                                  <Button
+                                    onClick={() => onEdit(reserva)}
+                                    disabled={saving}
+                                    variant="outlined-primary"
+                                    size="sm"
+                                    icon={<CheckCircleIcon />}
+                                    title="Completar reserva"
+                                  >
+                                    Completar
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      onUpdateStatus(reserva, "cancelada", true)
+                                    }
+                                    disabled={saving}
+                                    variant="outlined-danger"
+                                    size="sm"
+                                    icon={<XIcon />}
+                                    title="Cancelar reserva"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                onClick={() => onEdit(reserva)}
+                                disabled={saving}
+                                variant="outlined-warning"
+                                size="sm"
+                                icon={<EditIcon />}
+                                title="Editar reserva"
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                onClick={() => onDelete(reserva)}
+                                disabled={saving}
+                                variant="outlined-danger"
+                                size="sm"
+                                icon={<TrashIcon />}
+                                title="Eliminar reserva"
+                              >
+                                Eliminar
+                              </Button>
                             </div>
                           </div>
+                        </div>
+                      </div>
 
-                          {/* Acciones (desktop) */}
-                          <div
-                            className="hidden lg:flex items-start gap-2 flex-shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {reserva.estado === "pendiente" && (
-                              <>
-                                <Button
-                                  onClick={() =>
-                                    onUpdateStatus(reserva, "confirmada", true)
-                                  }
-                                  disabled={saving}
-                                  variant="outlined-success"
-                                  size="sm"
-                                  icon={<CheckIcon />}
-                                  title="Confirmar reserva"
-                                >
-                                  Confirmar
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    onUpdateStatus(reserva, "cancelada", true)
-                                  }
-                                  disabled={saving}
-                                  variant="outlined-danger"
-                                  size="sm"
-                                  icon={<XIcon />}
-                                  title="Cancelar reserva"
-                                >
-                                  Cancelar
-                                </Button>
-                              </>
-                            )}
-                            {reserva.estado === "confirmada" && (
-                              <>
-                                <Button
-                                  onClick={() => onEdit(reserva)}
-                                  disabled={saving}
-                                  variant="outlined-primary"
-                                  size="sm"
-                                  icon={<CheckCircleIcon />}
-                                  title="Completar reserva"
-                                >
-                                  Completar
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    onUpdateStatus(reserva, "cancelada", true)
-                                  }
-                                  disabled={saving}
-                                  variant="outlined-danger"
-                                  size="sm"
-                                  icon={<XIcon />}
-                                  title="Cancelar reserva"
-                                >
-                                  Cancelar
-                                </Button>
-                              </>
-                            )}
+                      {/* Acciones móviles (expandible) */}
+                      <div
+                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 sm:px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex flex-col gap-2">
+                          {reserva.estado === "pendiente" && (
+                            <>
+                              <Button
+                                onClick={() =>
+                                  onUpdateStatus(reserva, "confirmada", true)
+                                }
+                                disabled={saving}
+                                variant="outlined-success"
+                                size="sm"
+                                icon={<CheckIcon />}
+                                fullWidth
+                              >
+                                Confirmar
+                              </Button>
+                              <Button
+                                onClick={() =>
+                                  onUpdateStatus(reserva, "cancelada", true)
+                                }
+                                disabled={saving}
+                                variant="outlined-danger"
+                                size="sm"
+                                icon={<XIcon />}
+                                fullWidth
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          {reserva.estado === "confirmada" && (
+                            <>
+                              <Button
+                                onClick={() => onEdit(reserva)}
+                                disabled={saving}
+                                variant="outlined-primary"
+                                size="sm"
+                                icon={<CheckCircleIcon />}
+                                fullWidth
+                              >
+                                Completar
+                              </Button>
+                              <Button
+                                onClick={() =>
+                                  onUpdateStatus(reserva, "cancelada", true)
+                                }
+                                disabled={saving}
+                                variant="outlined-danger"
+                                size="sm"
+                                icon={<XIcon />}
+                                fullWidth
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
                             <Button
                               onClick={() => onEdit(reserva)}
                               disabled={saving}
                               variant="outlined-warning"
                               size="sm"
                               icon={<EditIcon />}
-                              title="Editar reserva"
+                              fullWidth
                             >
                               Editar
                             </Button>
@@ -705,7 +1042,7 @@ export default function ReservasTable({
                               variant="outlined-danger"
                               size="sm"
                               icon={<TrashIcon />}
-                              title="Eliminar reserva"
+                              fullWidth
                             >
                               Eliminar
                             </Button>
@@ -713,123 +1050,38 @@ export default function ReservasTable({
                         </div>
                       </div>
                     </div>
-
-                    {/* Acciones móviles (expandible) */}
-                    <div
-                      className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 sm:px-4 py-3"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex flex-col gap-2">
-                        {reserva.estado === "pendiente" && (
-                          <>
-                            <Button
-                              onClick={() =>
-                                onUpdateStatus(reserva, "confirmada", true)
-                              }
-                              disabled={saving}
-                              variant="outlined-success"
-                              size="sm"
-                              icon={<CheckIcon />}
-                              fullWidth
-                            >
-                              Confirmar
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                onUpdateStatus(reserva, "cancelada", true)
-                              }
-                              disabled={saving}
-                              variant="outlined-danger"
-                              size="sm"
-                              icon={<XIcon />}
-                              fullWidth
-                            >
-                              Cancelar
-                            </Button>
-                          </>
-                        )}
-                        {reserva.estado === "confirmada" && (
-                          <>
-                            <Button
-                              onClick={() => onEdit(reserva)}
-                              disabled={saving}
-                              variant="outlined-primary"
-                              size="sm"
-                              icon={<CheckCircleIcon />}
-                              fullWidth
-                            >
-                              Completar
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                onUpdateStatus(reserva, "cancelada", true)
-                              }
-                              disabled={saving}
-                              variant="outlined-danger"
-                              size="sm"
-                              icon={<XIcon />}
-                              fullWidth
-                            >
-                              Cancelar
-                            </Button>
-                          </>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() => onEdit(reserva)}
-                            disabled={saving}
-                            variant="outlined-warning"
-                            size="sm"
-                            icon={<EditIcon />}
-                            fullWidth
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            onClick={() => onDelete(reserva)}
-                            disabled={saving}
-                            variant="outlined-danger"
-                            size="sm"
-                            icon={<TrashIcon />}
-                            fullWidth
-                          >
-                            Eliminar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {/* Botón "Ver más" para la vista agenda */}
-        {viewMode === "agenda" && hayMasReservas && (
-          <div className="flex justify-center pt-4">
-            <button
-              onClick={() => setAgendaLimit((prev) => prev + 4)}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-xl transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {/* Botón "Ver más" para la vista agenda */}
+          {hayMasReservas && (
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={() => setAgendaLimit((prev) => prev + 4)}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-xl transition-colors duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-              Ver más ({todasReservasFuturas.length - agendaLimit} restantes)
-            </button>
-          </div>
-        )}
-      </div>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+                Ver más ({todasReservasFuturas.length - agendaLimit} restantes)
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
