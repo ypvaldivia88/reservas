@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { User, Reserva, ApiResponse } from "@/lib/types";
+import { phoneUtils } from "@/lib/utils";
 
 interface ClientCheckResponse {
   exists: boolean;
@@ -9,16 +10,18 @@ interface ClientCheckResponse {
 }
 
 // GET: Check if client exists by phone and return active reservations
-export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<ClientCheckResponse>>> {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<ApiResponse<ClientCheckResponse>>> {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const telefono = searchParams.get('telefono');
+    const telefono = searchParams.get("telefono");
 
     if (!telefono) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Teléfono es requerido',
+          error: "Teléfono es requerido",
         },
         { status: 400 }
       );
@@ -26,23 +29,35 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     const client = await clientPromise;
     const db = client.db("nailsalon");
-    
-    // Normalize phone for consistent search
-    const telefonoNormalizado = telefono.trim();
 
-    // Find client by phone
+    // Normalize phone for consistent search (removes spaces, adds +53, etc.)
+    let telefonoNormalizado: string;
+    try {
+      telefonoNormalizado = phoneUtils.normalize(telefono);
+    } catch (normalizeError) {
+      console.error("Error normalizing phone:", normalizeError);
+      return NextResponse.json({
+        success: true,
+        data: {
+          exists: false,
+        },
+        message: "Formato de teléfono inválido",
+      });
+    }
+
+    // Find client by normalized phone
     const cliente = await db.collection<User>("users").findOne({
       telefono: telefonoNormalizado,
-      role: 'cliente'
+      role: "cliente",
     });
 
     if (!cliente) {
       return NextResponse.json({
         success: true,
         data: {
-          exists: false
+          exists: false,
         },
-        message: 'Cliente no encontrado'
+        message: "Cliente no encontrado",
       });
     }
 
@@ -51,7 +66,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       .collection<Reserva>("reservas")
       .find({
         clienteId: cliente._id?.toString(),
-        estado: { $in: ['pendiente', 'confirmada'] }
+        estado: { $in: ["pendiente", "confirmada"] },
       })
       .sort({ fechaCita: 1 })
       .toArray();
@@ -61,18 +76,17 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       data: {
         exists: true,
         cliente,
-        reservasActivas
+        reservasActivas,
       },
-      message: 'Cliente encontrado'
+      message: "Cliente encontrado",
     });
-
   } catch (error) {
-    console.error('Error checking client by phone:', error);
-    
+    console.error("Error checking client by phone:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: 'Error interno del servidor'
+        error: "Error interno del servidor",
       },
       { status: 500 }
     );

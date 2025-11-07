@@ -16,6 +16,7 @@ import {
 } from "@/lib/whatsapp";
 import { Button } from "./ui/Button";
 import { XIcon, CheckIcon } from "./ui/Icons";
+import { phoneUtils } from "@/lib/utils";
 
 interface FormErrors {
   nombre?: string;
@@ -106,8 +107,10 @@ export default function ReservaForm() {
           break;
         case "telefono":
           if (!value.trim()) return "El teléfono es requerido";
-          if (!/^\+?[\d\s\-()]{8,15}$/.test(value))
-            return "Formato de teléfono inválido";
+          // Validar usando phoneUtils
+          if (!phoneUtils.isValid(value)) {
+            return "Ingresa un número cubano válido de 8 dígitos (ej: 55551234)";
+          }
           break;
         case "forma":
           if (!value) return "Selecciona una forma";
@@ -128,7 +131,13 @@ export default function ReservaForm() {
 
   // Modifica la función checkClientByPhone
   const checkClientByPhone = useCallback(async (telefono: string) => {
-    if (!telefono.trim() || !/^\+?[\d\s\-()]{8,15}$/.test(telefono)) {
+    // Validar que el teléfono tenga al menos contenido válido
+    if (!telefono.trim() || telefono.trim().length < 8) {
+      return;
+    }
+
+    // Validar formato antes de hacer la búsqueda
+    if (!phoneUtils.isValid(telefono)) {
       return;
     }
 
@@ -137,6 +146,7 @@ export default function ReservaForm() {
     setShowClientInfo(false);
 
     try {
+      // Enviar el teléfono tal cual (el backend lo normalizará)
       const res = await fetch(
         `/api/clientes/check-phone?telefono=${encodeURIComponent(telefono.trim())}`
       );
@@ -196,10 +206,20 @@ export default function ReservaForm() {
     ) => {
       const { name, value } = e.target;
 
-      setForm((prev) => ({ ...prev, [name]: value }));
+      // Si es teléfono, permitir solo números, +, espacios, guiones
+      let processedValue = value;
+      if (name === "telefono") {
+        // Permitir solo caracteres válidos para teléfono
+        processedValue = value.replace(/[^\d\s\-+()]/g, "");
+      }
+
+      setForm((prev) => ({ ...prev, [name]: processedValue }));
 
       // Validación en tiempo real
-      const error = validateField(name as keyof ReservaFormData, value);
+      const error = validateField(
+        name as keyof ReservaFormData,
+        processedValue
+      );
       setErrors((prev) => ({
         ...prev,
         [name]: error,
@@ -210,8 +230,8 @@ export default function ReservaForm() {
 
       // Check client when phone is entered
       if (name === "telefono") {
-        if (value.trim().length >= 8) {
-          checkClientByPhone(value);
+        if (processedValue.trim().length >= 8) {
+          checkClientByPhone(processedValue);
         } else {
           // Resetear cuando el teléfono es muy corto
           setIsNameEnabled(false);
@@ -601,7 +621,6 @@ export default function ReservaForm() {
       <div className="p-4 sm:p-6 md:p-8">
         <form className="space-y-4 sm:space-y-6">
           {/* Step 1: Información Personal */}
-          {/* Step 1: Información Personal */}
           {currentStep === 1 && (
             <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div className="grid grid-cols-1 gap-3 sm:gap-4">
@@ -618,7 +637,7 @@ export default function ReservaForm() {
                       id="telefono"
                       name="telefono"
                       type="tel"
-                      placeholder="Ej. +1 555 123 4567"
+                      placeholder="Ej: 55551234 o +53 5555 1234"
                       value={form.telefono}
                       onChange={handleChange}
                       className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base ${
@@ -654,11 +673,10 @@ export default function ReservaForm() {
                       <span className="mr-1">⚠️</span> {errors.telefono}
                     </p>
                   )}
-                  {!isCheckingPhone &&
-                    form.telefono.length >= 8 &&
-                    !clientInfo &&
-                    !isNameEnabled && (
-                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                  {!errors.telefono &&
+                    !isCheckingPhone &&
+                    form.telefono.length >= 8 && (
+                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 flex items-center">
                         <svg
                           className="w-4 h-4 mr-1 flex-shrink-0"
                           fill="none"
@@ -669,12 +687,30 @@ export default function ReservaForm() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        Verificando teléfono...
+                        Se guardará como: {phoneUtils.format(form.telefono)}
                       </p>
                     )}
+                  {isCheckingPhone && (
+                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                      <svg
+                        className="w-4 h-4 mr-1 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      Verificando teléfono...
+                    </p>
+                  )}
                 </div>
 
                 {/* Luego el nombre */}
