@@ -325,6 +325,7 @@ export default function GaleriaAdmin() {
                   <div className="flex space-x-2">
                     <Button
                       onClick={() => handleEdit(item)}
+                      variant="outlined-warning"
                       icon={<EditIcon />}
                       size="sm"
                       className="flex-1"

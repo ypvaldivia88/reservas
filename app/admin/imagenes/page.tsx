@@ -232,6 +232,7 @@ export default function ImagenesAdmin() {
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => handleEdit(imagen)}
+                    variant="outlined-warning"
                     icon={<EditIcon />}
                     size="sm"
                     className="flex-1"

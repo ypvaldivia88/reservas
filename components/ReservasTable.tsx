@@ -692,6 +692,7 @@ export default function ReservasTable({
                             <Button
                               onClick={() => onEdit(reserva)}
                               disabled={saving}
+                              variant="outlined-warning"
                               size="sm"
                               icon={<EditIcon />}
                               title="Editar reserva"
@@ -701,6 +702,7 @@ export default function ReservasTable({
                             <Button
                               onClick={() => onDelete(reserva)}
                               disabled={saving}
+                              variant="outlined-danger"
                               size="sm"
                               icon={<TrashIcon />}
                               title="Eliminar reserva"
@@ -776,6 +778,7 @@ export default function ReservasTable({
                           <Button
                             onClick={() => onEdit(reserva)}
                             disabled={saving}
+                            variant="outlined-warning"
                             size="sm"
                             icon={<EditIcon />}
                             fullWidth
@@ -785,6 +788,7 @@ export default function ReservasTable({
                           <Button
                             onClick={() => onDelete(reserva)}
                             disabled={saving}
+                            variant="outlined-danger"
                             size="sm"
                             icon={<TrashIcon />}
                             fullWidth

@@ -396,6 +396,7 @@ export default function ServiciosAdmin() {
                   <Button
                     onClick={() => handleEdit(servicio)}
                     disabled={saving}
+                    variant="outlined-warning"
                     size="sm"
                     icon={<EditIcon />}
                     fullWidth

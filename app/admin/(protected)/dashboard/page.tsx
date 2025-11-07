@@ -647,6 +647,7 @@ function DashboardContent() {
                         <Button
                           onClick={() => setEditingCliente(cliente)}
                           disabled={saving}
+                          variant="outlined-warning"
                           size="sm"
                           icon={<EditIcon />}
                         >
@@ -655,6 +656,7 @@ function DashboardContent() {
                         <Button
                           onClick={() => setDeletingCliente(cliente)}
                           disabled={saving}
+                          variant="outlined-danger"
                           size="sm"
                           icon={<TrashIcon />}
                         >
@@ -1083,7 +1085,7 @@ function DashboardContent() {
                           );
                         }}
                         disabled={saving}
-                        className="px-5 py-2.5 border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-blue-600 dark:hover:border-blue-300"
+                        className="px-5 py-2.5 border-2 border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-emerald-600 dark:hover:border-emerald-300"
                       >
                         <span className="text-lg">✔️</span>
                         <span>Completar Reserva</span>
@@ -1100,7 +1102,7 @@ function DashboardContent() {
                           );
                         }}
                         disabled={saving}
-                        className="px-5 py-2.5 border-2 border-rose-500 dark:border-rose-400 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-rose-600 dark:hover:border-rose-300"
+                        className="px-5 py-2.5 border-2 border-gray-500 dark:border-gray-400 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/10 rounded-xl transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-600 dark:hover:border-gray-300"
                       >
                         <span className="text-lg">❌</span>
                         <span>Cancelar Reserva</span>

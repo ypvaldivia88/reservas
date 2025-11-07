@@ -241,6 +241,7 @@ export default function CategoriasAdmin() {
                     <Button
                       onClick={() => handleEdit(categoria)}
                       disabled={saving}
+                      variant="outlined-warning"
                       icon={<EditIcon />}
                       size="sm"
                       className="flex-1"
