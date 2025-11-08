@@ -340,7 +340,7 @@ function DashboardContent() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-6 mb-8">
         <button
           onClick={() => {
             setReservasViewMode("month");
@@ -349,12 +349,12 @@ function DashboardContent() {
               .querySelector("#reservas-section")
               ?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
+          className="group bg-white dark:bg-gray-800/50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl p-2 sm:p-3 md:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
+            <div className="mb-1 sm:mb-2 md:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               <svg
-                className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400"
+                className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-blue-600 dark:text-blue-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -367,10 +367,10 @@ function DashboardContent() {
                 />
               </svg>
             </div>
-            <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
+            <p className="text-gray-600 dark:text-blue-200 text-[9px] sm:text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-0.5 sm:mb-1 md:mb-2">
               Reservas
             </p>
-            <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
               {reservas.length}
             </p>
           </div>
@@ -381,12 +381,12 @@ function DashboardContent() {
               .querySelector("#clientes-section")
               ?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
+          className="group bg-white dark:bg-gray-800/50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl p-2 sm:p-3 md:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
+            <div className="mb-1 sm:mb-2 md:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               <svg
-                className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400"
+                className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-blue-600 dark:text-blue-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -399,10 +399,10 @@ function DashboardContent() {
                 />
               </svg>
             </div>
-            <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
+            <p className="text-gray-600 dark:text-blue-200 text-[9px] sm:text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-0.5 sm:mb-1 md:mb-2">
               Clientes
             </p>
-            <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
               {clientes.length}
             </p>
           </div>
@@ -415,12 +415,12 @@ function DashboardContent() {
               .querySelector("#reservas-section")
               ?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
+          className="group bg-white dark:bg-gray-800/50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl p-2 sm:p-3 md:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
         >
           <div className="flex flex-col items-center text-center">
-            <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
+            <div className="mb-1 sm:mb-2 md:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               <svg
-                className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400"
+                className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-blue-600 dark:text-blue-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -433,10 +433,10 @@ function DashboardContent() {
                 />
               </svg>
             </div>
-            <p className="text-gray-600 dark:text-blue-200 text-[10px] sm:text-sm font-semibold uppercase tracking-wide mb-1 sm:mb-2">
+            <p className="text-gray-600 dark:text-blue-200 text-[9px] sm:text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-0.5 sm:mb-1 md:mb-2">
               Pendientes
             </p>
-            <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
               {reservas.filter((r) => r.estado === "pendiente").length}
             </p>
           </div>
@@ -446,7 +446,7 @@ function DashboardContent() {
       {/* Reservas Table */}
       <div
         id="reservas-section"
-        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20"
+        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-8 border border-gray-200 dark:border-white/20"
       >
         <ReservasTable
           reservas={reservas}

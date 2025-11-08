@@ -65,12 +65,12 @@ export default function AdminProtectedLayout({
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-gray-100 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950">
       {/* Header común */}
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200 dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-5 lg:px-8">
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -83,18 +83,18 @@ export default function AdminProtectedLayout({
                   />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                  Panel Administrador
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">
+                  Administración
                 </h1>
-                <p className="text-blue-600 dark:text-blue-300 text-sm">
+                <p className="text-blue-600 dark:text-blue-300 text-xs sm:text-sm truncate">
                   Gestión del Salón de Belleza
                 </p>
               </div>
             </div>
 
             {/* Desktop View - Botones */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3 flex-shrink-0">
               <ThemeToggle />
 
               <Button
@@ -126,7 +126,7 @@ export default function AdminProtectedLayout({
             </div>
 
             {/* Mobile View - Hamburger Menu */}
-            <div className="flex md:hidden items-center gap-2">
+            <div className="flex md:hidden items-center gap-1 sm:gap-2 flex-shrink-0">
               <Button
                 onClick={() => router.push("/")}
                 variant="ghost"
@@ -292,7 +292,7 @@ export default function AdminProtectedLayout({
       )}
 
       {/* Contenido de cada página */}
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8">
         {children}
       </div>
     </div>
