@@ -28,6 +28,9 @@ export default function AdminSchedulePage() {
   const [editingSlotIndex, setEditingSlotIndex] = useState<number | null>(null);
   const [specialDays, setSpecialDays] = useState<AvailabilityOverride[]>([]);
   const [showSpecialDayModal, setShowSpecialDayModal] = useState(false);
+  const [openMenuSpecialDayId, setOpenMenuSpecialDayId] = useState<
+    string | null
+  >(null);
   const [editingSpecialDay, setEditingSpecialDay] = useState<{
     _id?: string;
     dateMode: "single" | "range" | "multiple";
@@ -55,6 +58,18 @@ export default function AdminSchedulePage() {
     loadSchedule();
     loadSpecialDays();
   }, []);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = () => {
+      if (openMenuSpecialDayId) {
+        setOpenMenuSpecialDayId(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openMenuSpecialDayId]);
 
   const loadSchedule = async () => {
     try {
@@ -625,9 +640,6 @@ export default function AdminSchedulePage() {
                 <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
                   Horarios Disponibles
                 </th>
-                <th className="px-4 py-4 text-center text-xs sm:text-sm font-bold text-gray-700 dark:text-blue-200 uppercase tracking-wider">
-                  Acciones
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -676,59 +688,70 @@ export default function AdminSchedulePage() {
                   </td>
                   <td className="px-4 py-5">
                     {day.isWorkingDay ?
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {day.slots.length > 0 && (
-                          <>
-                            {day.slots.map((slot, idx) => (
-                              <button
-                                key={idx}
-                                onClick={() =>
-                                  handleEditExistingSlot(
-                                    day.dayOfWeek,
-                                    idx,
-                                    slot.time
-                                  )
-                                }
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all touch-manipulation"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2 items-center">
+                          {day.slots.length > 0 && (
+                            <>
+                              {day.slots.map((slot, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() =>
+                                    handleEditExistingSlot(
+                                      day.dayOfWeek,
+                                      idx,
+                                      slot.time
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all touch-manipulation"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-                                {slot.time}
-                              </button>
-                            ))}
-                          </>
-                        )}
-                        {day.slots.length === 0 && (
-                          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg">
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                              />
-                            </svg>
-                            <span className="text-sm font-medium">
-                              Sin horarios
-                            </span>
-                          </div>
-                        )}
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  {slot.time}
+                                </button>
+                              ))}
+                            </>
+                          )}
+                          {day.slots.length === 0 && (
+                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg">
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                              </svg>
+                              <span className="text-sm font-medium">
+                                Sin horarios
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => handleEditSlots(day.dayOfWeek)}
+                          disabled={saving}
+                          size="sm"
+                          icon={<PlusIcon />}
+                          className="w-full sm:w-auto"
+                        >
+                          Agregar Horario
+                        </Button>
                       </div>
                     : <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/30 px-3 py-2 rounded-lg w-fit">
                         <svg
@@ -749,18 +772,6 @@ export default function AdminSchedulePage() {
                         </span>
                       </div>
                     }
-                  </td>
-                  <td className="px-4 py-5 text-center">
-                    {day.isWorkingDay && (
-                      <Button
-                        onClick={() => handleEditSlots(day.dayOfWeek)}
-                        disabled={saving}
-                        size="sm"
-                        icon={<PlusIcon />}
-                      >
-                        Agregar
-                      </Button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -1028,7 +1039,61 @@ export default function AdminSchedulePage() {
                       className="px-4 py-4 text-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex gap-2">
+                      {/* Mobile: Dropdown Menu */}
+                      <div className="md:hidden relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuSpecialDayId(
+                              openMenuSpecialDayId === (day._id || day.date) ?
+                                null
+                              : (day._id || day.date)!
+                            );
+                          }}
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          aria-label="Menú de acciones"
+                        >
+                          <svg
+                            className="w-5 h-5 text-gray-600 dark:text-gray-300"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                          </svg>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {openMenuSpecialDayId === (day._id || day.date) && (
+                          <div
+                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={() => {
+                                handleEditSpecialDay(day);
+                                setOpenMenuSpecialDayId(null);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-3"
+                            >
+                              <EditIcon className="w-5 h-5" />
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDeleteSpecialDay(day.date);
+                                setOpenMenuSpecialDayId(null);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 font-medium transition-colors flex items-center gap-3"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                              Eliminar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Desktop: Botones con Iconos y Texto */}
+                      <div className="hidden md:flex gap-2">
                         <Button
                           onClick={() => handleEditSpecialDay(day)}
                           disabled={saving}
