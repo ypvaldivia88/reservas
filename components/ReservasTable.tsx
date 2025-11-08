@@ -965,88 +965,58 @@ export default function ReservasTable({
                         </div>
                       </div>
 
-                      {/* Acciones móviles (expandible) */}
+                      {/* Acciones móviles - Botones de estado con texto */}
                       <div
-                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 sm:px-4 py-3"
+                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 py-2.5"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2">
                           {reserva.estado === "pendiente" && (
                             <>
-                              <Button
+                              <button
                                 onClick={() =>
                                   onUpdateStatus(reserva, "confirmada", true)
                                 }
                                 disabled={saving}
-                                variant="outlined-success"
-                                size="sm"
-                                icon={<CheckIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-green-500 dark:border-green-400 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Confirmar
-                              </Button>
-                              <Button
+                                <CheckIcon className="w-4 h-4" />
+                                <span>Confirmar</span>
+                              </button>
+                              <button
                                 onClick={() =>
                                   onUpdateStatus(reserva, "cancelada", true)
                                 }
                                 disabled={saving}
-                                variant="outlined-danger"
-                                size="sm"
-                                icon={<XIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-red-500 dark:border-red-400 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Cancelar
-                              </Button>
+                                <XIcon className="w-4 h-4" />
+                                <span>Cancelar</span>
+                              </button>
                             </>
                           )}
                           {reserva.estado === "confirmada" && (
                             <>
-                              <Button
+                              <button
                                 onClick={() => onEdit(reserva)}
                                 disabled={saving}
-                                variant="outlined-primary"
-                                size="sm"
-                                icon={<CheckCircleIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Completar
-                              </Button>
-                              <Button
+                                <CheckCircleIcon className="w-4 h-4" />
+                                <span>Completar</span>
+                              </button>
+                              <button
                                 onClick={() =>
                                   onUpdateStatus(reserva, "cancelada", true)
                                 }
                                 disabled={saving}
-                                variant="outlined-danger"
-                                size="sm"
-                                icon={<XIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-red-500 dark:border-red-400 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Cancelar
-                              </Button>
+                                <XIcon className="w-4 h-4" />
+                                <span>Cancelar</span>
+                              </button>
                             </>
                           )}
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              onClick={() => onEdit(reserva)}
-                              disabled={saving}
-                              variant="outlined-warning"
-                              size="sm"
-                              icon={<EditIcon />}
-                              fullWidth
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              onClick={() => onDelete(reserva)}
-                              disabled={saving}
-                              variant="outlined-danger"
-                              size="sm"
-                              icon={<TrashIcon />}
-                              fullWidth
-                            >
-                              Eliminar
-                            </Button>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -1284,88 +1254,58 @@ export default function ReservasTable({
                         </div>
                       </div>
 
-                      {/* Acciones móviles (expandible) */}
+                      {/* Acciones móviles - Botones de estado con texto */}
                       <div
-                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 sm:px-4 py-3"
+                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 py-2.5"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2">
                           {reserva.estado === "pendiente" && (
                             <>
-                              <Button
+                              <button
                                 onClick={() =>
                                   onUpdateStatus(reserva, "confirmada", true)
                                 }
                                 disabled={saving}
-                                variant="outlined-success"
-                                size="sm"
-                                icon={<CheckIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-green-500 dark:border-green-400 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Confirmar
-                              </Button>
-                              <Button
+                                <CheckIcon className="w-4 h-4" />
+                                <span>Confirmar</span>
+                              </button>
+                              <button
                                 onClick={() =>
                                   onUpdateStatus(reserva, "cancelada", true)
                                 }
                                 disabled={saving}
-                                variant="outlined-danger"
-                                size="sm"
-                                icon={<XIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-red-500 dark:border-red-400 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Cancelar
-                              </Button>
+                                <XIcon className="w-4 h-4" />
+                                <span>Cancelar</span>
+                              </button>
                             </>
                           )}
                           {reserva.estado === "confirmada" && (
                             <>
-                              <Button
+                              <button
                                 onClick={() => onEdit(reserva)}
                                 disabled={saving}
-                                variant="outlined-primary"
-                                size="sm"
-                                icon={<CheckCircleIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Completar
-                              </Button>
-                              <Button
+                                <CheckCircleIcon className="w-4 h-4" />
+                                <span>Completar</span>
+                              </button>
+                              <button
                                 onClick={() =>
                                   onUpdateStatus(reserva, "cancelada", true)
                                 }
                                 disabled={saving}
-                                variant="outlined-danger"
-                                size="sm"
-                                icon={<XIcon />}
-                                fullWidth
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-red-500 dark:border-red-400 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                               >
-                                Cancelar
-                              </Button>
+                                <XIcon className="w-4 h-4" />
+                                <span>Cancelar</span>
+                              </button>
                             </>
                           )}
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              onClick={() => onEdit(reserva)}
-                              disabled={saving}
-                              variant="outlined-warning"
-                              size="sm"
-                              icon={<EditIcon />}
-                              fullWidth
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              onClick={() => onDelete(reserva)}
-                              disabled={saving}
-                              variant="outlined-danger"
-                              size="sm"
-                              icon={<TrashIcon />}
-                              fullWidth
-                            >
-                              Eliminar
-                            </Button>
-                          </div>
                         </div>
                       </div>
                     </div>
