@@ -38,6 +38,14 @@ function DashboardContent() {
   const [clientesPerPage] = useState(10);
   const [clientesSearch, setClientesSearch] = useState("");
 
+  // Control states for ReservasTable
+  const [reservasViewMode, setReservasViewMode] = useState<"month" | "agenda">(
+    "month"
+  );
+  const [reservasEstadoFilter, setReservasEstadoFilter] = useState<
+    Reserva["estado"] | "todos"
+  >("todos");
+
   const [actionMessage, setActionMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -333,7 +341,16 @@ function DashboardContent() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8">
-        <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
+        <button
+          onClick={() => {
+            setReservasViewMode("month");
+            setReservasEstadoFilter("todos");
+            document
+              .querySelector("#reservas-section")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
+        >
           <div className="flex flex-col items-center text-center">
             <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               <svg
@@ -357,8 +374,15 @@ function DashboardContent() {
               {reservas.length}
             </p>
           </div>
-        </div>
-        <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
+        </button>
+        <button
+          onClick={() => {
+            document
+              .querySelector("#clientes-section")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
+        >
           <div className="flex flex-col items-center text-center">
             <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               <svg
@@ -382,8 +406,17 @@ function DashboardContent() {
               {clientes.length}
             </p>
           </div>
-        </div>
-        <div className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300">
+        </button>
+        <button
+          onClick={() => {
+            setReservasViewMode("agenda");
+            setReservasEstadoFilter("pendiente");
+            document
+              .querySelector("#reservas-section")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className="group bg-white dark:bg-gray-800/50 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-3 sm:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
+        >
           <div className="flex flex-col items-center text-center">
             <div className="mb-2 sm:mb-3 opacity-80 group-hover:scale-110 transition-transform">
               <svg
@@ -407,11 +440,14 @@ function DashboardContent() {
               {reservas.filter((r) => r.estado === "pendiente").length}
             </p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Reservas Table */}
-      <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20">
+      <div
+        id="reservas-section"
+        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-gray-200 dark:border-white/20"
+      >
         <ReservasTable
           reservas={reservas}
           saving={saving}
@@ -420,11 +456,17 @@ function DashboardContent() {
           onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
             handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
           }}
+          externalViewMode={reservasViewMode}
+          externalEstadoFilter={reservasEstadoFilter}
+          onViewModeChange={setReservasViewMode}
         />
       </div>
 
       {/* Clientes Table */}
-      <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 dark:border-white/20">
+      <div
+        id="clientes-section"
+        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 dark:border-white/20"
+      >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <span className="text-3xl">👥</span>

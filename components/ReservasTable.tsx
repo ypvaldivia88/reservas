@@ -20,6 +20,9 @@ interface ReservasTableProps {
     estado: Reserva["estado"],
     openWhatsApp?: boolean
   ) => void;
+  externalViewMode?: ViewMode;
+  externalEstadoFilter?: Reserva["estado"] | "todos";
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
 type ViewMode = "month" | "agenda";
@@ -30,6 +33,9 @@ export default function ReservasTable({
   onEdit,
   onDelete,
   onUpdateStatus,
+  externalViewMode,
+  externalEstadoFilter,
+  onViewModeChange,
 }: ReservasTableProps) {
   // Función para obtener el próximo turno
   const getProximoTurnoFecha = () => {
@@ -59,7 +65,9 @@ export default function ReservasTable({
     return proximaReserva?.fechaCita || nowStr;
   };
 
-  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    externalViewMode || "month"
+  );
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     return getProximoTurnoFecha();
   });
@@ -70,9 +78,20 @@ export default function ReservasTable({
   const [agendaLimit, setAgendaLimit] = useState(4); // Límite inicial de 4 reservas
   const [searchQuery, setSearchQuery] = useState("");
   const [estadoFilter, setEstadoFilter] = useState<Reserva["estado"] | "todos">(
-    "todos"
+    externalEstadoFilter || "todos"
   );
   const [searchExpanded, setSearchExpanded] = useState(false);
+
+  // Sync external changes
+  if (externalViewMode !== undefined && externalViewMode !== viewMode) {
+    setViewMode(externalViewMode);
+  }
+  if (
+    externalEstadoFilter !== undefined &&
+    externalEstadoFilter !== estadoFilter
+  ) {
+    setEstadoFilter(externalEstadoFilter);
+  }
 
   // Agrupar reservas por fecha
   const reservasPorFecha = reservas.reduce(
@@ -369,6 +388,7 @@ export default function ReservasTable({
             onClick={() => {
               setViewMode("agenda");
               setAgendaLimit(4); // Resetear al cambiar de vista
+              onViewModeChange?.("agenda");
             }}
             className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
               viewMode === "agenda" ?
@@ -394,7 +414,10 @@ export default function ReservasTable({
             </span>
           </button>
           <button
-            onClick={() => setViewMode("month")}
+            onClick={() => {
+              setViewMode("month");
+              onViewModeChange?.("month");
+            }}
             className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
               viewMode === "month" ?
                 "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
