@@ -573,9 +573,25 @@ export default function ReservasTable({
                 const isToday =
                   dateStr === new Date().toISOString().split("T")[0];
                 const isSelected = dateStr === selectedDate;
-                const hasReservas = reservasPorFecha[dateStr];
-                const reservasCount =
-                  hasReservas ? reservasPorFecha[dateStr].length : 0;
+
+                // Obtener reservas filtradas para este día
+                const reservasDelDia = reservasPorFecha[dateStr] || [];
+                const reservasFiltradas = filterReservas(reservasDelDia);
+                const hasReservas = reservasFiltradas.length > 0;
+
+                // Obtener el estado predominante de las reservas filtradas
+                const estadosPendientes = reservasFiltradas.filter(
+                  (r) => r.estado === "pendiente"
+                ).length;
+                const estadosConfirmadas = reservasFiltradas.filter(
+                  (r) => r.estado === "confirmada"
+                ).length;
+                const estadosCompletadas = reservasFiltradas.filter(
+                  (r) => r.estado === "completada"
+                ).length;
+                const estadosCanceladas = reservasFiltradas.filter(
+                  (r) => r.estado === "cancelada"
+                ).length;
 
                 return (
                   <button
@@ -593,19 +609,20 @@ export default function ReservasTable({
                     <span className="block">{date.getDate()}</span>
                     {hasReservas && isCurrentMonth && (
                       <div className="absolute bottom-0.5 sm:bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5">
-                        {Array.from({ length: Math.min(reservasCount, 3) }).map(
-                          (_, i) => (
-                            <div
-                              key={i}
-                              className={`w-1 h-1 rounded-full ${
-                                isSelected || isToday ?
-                                  isSelected ? "bg-blue-500 dark:bg-blue-400"
-                                  : "bg-green-500 dark:bg-green-400"
-                                : "bg-blue-500 dark:bg-blue-400"
-                              }`}
-                            />
-                          )
+                        {/* Mostrar hasta 3 puntos con colores según el estado */}
+                        {estadosPendientes > 0 && (
+                          <div className="w-1 h-1 rounded-full bg-yellow-500 dark:bg-yellow-400" />
                         )}
+                        {estadosConfirmadas > 0 && (
+                          <div className="w-1 h-1 rounded-full bg-green-500 dark:bg-green-400" />
+                        )}
+                        {estadosCompletadas > 0 && (
+                          <div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400" />
+                        )}
+                        {estadosCanceladas > 0 &&
+                          reservasFiltradas.length === estadosCanceladas && (
+                            <div className="w-1 h-1 rounded-full bg-gray-500 dark:bg-gray-400" />
+                          )}
                       </div>
                     )}
                   </button>
