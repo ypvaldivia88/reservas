@@ -72,6 +72,7 @@ export default function ReservasTable({
   const [estadoFilter, setEstadoFilter] = useState<Reserva["estado"] | "todos">(
     "todos"
   );
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   // Agrupar reservas por fecha
   const reservasPorFecha = reservas.reduce(
@@ -421,38 +422,36 @@ export default function ReservasTable({
       </div>
 
       {/* Buscador y Filtro de Estados */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Buscador */}
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400 dark:text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por nombre, teléfono o decoración..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            >
+      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-2">
+        {/* Botón de búsqueda / Input expandible */}
+        <div
+          className="flex-1 flex items-center gap-2 cursor-pointer"
+          onClick={() => !searchExpanded && setSearchExpanded(true)}
+        >
+          {!searchExpanded ?
+            <>
+              <div className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <svg
+                  className="w-5 h-5 text-gray-600 dark:text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <span className="text-sm text-gray-400 dark:text-gray-500 select-none">
+                Buscar...
+              </span>
+            </>
+          : <div className="flex-1 flex items-center gap-2">
               <svg
-                className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -461,44 +460,177 @@ export default function ReservasTable({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar..."
+                autoFocus
+                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchExpanded(false);
+                }}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                title="Cerrar búsqueda"
+              >
+                <svg
+                  className="w-4 h-4 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+
+        {/* Separador - Solo visible cuando no está expandido */}
+        {!searchExpanded && (
+          <div className="h-8 w-px bg-gray-200 dark:bg-gray-700" />
+        )}
+
+        {/* Filtros de estado como iconos - Solo visibles cuando no está expandido */}
+        {!searchExpanded && (
+          <div className="flex items-center gap-1">
+            {/* Todos */}
+            <button
+              onClick={() => setEstadoFilter("todos")}
+              className={`p-2 rounded-lg transition-colors ${
+                estadoFilter === "todos" ?
+                  "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+                : "text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-600 dark:hover:text-gray-300"
+              }`}
+              title="Todas"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
                 />
               </svg>
             </button>
-          )}
-        </div>
 
-        {/* Filtro de Estados */}
-        <div className="relative">
-          <select
-            value={estadoFilter}
-            onChange={(e) =>
-              setEstadoFilter(e.target.value as typeof estadoFilter)
-            }
-            className="w-full sm:w-auto pl-4 pr-10 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors appearance-none cursor-pointer"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="confirmada">Confirmada</option>
-            <option value="completada">Completada</option>
-            <option value="cancelada">Cancelada</option>
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400 dark:text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            {/* Pendiente */}
+            <button
+              onClick={() => setEstadoFilter("pendiente")}
+              className={`p-2 rounded-lg transition-colors ${
+                estadoFilter === "pendiente" ?
+                  "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                : "text-yellow-400 dark:text-yellow-500/50 hover:bg-yellow-50 dark:hover:bg-yellow-500/10 hover:text-yellow-500 dark:hover:text-yellow-400"
+              }`}
+              title="Pendientes"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+
+            {/* Confirmada */}
+            <button
+              onClick={() => setEstadoFilter("confirmada")}
+              className={`p-2 rounded-lg transition-colors ${
+                estadoFilter === "confirmada" ?
+                  "bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400"
+                : "text-green-400 dark:text-green-500/50 hover:bg-green-50 dark:hover:bg-green-500/10 hover:text-green-500 dark:hover:text-green-400"
+              }`}
+              title="Confirmadas"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+
+            {/* Completada */}
+            <button
+              onClick={() => setEstadoFilter("completada")}
+              className={`p-2 rounded-lg transition-colors ${
+                estadoFilter === "completada" ?
+                  "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                : "text-blue-400 dark:text-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400"
+              }`}
+              title="Completadas"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </button>
+
+            {/* Cancelada */}
+            <button
+              onClick={() => setEstadoFilter("cancelada")}
+              className={`p-2 rounded-lg transition-colors ${
+                estadoFilter === "cancelada" ?
+                  "bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400"
+                : "text-red-400 dark:text-red-500/50 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400"
+              }`}
+              title="Canceladas"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Vista de Mes: Calendario */}
