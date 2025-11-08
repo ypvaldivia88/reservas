@@ -191,6 +191,15 @@ export default function ReservasTable({
     });
   };
 
+  // Obtener todas las reservas futuras filtradas (sin límite de paginación)
+  const todasReservasFiltradas = filterReservas(getProximosTurnos());
+
+  // Aplicar paginación a las reservas filtradas
+  const reservasFiltradaPaginadas = todasReservasFiltradas.slice(
+    0,
+    agendaLimit
+  );
+
   // Filtrar reservas según el modo de vista
   const getFilteredReservas = () => {
     if (viewMode === "month") {
@@ -203,23 +212,18 @@ export default function ReservasTable({
         : [];
       return filterReservas(reservasDelDia);
     } else {
-      // En vista agenda, mostrar según el límite actual
-      const reservasAgenda = getProximosTurnos(agendaLimit);
-      return filterReservas(reservasAgenda);
+      // En vista agenda, mostrar reservas filtradas y paginadas
+      return reservasFiltradaPaginadas;
     }
   };
 
   // Variables para la vista agenda
-  const todasReservasFuturas = filterReservas(getProximosTurnos()); // Todas las reservas futuras sin límite (con filtros)
-  const reservasMostradas = filterReservas(
-    getProximosTurnos(agendaLimit)
-  ).length;
-  const hayMasReservas = todasReservasFuturas.length > reservasMostradas; // ¿Hay más para mostrar?
+  const hayMasReservas = todasReservasFiltradas.length > agendaLimit; // ¿Hay más para mostrar?
 
   // Agrupar reservas para la vista agenda
   const reservasAgrupadas =
     viewMode === "agenda" ?
-      filterReservas(getProximosTurnos(agendaLimit)).reduce(
+      reservasFiltradaPaginadas.reduce(
         (acc, reserva) => {
           const fecha = reserva.fechaCita;
           if (!acc[fecha]) {
@@ -1242,7 +1246,7 @@ export default function ReservasTable({
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
-                Ver más ({todasReservasFuturas.length - reservasMostradas}{" "}
+                Ver más ({todasReservasFiltradas.length - agendaLimit}{" "}
                 restantes)
               </button>
             </div>
