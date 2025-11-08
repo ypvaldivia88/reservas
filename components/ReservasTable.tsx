@@ -68,6 +68,10 @@ export default function ReservasTable({
     return new Date(fechaProximoTurno + "T00:00:00");
   });
   const [agendaLimit, setAgendaLimit] = useState(4); // Límite inicial de 4 reservas
+  const [searchQuery, setSearchQuery] = useState("");
+  const [estadoFilter, setEstadoFilter] = useState<Reserva["estado"] | "todos">(
+    "todos"
+  );
 
   // Agrupar reservas por fecha
   const reservasPorFecha = reservas.reduce(
@@ -168,29 +172,54 @@ export default function ReservasTable({
     return days;
   };
 
+  // Función para filtrar reservas por búsqueda y estado
+  const filterReservas = (reservasToFilter: Reserva[]) => {
+    return reservasToFilter.filter((reserva) => {
+      // Filtro de búsqueda
+      const matchesSearch =
+        !searchQuery ||
+        reserva.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        reserva.telefono?.includes(searchQuery) ||
+        reserva.decoracion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        reserva.forma.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Filtro de estado
+      const matchesEstado =
+        estadoFilter === "todos" || reserva.estado === estadoFilter;
+
+      return matchesSearch && matchesEstado;
+    });
+  };
+
   // Filtrar reservas según el modo de vista
   const getFilteredReservas = () => {
     if (viewMode === "month") {
       // En vista mes, mostrar reservas del día seleccionado
-      return selectedDate && reservasPorFecha[selectedDate] ?
+      const reservasDelDia =
+        selectedDate && reservasPorFecha[selectedDate] ?
           reservasPorFecha[selectedDate].sort((a, b) =>
             a.horaCita.localeCompare(b.horaCita)
           )
         : [];
+      return filterReservas(reservasDelDia);
     } else {
       // En vista agenda, mostrar según el límite actual
-      return getProximosTurnos(agendaLimit);
+      const reservasAgenda = getProximosTurnos(agendaLimit);
+      return filterReservas(reservasAgenda);
     }
   };
 
   // Variables para la vista agenda
-  const todasReservasFuturas = getProximosTurnos(); // Todas las reservas futuras sin límite
-  const hayMasReservas = todasReservasFuturas.length > agendaLimit; // ¿Hay más para mostrar?
+  const todasReservasFuturas = filterReservas(getProximosTurnos()); // Todas las reservas futuras sin límite (con filtros)
+  const reservasMostradas = filterReservas(
+    getProximosTurnos(agendaLimit)
+  ).length;
+  const hayMasReservas = todasReservasFuturas.length > reservasMostradas; // ¿Hay más para mostrar?
 
   // Agrupar reservas para la vista agenda
   const reservasAgrupadas =
     viewMode === "agenda" ?
-      getProximosTurnos(agendaLimit).reduce(
+      filterReservas(getProximosTurnos(agendaLimit)).reduce(
         (acc, reserva) => {
           const fecha = reserva.fechaCita;
           if (!acc[fecha]) {
@@ -387,6 +416,87 @@ export default function ReservasTable({
         </div>
       </div>
 
+      {/* Buscador y Filtro de Estados */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Buscador */}
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg
+              className="h-5 w-5 text-gray-400 dark:text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar por nombre, teléfono o decoración..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg
+                className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Filtro de Estados */}
+        <div className="relative">
+          <select
+            value={estadoFilter}
+            onChange={(e) =>
+              setEstadoFilter(e.target.value as typeof estadoFilter)
+            }
+            className="w-full sm:w-auto pl-4 pr-10 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors appearance-none cursor-pointer"
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="completada">Completada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <svg
+              className="h-5 w-5 text-gray-400 dark:text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
       {/* Vista de Mes: Calendario */}
       {viewMode === "month" && (
         <div className="flex flex-col lg:flex-row gap-6">
@@ -521,11 +631,34 @@ export default function ReservasTable({
               </div>
             )}
 
-            {selectedDate && reservasPorFecha[selectedDate] && (
-              <div className="space-y-2">
-                {reservasPorFecha[selectedDate]
-                  .sort((a, b) => a.horaCita.localeCompare(b.horaCita))
-                  .map((reserva) => (
+            {selectedDate &&
+              reservasPorFecha[selectedDate] &&
+              getFilteredReservas().length === 0 && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <svg
+                    className="w-12 h-12 mx-auto mb-3 opacity-50"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <p className="text-sm">
+                    No se encontraron reservas con los filtros aplicados
+                  </p>
+                </div>
+              )}
+
+            {selectedDate &&
+              reservasPorFecha[selectedDate] &&
+              getFilteredReservas().length > 0 && (
+                <div className="space-y-2">
+                  {getFilteredReservas().map((reserva) => (
                     <div
                       key={reserva._id}
                       className="group bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
@@ -765,8 +898,8 @@ export default function ReservasTable({
                       </div>
                     </div>
                   ))}
-              </div>
-            )}
+                </div>
+              )}
           </div>
         </div>
       )}
@@ -774,24 +907,57 @@ export default function ReservasTable({
       {/* Vista Agenda */}
       {viewMode === "agenda" && (
         <div className="space-y-6">
-          {fechasOrdenadas.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <svg
-                className="w-12 h-12 mx-auto mb-3 opacity-50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p className="text-sm">No hay próximas reservas</p>
-            </div>
-          )}
+          {fechasOrdenadas.length === 0 &&
+            !searchQuery &&
+            estadoFilter === "todos" && (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <svg
+                  className="w-12 h-12 mx-auto mb-3 opacity-50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <p className="text-sm">No hay próximas reservas</p>
+              </div>
+            )}
+
+          {fechasOrdenadas.length === 0 &&
+            (searchQuery || estadoFilter !== "todos") && (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <svg
+                  className="w-12 h-12 mx-auto mb-3 opacity-50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <p className="text-sm">
+                  No se encontraron reservas con los filtros aplicados
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setEstadoFilter("todos");
+                  }}
+                  className="mt-3 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            )}
 
           {fechasOrdenadas.map((fecha) => {
             const reservasDelDia = reservasAgrupadas[fecha];
@@ -1076,7 +1242,8 @@ export default function ReservasTable({
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
-                Ver más ({todasReservasFuturas.length - agendaLimit} restantes)
+                Ver más ({todasReservasFuturas.length - reservasMostradas}{" "}
+                restantes)
               </button>
             </div>
           )}
