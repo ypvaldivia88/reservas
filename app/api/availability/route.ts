@@ -158,9 +158,16 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       const override = overridesMap.get(dateString);
 
       if (override) {
+        // Filtrar slots ya reservados
+        const bookedTimes = reservasMap.get(dateString) || new Set();
+        const slotsWithAvailability = override.slots.map((slot) => ({
+          time: slot.time,
+          available: slot.available && !bookedTimes.has(slot.time),
+        }));
+
         availability.push({
           date: dateString,
-          slots: override.slots,
+          slots: slotsWithAvailability,
           isWorkingDay: override.isWorkingDay,
         });
       } else {
