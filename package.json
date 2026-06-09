@@ -18,9 +18,9 @@
     "@vercel/blob": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "mongodb": "^6.19.0",
-    "next": "15.5.2",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "next": "^15.5.19",
+    "react": "^19.1.7",
+    "react-dom": "^19.1.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -29,7 +29,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^15.5.2",
+    "eslint-config-next": "^15.5.19",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
