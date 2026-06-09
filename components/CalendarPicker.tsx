@@ -6,11 +6,13 @@ interface AvailableSlot {
   date: string;
   slots: { time: string; available: boolean }[];
   isWorkingDay: boolean;
+  clientHasBooking?: boolean;
 }
 
 interface CalendarPickerProps {
   selectedDate: string;
   selectedTime: string;
+  telefono?: string;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string) => void;
 }
@@ -18,6 +20,7 @@ interface CalendarPickerProps {
 export default function CalendarPicker({
   selectedDate,
   selectedTime,
+  telefono,
   onDateSelect,
   onTimeSelect,
 }: CalendarPickerProps) {
@@ -35,8 +38,12 @@ export default function CalendarPicker({
       endDate.setMonth(endDate.getMonth() + 1);
       endDate.setDate(0);
 
+      const telefonoQuery =
+        telefono?.trim() ?
+          `&telefono=${encodeURIComponent(telefono.trim())}`
+        : "";
       const res = await fetch(
-        `/api/availability?startDate=${dateUtils.formatToYYYYMMDD(startDate)}&endDate=${dateUtils.formatToYYYYMMDD(endDate)}`
+        `/api/availability?startDate=${dateUtils.formatToYYYYMMDD(startDate)}&endDate=${dateUtils.formatToYYYYMMDD(endDate)}${telefonoQuery}`
       );
 
       if (res.ok) {
@@ -50,7 +57,7 @@ export default function CalendarPicker({
     } finally {
       setLoading(false);
     }
-  }, [currentMonth]);
+  }, [currentMonth, telefono]);
 
   useEffect(() => {
     loadAvailability();
@@ -257,7 +264,9 @@ export default function CalendarPicker({
                 ))}
             </div>
           : <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay horarios disponibles para esta fecha
+              {selectedDateAvailability.clientHasBooking ?
+                "Ya tienes una cita activa este día. Cancela la existente o elige otro día."
+              : "No hay horarios disponibles para esta fecha"}
             </p>
           }
         </div>
