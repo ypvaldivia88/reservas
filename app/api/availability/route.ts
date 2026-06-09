@@ -1,65 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { AvailabilityOverride, Schedule, Reserva, ApiResponse, TimeSlot, DayOfWeek } from "@/lib/types";
-import { Db } from "mongodb";
-import { dateUtils, scheduleUtils } from "@/lib/utils";
+import { AvailabilityOverride, Schedule, Reserva, ApiResponse, DayOfWeek } from "@/lib/types";
+import { dateUtils, scheduleUtils, phoneUtils } from "@/lib/utils";
+import { ACTIVE_RESERVATION_STATES } from "@/lib/reservaValidation";
 
 // Función helper para obtener el día de la semana de una fecha
 function getDayOfWeek(dateString: string): DayOfWeek {
   const date = dateUtils.parseDate(dateString);
   const days: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   return days[date.getDay()];
-}
-
-// Función para calcular disponibilidad de una fecha específica
-async function getDateAvailability(
-  db: Db,
-  dateString: string,
-  schedule: Schedule
-): Promise<{ date: string; slots: TimeSlot[]; isWorkingDay: boolean }> {
-  // Primero, verificar si hay un override para esta fecha
-  const override = await db.collection("availability_overrides").findOne({ date: dateString }) as AvailabilityOverride | null;
-  
-  if (override) {
-    return {
-      date: dateString,
-      slots: override.slots,
-      isWorkingDay: override.isWorkingDay
-    };
-  }
-
-  // Si no hay override, usar el horario por defecto basado en el día de la semana
-  const dayOfWeek = getDayOfWeek(dateString);
-  const daySchedule = schedule.schedule.find(s => s.dayOfWeek === dayOfWeek);
-
-  if (!daySchedule || !daySchedule.isWorkingDay) {
-    return {
-      date: dateString,
-      slots: [],
-      isWorkingDay: false
-    };
-  }
-
-  // Obtener reservas existentes para esta fecha
-  const reservas = (await db.collection("reservas").find({
-    fechaCita: dateString,
-    estado: { $in: ['pendiente', 'confirmada'] }
-  }).toArray()) as unknown as Reserva[];
-
-  // Marcar slots como no disponibles si ya tienen reserva
-  const slotsWithAvailability = daySchedule.slots.map(slot => {
-    const isBooked = reservas.some((r: Reserva) => r.horaCita === slot.time);
-    return {
-      time: slot.time,
-      available: slot.available && !isBooked
-    };
-  });
-
-  return {
-    date: dateString,
-    slots: slotsWithAvailability,
-    isWorkingDay: true
-  };
 }
 
 // GET: Obtiene disponibilidad para un rango de fechas
@@ -69,6 +18,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     const startDateParam = searchParams.get("startDate");
     const endDateParam = searchParams.get("endDate");
     const daysParam = searchParams.get("days") || "30"; // Por defecto 30 días
+    const telefonoParam = searchParams.get("telefono");
 
     const client = await clientPromise;
     const db = client.db("nailsalon");
@@ -134,7 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       .collection("reservas")
       .find({
         fechaCita: { $gte: startDateStr, $lte: endDateStr },
-        estado: { $in: ["pendiente", "confirmada"] },
+        estado: { $in: ACTIVE_RESERVATION_STATES },
       })
       .toArray()) as unknown as Reserva[];
 
@@ -147,6 +97,19 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       reservasMap.get(reserva.fechaCita)!.add(reserva.horaCita);
     });
 
+    // Fechas donde el cliente ya tiene una cita activa (máx. 1 por día)
+    const clientBookedDates = new Set<string>();
+    if (telefonoParam) {
+      try {
+        const telefonoNormalizado = phoneUtils.normalize(telefonoParam);
+        reservas
+          .filter((r) => r.telefono === telefonoNormalizado)
+          .forEach((r) => clientBookedDates.add(r.fechaCita));
+      } catch {
+        // Teléfono inválido: ignorar filtro de cliente
+      }
+    }
+
     // Generar disponibilidad procesando en memoria (sin consultas adicionales)
     const availability = [];
     const currentDate = new Date(startDate);
@@ -157,18 +120,24 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       // Verificar si hay override
       const override = overridesMap.get(dateString);
 
+      const clientHasBooking = clientBookedDates.has(dateString);
+
       if (override) {
         // Filtrar slots ya reservados
         const bookedTimes = reservasMap.get(dateString) || new Set();
         const slotsWithAvailability = override.slots.map((slot) => ({
           time: slot.time,
-          available: slot.available && !bookedTimes.has(slot.time),
+          available:
+            slot.available &&
+            !bookedTimes.has(slot.time) &&
+            !clientHasBooking,
         }));
 
         availability.push({
           date: dateString,
           slots: slotsWithAvailability,
           isWorkingDay: override.isWorkingDay,
+          clientHasBooking,
         });
       } else {
         // Usar horario por defecto basado en el día de la semana
@@ -182,6 +151,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
             date: dateString,
             slots: [],
             isWorkingDay: false,
+            clientHasBooking,
           });
         } else {
           // Obtener reservas de esta fecha (desde el mapa)
@@ -190,13 +160,17 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
           // Marcar slots como no disponibles si ya tienen reserva
           const slotsWithAvailability = daySchedule.slots.map((slot) => ({
             time: slot.time,
-            available: slot.available && !bookedTimes.has(slot.time),
+            available:
+              slot.available &&
+              !bookedTimes.has(slot.time) &&
+              !clientHasBooking,
           }));
 
           availability.push({
             date: dateString,
             slots: slotsWithAvailability,
             isWorkingDay: true,
+            clientHasBooking,
           });
         }
       }

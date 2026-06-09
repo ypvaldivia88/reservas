@@ -312,6 +312,16 @@ export default function ReservaForm() {
               isValid = false;
             }
           });
+          if (
+            form.fechaCita &&
+            clientInfo?.reservasActivas.some(
+              (r) => r.fechaCita === form.fechaCita
+            )
+          ) {
+            newErrors.fechaCita =
+              "Ya tienes una cita activa ese día. Cancela la existente o elige otro día.";
+            isValid = false;
+          }
           break;
         case 3: // Forma de Uñas
           const formaError = validateField("forma", form.forma);
@@ -335,7 +345,7 @@ export default function ReservaForm() {
       setErrors(newErrors);
       return isValid;
     },
-    [form, validateField]
+    [form, validateField, clientInfo]
   );
 
   const handleNext = useCallback(() => {
@@ -1087,6 +1097,7 @@ export default function ReservaForm() {
               <CalendarPicker
                 selectedDate={form.fechaCita}
                 selectedTime={form.horaCita}
+                telefono={form.telefono}
                 onDateSelect={(date) => {
                   setForm((prev) => ({ ...prev, fechaCita: date }));
                   setErrors((prev) => ({ ...prev, fechaCita: undefined }));
@@ -1669,6 +1680,9 @@ export default function ReservaForm() {
                       </li>
                       <li>
                         • Duración aproximada: 60-90 minutos según el servicio
+                      </li>
+                      <li>
+                        • Solo puedes tener una cita activa por día
                       </li>
                       <li>
                         • Puedes reagendar o cancelar con 24 horas de

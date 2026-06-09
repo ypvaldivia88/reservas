@@ -1,7 +1,7 @@
 /**
  * Script para crear índices en MongoDB que optimizan las consultas
  * de disponibilidad y reservas
- * 
+ *
  * Ejecutar con: npx tsx scripts/create-indexes.ts
  */
 
@@ -15,35 +15,61 @@ async function createIndexes() {
 
     console.log("📊 Creando índices...\n");
 
-    // Índice para availability_overrides por fecha
     await db.collection("availability_overrides").createIndex(
       { date: 1 },
       { name: "idx_date" }
     );
     console.log("✅ Índice creado: availability_overrides.date");
 
-    // Índice compuesto para reservas por fecha y estado
     await db.collection("reservas").createIndex(
       { fechaCita: 1, estado: 1 },
       { name: "idx_fecha_estado" }
     );
     console.log("✅ Índice creado: reservas.fechaCita + estado");
 
-    // Índice adicional para búsquedas por teléfono
-    await db.collection("clientes").createIndex(
-      { telefono: 1 },
-      { name: "idx_telefono", unique: true }
+    await db.collection("reservas").createIndex(
+      { fechaCita: 1, horaCita: 1 },
+      {
+        name: "uniq_active_slot",
+        unique: true,
+        partialFilterExpression: {
+          estado: { $in: ["pendiente", "confirmada"] },
+        },
+      }
     );
-    console.log("✅ Índice creado: clientes.telefono (único)");
+    console.log("✅ Índice creado: reservas.fechaCita + horaCita (único activo)");
 
-    // Índice para categorías activas
+    await db.collection("reservas").createIndex(
+      { telefono: 1, fechaCita: 1 },
+      {
+        name: "uniq_active_client_day_by_phone",
+        unique: true,
+        partialFilterExpression: {
+          estado: { $in: ["pendiente", "confirmada"] },
+        },
+      }
+    );
+    console.log("✅ Índice creado: reservas.telefono + fechaCita (único activo/día)");
+
+    await db.collection("users").createIndex(
+      { telefono: 1, role: 1 },
+      {
+        name: "idx_users_telefono_role",
+        unique: true,
+        partialFilterExpression: {
+          role: "cliente",
+          telefono: { $exists: true },
+        },
+      }
+    );
+    console.log("✅ Índice creado: users.telefono + role (único para clientes)");
+
     await db.collection("categorias").createIndex(
       { activo: 1, orden: 1 },
       { name: "idx_activo_orden" }
     );
     console.log("✅ Índice creado: categorias.activo + orden");
 
-    // Índice para imágenes por categoría y activo
     await db.collection("imagenes").createIndex(
       { categoriaId: 1, activo: 1 },
       { name: "idx_categoria_activo" }
@@ -51,11 +77,6 @@ async function createIndexes() {
     console.log("✅ Índice creado: imagenes.categoriaId + activo");
 
     console.log("\n✨ Todos los índices creados exitosamente!");
-    console.log("\n📈 Beneficios:");
-    console.log("   • Consultas de disponibilidad ~10x más rápidas");
-    console.log("   • Búsqueda de reservas por fecha optimizada");
-    console.log("   • Validación de teléfono duplicado instantánea");
-    console.log("   • Galería de imágenes carga más rápido");
 
     process.exit(0);
   } catch (error) {

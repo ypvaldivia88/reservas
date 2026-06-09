@@ -1,67 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { Reserva, ApiResponse, FORMAS_UNAS, User } from "@/lib/types";
-import { dateUtils, phoneUtils } from "@/lib/utils";
-
-// Función de validación
-function validarReserva(data: any): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  if (
-    !data.nombre ||
-    typeof data.nombre !== "string" ||
-    data.nombre.trim().length < 2
-  ) {
-    errors.push("El nombre es requerido y debe tener al menos 2 caracteres");
-  }
-
-  if (
-    !data.telefono ||
-    typeof data.telefono !== "string" ||
-    !phoneUtils.isValid(data.telefono)
-  ) {
-    errors.push("El teléfono debe ser un número cubano válido de 8 dígitos");
-  }
-
-  if (!data.forma || !FORMAS_UNAS.includes(data.forma)) {
-    errors.push("La forma debe ser una opción válida");
-  }
-
-  const largo = Number(data.largo);
-  if (!largo || largo < 1 || largo > 8) {
-    errors.push("El largo debe ser un número entre 1 y 8");
-  }
-
-  // Validar fecha de cita
-  if (!data.fechaCita || typeof data.fechaCita !== "string") {
-    errors.push("La fecha de cita es requerida");
-  } else if (!dateUtils.isFutureDate(data.fechaCita)) {
-    errors.push("La fecha de cita no puede ser en el pasado");
-  }
-
-  // Validar hora de cita
-  if (
-    !data.horaCita ||
-    typeof data.horaCita !== "string" ||
-    !dateUtils.isValidTimeFormat(data.horaCita)
-  ) {
-    errors.push("La hora de cita es requerida y debe tener formato HH:mm");
-  }
-
-  return { isValid: errors.length === 0, errors };
-}
+import { Reserva, ApiResponse, User } from "@/lib/types";
+import { phoneUtils } from "@/lib/utils";
+import {
+  validateReservaInput,
+  findActiveSlotConflict,
+  findClientDayConflict,
+  clientDayConflictMessage,
+  isMongoDuplicateKeyError,
+} from "@/lib/reservaValidation";
 
 // GET: Obtiene todas las reservas
 export async function GET(): Promise<NextResponse<ApiResponse<Reserva[]>>> {
   try {
-    console.log("🔍 Iniciando GET /api/reservas");
-    console.log("📁 MONGODB_URI configurado:", !!process.env.MONGODB_URI);
-
     const client = await clientPromise;
-    console.log("✅ Cliente MongoDB conectado");
-
     const db = client.db("nailsalon");
-    console.log("📊 Base de datos seleccionada: nailsalon");
 
     const reservas = await db
       .collection<Reserva>("reservas")
@@ -69,19 +22,13 @@ export async function GET(): Promise<NextResponse<ApiResponse<Reserva[]>>> {
       .sort({ fechaCreacion: -1 })
       .toArray();
 
-    console.log(`📋 ${reservas.length} reservas encontradas`);
-
     return NextResponse.json({
       success: true,
       data: reservas,
       message: "Reservas obtenidas exitosamente",
     });
   } catch (error) {
-    console.error("❌ Error en GET /api/reservas:", error);
-    console.error(
-      "📍 Stack trace:",
-      error instanceof Error ? error.stack : "No stack trace"
-    );
+    console.error("Error en GET /api/reservas:", error);
 
     return NextResponse.json(
       {
@@ -101,8 +48,7 @@ export async function POST(
   try {
     const data = await request.json();
 
-    // Validar datos de entrada
-    const validacion = validarReserva(data);
+    const validacion = validateReservaInput(data);
     if (!validacion.isValid) {
       return NextResponse.json(
         {
@@ -117,14 +63,12 @@ export async function POST(
     const client = await clientPromise;
     const db = client.db("nailsalon");
 
-    // Validar que la fecha/hora esté disponible
-    const existingReserva = await db.collection<Reserva>("reservas").findOne({
-      fechaCita: data.fechaCita,
-      horaCita: data.horaCita,
-      estado: { $in: ["pendiente", "confirmada"] },
-    });
-
-    if (existingReserva) {
+    const slotConflict = await findActiveSlotConflict(
+      db,
+      data.fechaCita,
+      data.horaCita
+    );
+    if (slotConflict) {
       return NextResponse.json(
         {
           success: false,
@@ -136,12 +80,10 @@ export async function POST(
       );
     }
 
-    // Normalizar teléfono para búsqueda consistente y evitar duplicados
     let telefonoNormalizado: string;
     try {
       telefonoNormalizado = phoneUtils.normalize(data.telefono);
-    } catch (normalizeError) {
-      console.error("Error normalizing phone:", normalizeError);
+    } catch {
       return NextResponse.json(
         {
           success: false,
@@ -154,14 +96,12 @@ export async function POST(
 
     const nombreNormalizado = data.nombre.trim();
 
-    // Buscar cliente existente por teléfono normalizado
     let cliente = await db.collection<User>("users").findOne({
       telefono: telefonoNormalizado,
       role: "cliente",
     });
 
     if (cliente) {
-      // Si el teléfono existe pero el nombre es diferente, verificar para evitar duplicados
       if (cliente.nombre !== nombreNormalizado) {
         return NextResponse.json(
           {
@@ -173,7 +113,6 @@ export async function POST(
         );
       }
     } else {
-      // Registrar nuevo cliente si el teléfono no existe
       const nuevoCliente: Omit<User, "_id"> = {
         nombre: nombreNormalizado,
         telefono: telefonoNormalizado,
@@ -185,12 +124,27 @@ export async function POST(
         .collection<User>("users")
         .insertOne(nuevoCliente);
       cliente = { ...nuevoCliente, _id: resultCliente.insertedId.toString() };
-      console.log("✨ Nuevo cliente registrado:", nombreNormalizado);
     }
 
-    // Preparar datos para inserción de reserva
+    const clienteId = cliente?._id?.toString();
+
+    const dayConflict = await findClientDayConflict(db, data.fechaCita, {
+      clienteId,
+      telefono: telefonoNormalizado,
+    });
+    if (dayConflict) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cita duplicada en el mismo día",
+          message: clientDayConflictMessage(dayConflict.horaCita),
+        },
+        { status: 400 }
+      );
+    }
+
     const nuevaReserva: Omit<Reserva, "_id"> = {
-      clienteId: cliente?._id?.toString(),
+      clienteId,
       nombre: nombreNormalizado,
       telefono: telefonoNormalizado,
       forma: data.forma,
@@ -216,19 +170,24 @@ export async function POST(
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
+        { success: false, error: "Formato JSON inválido" },
+        { status: 400 }
+      );
+    }
+
+    if (isMongoDuplicateKeyError(error)) {
+      return NextResponse.json(
         {
           success: false,
-          error: "Formato JSON inválido",
+          error: "Cita duplicada",
+          message: clientDayConflictMessage(),
         },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      {
-        success: false,
-        error: "Error interno del servidor",
-      },
+      { success: false, error: "Error interno del servidor" },
       { status: 500 }
     );
   }
