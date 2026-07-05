@@ -1,163 +1,101 @@
-import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import { platformHandler } from "@/lib/api/handlers";
+import { ok } from "@/lib/api/responses";
+import { getDb } from "@/lib/mongodb";
+import { Collections } from "@/lib/db/collections";
 import { ObjectId } from "mongodb";
-import { ApiResponse, PaymentRequest } from "@/lib/types";
-import { requirePlatformAdmin } from "@/lib/session";
+import { PaymentRequest } from "@/lib/types";
 import { getSubscriptionPeriodEnd } from "@/lib/subscription";
+import { AppError } from "@/lib/api/errors";
 
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<ApiResponse<PaymentRequest[]>>> {
-  try {
-    const auth = await requirePlatformAdmin(request);
-    if ("error" in auth) {
-      return NextResponse.json(
-        { success: false, error: auth.error },
-        { status: auth.status }
-      );
-    }
+export const GET = platformHandler(async ({ request }) => {
+  const status = (request.nextUrl.searchParams.get("status") ||
+    "pending") as PaymentRequest["status"];
 
-    const status = (request.nextUrl.searchParams.get("status") ||
-      "pending") as PaymentRequest["status"];
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
+  const db = await getDb();
+  const payments = await db
+    .collection<PaymentRequest>(Collections.PAYMENT_REQUESTS)
+    .find({ status })
+    .sort({ fechaCreacion: -1 })
+    .toArray();
 
-    const payments = await db
-      .collection<PaymentRequest>("payment_requests")
-      .find({ status })
-      .sort({ fechaCreacion: -1 })
-      .toArray();
+  const enriched = await Promise.all(
+    payments.map(async (p) => {
+      const salon = await db
+        .collection(Collections.SALONS)
+        .findOne({ salonId: p.salonId });
+      const plan = await db
+        .collection(Collections.SUBSCRIPTION_PLANS)
+        .findOne({ _id: new ObjectId(p.planId) });
+      return {
+        ...p,
+        _id: p._id?.toString(),
+        salonNombre: salon?.nombre,
+        planNombre: plan?.nombre,
+      };
+    })
+  );
 
-    const enriched = await Promise.all(
-      payments.map(async (p) => {
-        const salon = await db
-          .collection("salons")
-          .findOne({ salonId: p.salonId });
-        const plan = await db
-          .collection("subscription_plans")
-          .findOne({ _id: new ObjectId(p.planId) });
-        return {
-          ...p,
-          _id: p._id?.toString(),
-          salonNombre: salon?.nombre,
-          planNombre: plan?.nombre,
-        };
-      })
-    );
+  return ok(enriched);
+});
 
-    return NextResponse.json({ success: true, data: enriched });
-  } catch (error) {
-    console.error("Error en GET /api/platform/payments:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    );
+export const PATCH = platformHandler(async ({ request }) => {
+  const { paymentId, action, notas } = await request.json();
+  if (!paymentId || !["approve", "reject"].includes(action)) {
+    throw new AppError("paymentId y action (approve/reject) requeridos", 400);
   }
-}
 
-export async function PATCH(
-  request: NextRequest
-): Promise<NextResponse<ApiResponse>> {
-  try {
-    const auth = await requirePlatformAdmin(request);
-    if ("error" in auth) {
-      return NextResponse.json(
-        { success: false, error: auth.error },
-        { status: auth.status }
-      );
-    }
+  const db = await getDb();
+  const payment = (await db
+    .collection(Collections.PAYMENT_REQUESTS)
+    .findOne({ _id: new ObjectId(paymentId) })) as PaymentRequest | null;
 
-    const { paymentId, action, notas } = await request.json();
-    if (!paymentId || !["approve", "reject"].includes(action)) {
-      return NextResponse.json(
-        { success: false, error: "paymentId y action (approve/reject) requeridos" },
-        { status: 400 }
-      );
-    }
-
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    const payment = (await db
-      .collection("payment_requests")
-      .findOne({ _id: new ObjectId(paymentId) })) as PaymentRequest | null;
-
-    if (!payment) {
-      return NextResponse.json(
-        { success: false, error: "Pago no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    if (payment.status !== "pending") {
-      return NextResponse.json(
-        { success: false, error: "Este pago ya fue procesado" },
-        { status: 400 }
-      );
-    }
-
-    const newStatus = action === "approve" ? "approved" : "rejected";
-
-    await db.collection("payment_requests").updateOne(
-      { _id: new ObjectId(paymentId) },
-      {
-        $set: {
-          status: newStatus,
-          notas,
-          fechaResolucion: new Date(),
-        },
-      }
-    );
-
-    if (action === "approve") {
-      const now = new Date();
-      const periodoFin = getSubscriptionPeriodEnd(payment.ciclo, now);
-
-      const existingSub = await db
-        .collection("tenant_subscriptions")
-        .findOne({ salonId: payment.salonId });
-
-      if (existingSub) {
-        await db.collection("tenant_subscriptions").updateOne(
-          { _id: existingSub._id },
-          {
-            $set: {
-              planId: payment.planId,
-              ciclo: payment.ciclo,
-              status: "active",
-              descuentoAplicado: payment.descuentoPorcentaje,
-              periodoInicio: now,
-              periodoFin,
-              fechaActualizacion: now,
-            },
-          }
-        );
-      } else {
-        await db.collection("tenant_subscriptions").insertOne({
-          salonId: payment.salonId,
-          planId: payment.planId,
-          ciclo: payment.ciclo,
-          status: "active",
-          descuentoAplicado: payment.descuentoPorcentaje,
-          periodoInicio: now,
-          periodoFin,
-          fechaCreacion: now,
-        });
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      message:
-        action === "approve"
-          ? "Pago aprobado y suscripción activada"
-          : "Pago rechazado",
-    });
-  } catch (error) {
-    console.error("Error en PATCH /api/platform/payments:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    );
+  if (!payment) throw AppError.notFound("Pago no encontrado");
+  if (payment.status !== "pending") {
+    throw new AppError("Este pago ya fue procesado", 400);
   }
-}
+
+  const newStatus = action === "approve" ? "approved" : "rejected";
+
+  await db.collection(Collections.PAYMENT_REQUESTS).updateOne(
+    { _id: new ObjectId(paymentId) },
+    { $set: { status: newStatus, notas, fechaResolucion: new Date() } }
+  );
+
+  if (action === "approve") {
+    const now = new Date();
+    const periodoFin = getSubscriptionPeriodEnd(payment.ciclo, now);
+
+    const existingSub = await db
+      .collection(Collections.TENANT_SUBSCRIPTIONS)
+      .findOne({ salonId: payment.salonId });
+
+    const subData = {
+      planId: payment.planId,
+      ciclo: payment.ciclo,
+      status: "active" as const,
+      descuentoAplicado: payment.descuentoPorcentaje,
+      periodoInicio: now,
+      periodoFin,
+      fechaActualizacion: now,
+    };
+
+    if (existingSub) {
+      await db
+        .collection(Collections.TENANT_SUBSCRIPTIONS)
+        .updateOne({ _id: existingSub._id }, { $set: subData });
+    } else {
+      await db.collection(Collections.TENANT_SUBSCRIPTIONS).insertOne({
+        salonId: payment.salonId,
+        ...subData,
+        fechaCreacion: now,
+      });
+    }
+  }
+
+  return ok(undefined, {
+    message:
+      action === "approve"
+        ? "Pago aprobado y suscripción activada"
+        : "Pago rechazado",
+  });
+});

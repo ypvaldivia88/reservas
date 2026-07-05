@@ -1,73 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
-import { ApiResponse } from "@/lib/types";
-import { requireAdmin } from "@/lib/session";
-import { DEFAULT_SALON_ID } from "@/lib/tenant";
+import { adminHandler } from "@/lib/api/handlers";
+import { ok } from "@/lib/api/responses";
+import { getDb } from "@/lib/mongodb";
+import { Collections } from "@/lib/db/collections";
 import { tenantQuery } from "@/lib/tenant";
+import { ObjectId } from "mongodb";
+import { AppError } from "@/lib/api/errors";
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse>> {
-  try {
-    const auth = await requireAdmin(request);
-    if ("error" in auth) {
-      return NextResponse.json(
-        { success: false, error: auth.error },
-        { status: auth.status }
-      );
-    }
+export const DELETE = adminHandler(async ({ salonId, params }) => {
+  const { id } = params;
+  if (!ObjectId.isValid(id)) throw new AppError("ID inválido", 400);
 
-    const { id } = await params;
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: "ID inválido" },
-        { status: 400 }
-      );
-    }
+  const db = await getDb();
+  const tx = await db.collection(Collections.FINANCIAL_TRANSACTIONS).findOne({
+    _id: new ObjectId(id),
+    ...tenantQuery(salonId),
+  });
 
-    const effectiveSalonId = auth.session.salonId || DEFAULT_SALON_ID;
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
+  if (!tx) throw AppError.notFound("Transacción no encontrada");
 
-    const tx = await db.collection("financial_transactions").findOne({
-      _id: new ObjectId(id),
-      ...tenantQuery(effectiveSalonId),
-    });
-
-    if (!tx) {
-      return NextResponse.json(
-        { success: false, error: "Transacción no encontrada" },
-        { status: 404 }
-      );
-    }
-
-    // Solo permitir eliminar transacciones manuales (proteger ingresos de reservas)
-    if (tx.fuente === "reserva") {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Los ingresos de reservas no se pueden eliminar. Edita el costo de la reserva.",
-        },
-        { status: 400 }
-      );
-    }
-
-    await db
-      .collection("financial_transactions")
-      .deleteOne({ _id: new ObjectId(id) });
-
-    return NextResponse.json({
-      success: true,
-      message: "Transacción eliminada",
-    });
-  } catch (error) {
-    console.error("Error en DELETE /api/finanzas/transactions:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
+  if (tx.fuente === "reserva") {
+    throw new AppError(
+      "Los ingresos de reservas no se pueden eliminar. Edita el costo de la reserva.",
+      400
     );
   }
-}
+
+  await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .deleteOne({ _id: new ObjectId(id) });
+
+  return ok(undefined, { message: "Transacción eliminada" });
+});

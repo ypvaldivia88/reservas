@@ -1,157 +1,98 @@
-import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import { adminHandler } from "@/lib/api/handlers";
+import { ok, created } from "@/lib/api/responses";
+import { getDb } from "@/lib/mongodb";
+import { Collections } from "@/lib/db/collections";
+import { tenantQuery } from "@/lib/tenant";
 import { ObjectId } from "mongodb";
 import {
-  ApiResponse,
   SubscriptionPlan,
   TenantSubscription,
   PaymentRequest,
 } from "@/lib/types";
-import { requireAdmin } from "@/lib/session";
-import { getTenantFromRequest, DEFAULT_SALON_ID } from "@/lib/tenant";
-import { tenantQuery } from "@/lib/tenant";
 import {
   calculatePlanPrice,
   generatePaymentReference,
   isSubscriptionActive,
 } from "@/lib/subscription";
+import { AppError } from "@/lib/api/errors";
 
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<ApiResponse>> {
-  try {
-    const auth = await requireAdmin(request);
-    if ("error" in auth) {
-      return NextResponse.json(
-        { success: false, error: auth.error },
-        { status: auth.status }
-      );
-    }
+export const GET = adminHandler(async ({ salonId }) => {
+  const db = await getDb();
 
-    const { salonId } = await getTenantFromRequest(request);
-    const effectiveSalonId = auth.session.salonId || salonId || DEFAULT_SALON_ID;
+  const subscription = (await db
+    .collection<TenantSubscription>(Collections.TENANT_SUBSCRIPTIONS)
+    .findOne(
+      { ...tenantQuery(salonId) },
+      { sort: { fechaCreacion: -1 } }
+    )) as TenantSubscription | null;
 
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    const subscription = (await db
-      .collection<TenantSubscription>("tenant_subscriptions")
-      .findOne(
-        { ...tenantQuery(effectiveSalonId) },
-        { sort: { fechaCreacion: -1 } }
-      )) as TenantSubscription | null;
-
-    let plan: SubscriptionPlan | null = null;
-    if (subscription?.planId) {
-      plan = (await db
-        .collection("subscription_plans")
-        .findOne({
-          _id: new ObjectId(subscription.planId),
-        })) as SubscriptionPlan | null;
-    }
-
-    const pendingPayment = (await db
-      .collection<PaymentRequest>("payment_requests")
-      .findOne({
-        ...tenantQuery(effectiveSalonId),
-        status: "pending",
-      })) as PaymentRequest | null;
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        subscription,
-        plan,
-        isActive: isSubscriptionActive(subscription),
-        pendingPayment,
-      },
-    });
-  } catch (error) {
-    console.error("Error en GET /api/subscriptions:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    );
+  let plan: SubscriptionPlan | null = null;
+  if (subscription?.planId) {
+    plan = (await db
+      .collection(Collections.SUBSCRIPTION_PLANS)
+      .findOne({ _id: new ObjectId(subscription.planId) })) as SubscriptionPlan | null;
   }
-}
 
-export async function POST(
-  request: NextRequest
-): Promise<NextResponse<ApiResponse>> {
-  try {
-    const auth = await requireAdmin(request);
-    if ("error" in auth) {
-      return NextResponse.json(
-        { success: false, error: auth.error },
-        { status: auth.status }
-      );
-    }
-
-    const { planId, ciclo } = await request.json();
-    if (!planId || !["monthly", "yearly"].includes(ciclo)) {
-      return NextResponse.json(
-        { success: false, error: "planId y ciclo son requeridos" },
-        { status: 400 }
-      );
-    }
-
-    const { salonId } = await getTenantFromRequest(request);
-    const effectiveSalonId = auth.session.salonId || salonId || DEFAULT_SALON_ID;
-
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    const plan = (await db
-      .collection("subscription_plans")
-      .findOne({ _id: new ObjectId(planId), activo: true })) as SubscriptionPlan | null;
-
-    if (!plan) {
-      return NextResponse.json(
-        { success: false, error: "Plan no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    const pricing = calculatePlanPrice(plan, ciclo);
-    const codigoReferencia = generatePaymentReference();
-
-    const paymentRequest: Omit<PaymentRequest, "_id"> = {
-      salonId: effectiveSalonId,
-      planId,
-      ciclo,
-      montoOriginal: pricing.montoOriginal,
-      descuentoPorcentaje: pricing.descuentoTotal,
-      montoFinal: pricing.montoFinal,
-      codigoReferencia,
+  const pendingPayment = (await db
+    .collection<PaymentRequest>(Collections.PAYMENT_REQUESTS)
+    .findOne({
+      ...tenantQuery(salonId),
       status: "pending",
-      fechaCreacion: new Date(),
-    };
+    })) as PaymentRequest | null;
 
-    const result = await db
-      .collection("payment_requests")
-      .insertOne(paymentRequest);
+  return ok({
+    subscription,
+    plan,
+    isActive: isSubscriptionActive(subscription),
+    pendingPayment,
+  });
+});
 
-    const salon = await db
-      .collection("salons")
-      .findOne({ salonId: effectiveSalonId });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        paymentRequest: {
-          ...paymentRequest,
-          _id: result.insertedId.toString(),
-        },
-        salonNombre: salon?.nombre ?? "Mi Salón",
-        planNombre: plan.nombre,
-      },
-      message: "Solicitud de pago creada. Envía el comprobante por WhatsApp.",
-    });
-  } catch (error) {
-    console.error("Error en POST /api/subscriptions:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    );
+export const POST = adminHandler(async ({ salonId, request }) => {
+  const { planId, ciclo } = await request.json();
+  if (!planId || !["monthly", "yearly"].includes(ciclo)) {
+    throw new AppError("planId y ciclo son requeridos", 400);
   }
-}
+
+  const db = await getDb();
+  const plan = (await db
+    .collection(Collections.SUBSCRIPTION_PLANS)
+    .findOne({ _id: new ObjectId(planId), activo: true })) as SubscriptionPlan | null;
+
+  if (!plan) throw AppError.notFound("Plan no encontrado");
+
+  const pricing = calculatePlanPrice(plan, ciclo);
+  const codigoReferencia = generatePaymentReference();
+
+  const paymentRequest: Omit<PaymentRequest, "_id"> = {
+    salonId,
+    planId,
+    ciclo,
+    montoOriginal: pricing.montoOriginal,
+    descuentoPorcentaje: pricing.descuentoTotal,
+    montoFinal: pricing.montoFinal,
+    codigoReferencia,
+    status: "pending",
+    fechaCreacion: new Date(),
+  };
+
+  const result = await db
+    .collection(Collections.PAYMENT_REQUESTS)
+    .insertOne(paymentRequest);
+
+  const salon = await db
+    .collection(Collections.SALONS)
+    .findOne({ salonId });
+
+  return created(
+    {
+      paymentRequest: {
+        ...paymentRequest,
+        _id: result.insertedId.toString(),
+      },
+      salonNombre: salon?.nombre ?? "Mi Salón",
+      planNombre: plan.nombre,
+    },
+    "Solicitud de pago creada. Envía el comprobante por WhatsApp."
+  );
+});

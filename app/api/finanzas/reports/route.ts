@@ -1,50 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
-import { ApiResponse, FinancialReport } from "@/lib/types";
-import { requireAdmin } from "@/lib/session";
-import { getTenantFromRequest, DEFAULT_SALON_ID } from "@/lib/tenant";
+import { adminHandler } from "@/lib/api/handlers";
+import { ok } from "@/lib/api/responses";
+import { getDb } from "@/lib/mongodb";
 import { generateFinancialReport } from "@/lib/finances";
+import { FinancialReport } from "@/lib/types";
 
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<ApiResponse<FinancialReport>>> {
-  try {
-    const auth = await requireAdmin(request);
-    if ("error" in auth) {
-      return NextResponse.json(
-        { success: false, error: auth.error },
-        { status: auth.status }
-      );
-    }
+export const GET = adminHandler(async ({ salonId, request }) => {
+  const desde =
+    request.nextUrl.searchParams.get("desde") ||
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0];
+  const hasta =
+    request.nextUrl.searchParams.get("hasta") ||
+    new Date().toISOString().split("T")[0];
 
-    const { salonId } = await getTenantFromRequest(request);
-    const effectiveSalonId = auth.session.salonId || salonId || DEFAULT_SALON_ID;
+  const db = await getDb();
+  const report: FinancialReport = await generateFinancialReport(
+    db,
+    salonId,
+    desde,
+    hasta
+  );
 
-    const desde =
-      request.nextUrl.searchParams.get("desde") ||
-      new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        .toISOString()
-        .split("T")[0];
-    const hasta =
-      request.nextUrl.searchParams.get("hasta") ||
-      new Date().toISOString().split("T")[0];
-
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    const report = await generateFinancialReport(
-      db,
-      effectiveSalonId,
-      desde,
-      hasta
-    );
-
-    return NextResponse.json({ success: true, data: report });
-  } catch (error) {
-    console.error("Error en GET /api/finanzas/reports:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    );
-  }
-}
+  return ok(report);
+});

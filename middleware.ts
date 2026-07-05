@@ -13,6 +13,9 @@ export async function middleware(request: NextRequest) {
     '/admin/finanzas',
     '/admin/suscripcion',
     '/admin/platform',
+    '/admin/categorias',
+    '/admin/galeria',
+    '/admin/imagenes',
   ];
 
   if (protectedAdminPaths.some((p) => pathname.startsWith(p))) {
