@@ -3,6 +3,7 @@ export { authService } from "./auth.service";
 export { reservaService, clienteService } from "./reserva.service";
 export { servicioService, categoriaService } from "./catalog.service";
 export { clienteDetailService } from "./cliente.service";
+export { salonService, platformService } from "./salon.service";
 export {
   resolvePublicTenant,
   resolveAdminTenant,

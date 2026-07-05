@@ -41,7 +41,11 @@ export class AuthService {
 
     return {
       token,
-      user: { username: user.username!, role: user.role },
+      user: {
+        username: user.username!,
+        role: user.role,
+        salonId: user.salonId,
+      },
     };
   }
 
@@ -96,6 +100,46 @@ export class AuthService {
     });
 
     return { created: true };
+  }
+
+  async initPlatformAdmin() {
+    const username =
+      process.env.PLATFORM_ADMIN_USERNAME || "platform";
+    const existing = await userRepository.findAdminByUsername(username);
+    if (existing) return { created: false, username };
+
+    const password =
+      process.env.PLATFORM_ADMIN_PASSWORD || "platform123";
+    const hashedPassword = await hashPassword(password);
+    const db = await getDb();
+
+    await db.collection(Collections.USERS).insertOne({
+      username,
+      password: hashedPassword,
+      role: "platform_admin",
+      nombre: "Administrador de Plataforma",
+      fechaCreacion: new Date(),
+    });
+
+    return { created: true, username };
+  }
+
+  async getSessionInfo(token?: string) {
+    if (!token) return null;
+
+    const db = await getDb();
+    const session = await db.collection(Collections.SESSIONS).findOne({
+      token,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!session) return null;
+
+    return {
+      username: session.username as string,
+      role: session.role as string,
+      salonId: session.salonId as string | undefined,
+    };
   }
 }
 

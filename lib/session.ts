@@ -4,9 +4,18 @@ import clientPromise from "@/lib/mongodb";
 import { SessionData, UserRole } from "@/lib/types";
 
 const ADMIN_ROLES: UserRole[] = ["admin", "salon_admin", "platform_admin"];
+const SALON_ADMIN_ROLES: UserRole[] = ["admin", "salon_admin"];
 
 export function isAdminRole(role: UserRole): boolean {
   return ADMIN_ROLES.includes(role);
+}
+
+export function isSalonAdminRole(role: UserRole): boolean {
+  return SALON_ADMIN_ROLES.includes(role);
+}
+
+export function isPlatformAdminRole(role: UserRole): boolean {
+  return role === "platform_admin";
 }
 
 export async function getSession(
@@ -46,6 +55,18 @@ export async function requireSession(
 
   if (allowedRoles && !allowedRoles.includes(session.role)) {
     return { error: "Acceso denegado", status: 403 };
+  }
+
+  return { session };
+}
+
+export async function requireSalonAdmin(
+  request: NextRequest
+): Promise<{ session: SessionData } | { error: string; status: number }> {
+  const session = await getSession(request);
+
+  if (!session || !isSalonAdminRole(session.role)) {
+    return { error: "No autorizado", status: 401 };
   }
 
   return { session };

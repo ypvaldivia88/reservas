@@ -13,6 +13,23 @@ export interface Salon {
   fechaActualizacion?: Date;
 }
 
+export interface SalonRegistrationRequest {
+  nombre: string;
+  slug: string;
+  whatsappNumber?: string;
+  adminNombre: string;
+  adminUsername: string;
+  adminPassword: string;
+}
+
+export interface SalonRegistrationResult {
+  salonId: string;
+  slug: string;
+  nombre: string;
+  adminUsername: string;
+  trialEndsAt: string;
+}
+
 // ─── Suscripciones ──────────────────────────────────────────────────────────
 
 export type BillingCycle = 'monthly' | 'yearly';

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ApiResponse } from "@/lib/types";
 import { handleError } from "@/lib/api/responses";
 import {
-  buildAdminContext,
+  buildSalonAdminContext,
   buildPlatformContext,
   buildPublicContext,
   RequestContext,
@@ -46,9 +46,14 @@ export function publicHandler(handler: HandlerFn) {
   return wrapHandler(handler, buildPublicContext);
 }
 
-/** Handler para rutas admin autenticadas */
+/** Handler para administradores de salón (excluye platform_admin) */
+export function salonAdminHandler(handler: HandlerFn) {
+  return wrapHandler(handler, buildSalonAdminContext);
+}
+
+/** @deprecated Usar salonAdminHandler */
 export function adminHandler(handler: HandlerFn) {
-  return wrapHandler(handler, buildAdminContext);
+  return salonAdminHandler(handler);
 }
 
 /** Handler para administradores de plataforma */

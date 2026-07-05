@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { SessionData, UserRole } from "@/lib/types";
-import { getSession, requireAdmin, requirePlatformAdmin } from "@/lib/session";
+import { getSession, requireSalonAdmin, requirePlatformAdmin } from "@/lib/session";
 import {
   DEFAULT_SALON_ID,
   getSalonBySlug,
@@ -48,11 +48,11 @@ export async function buildPublicContext(
   return { request, params, tenant, salonId: tenant.salonId };
 }
 
-export async function buildAdminContext(
+export async function buildSalonAdminContext(
   request: NextRequest,
   params: Record<string, string> = {}
 ): Promise<RequestContext> {
-  const auth = await requireAdmin(request);
+  const auth = await requireSalonAdmin(request);
   if ("error" in auth) throw AppError.unauthorized(auth.error);
 
   const salonId = resolveAdminTenant(auth.session);
@@ -63,6 +63,14 @@ export async function buildAdminContext(
     tenant: { salonId },
     salonId,
   };
+}
+
+/** @deprecated Usar buildSalonAdminContext */
+export async function buildAdminContext(
+  request: NextRequest,
+  params: Record<string, string> = {}
+): Promise<RequestContext> {
+  return buildSalonAdminContext(request, params);
 }
 
 export async function buildPlatformContext(

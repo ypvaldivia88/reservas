@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest) {
     '/admin/finanzas',
     '/admin/suscripcion',
     '/admin/platform',
+    '/admin/platform/salones',
     '/admin/categorias',
     '/admin/galeria',
     '/admin/imagenes',

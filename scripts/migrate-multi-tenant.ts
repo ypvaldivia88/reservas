@@ -148,6 +148,27 @@ async function migrate() {
     );
   }
 
+  // 8. Crear platform_admin si no existe
+  const platformUsername = process.env.PLATFORM_ADMIN_USERNAME || "platform";
+  const platformExists = await db.collection("users").findOne({
+    username: platformUsername,
+    role: "platform_admin",
+  });
+  if (!platformExists) {
+    const { hashPassword } = await import("../lib/auth");
+    const password = process.env.PLATFORM_ADMIN_PASSWORD || "platform123";
+    await db.collection("users").insertOne({
+      username: platformUsername,
+      password: await hashPassword(password),
+      role: "platform_admin",
+      nombre: "Administrador de Plataforma",
+      fechaCreacion: new Date(),
+    });
+    console.log(`✅ Usuario platform_admin creado (${platformUsername})`);
+  } else {
+    console.log("ℹ️  Usuario platform_admin ya existe");
+  }
+
   console.log("\n✅ Migración completada sin pérdida de datos.");
   process.exit(0);
 }

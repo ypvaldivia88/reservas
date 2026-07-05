@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
+import AdminRoleGuard from "@/components/AdminRoleGuard";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import {
@@ -24,6 +25,8 @@ export default function AdminProtectedLayout({
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const isPlatformRoute = pathname.startsWith("/admin/platform");
 
   const handleLogout = async () => {
     try {
@@ -88,7 +91,7 @@ export default function AdminProtectedLayout({
                   Administración
                 </h1>
                 <p className="text-blue-600 dark:text-blue-300 text-xs sm:text-sm truncate">
-                  Gestión del Salón de Belleza
+                  {isPlatformRoute ? "Panel de Plataforma" : "Gestión del Salón de Belleza"}
                 </p>
               </div>
             </div>
@@ -178,8 +181,8 @@ export default function AdminProtectedLayout({
         </div>
       </header>
 
-      {/* Navegación común */}
-      <AdminNav />
+      {/* Navegación común (solo salones, no plataforma) */}
+      {!isPlatformRoute && <AdminNav />}
 
       {/* Modal de cambio de contraseña */}
       {showChangePassword && (
@@ -293,7 +296,7 @@ export default function AdminProtectedLayout({
 
       {/* Contenido de cada página */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8">
-        {children}
+        <AdminRoleGuard>{children}</AdminRoleGuard>
       </div>
     </div>
   );

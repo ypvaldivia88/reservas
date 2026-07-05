@@ -25,7 +25,10 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (data.success) {
-        router.push("/admin/dashboard");
+        const role = data.data?.user?.role;
+        router.push(
+          role === "platform_admin" ? "/admin/platform" : "/admin/dashboard"
+        );
       } else {
         setError(data.error || "Error al iniciar sesión");
       }
@@ -110,10 +113,17 @@ export default function AdminLogin() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>¿Primera vez? Usa las credenciales por defecto:</p>
-          <p className="font-mono mt-1">
-            <strong>Usuario:</strong> admin | <strong>Contraseña:</strong> admin
+        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 space-y-3">
+          <p>
+            ¿Nuevo salón?{" "}
+            <a href="/registro" className="text-violet-600 hover:underline font-medium">
+              Regístrate gratis
+            </a>
+          </p>
+          <p className="text-xs">
+            Salón existente: <strong>admin</strong> / <strong>admin</strong>
+            <br />
+            Plataforma: <strong>platform</strong> / <strong>platform123</strong>
           </p>
         </div>
       </div>
