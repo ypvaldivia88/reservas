@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { User, ApiResponse, LoginCredentials } from "@/lib/types";
 import { verifyPassword, generateSessionToken } from "@/lib/auth";
+import { DEFAULT_SALON_ID } from "@/lib/tenant";
 
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<{ token: string; user: { username: string; role: string } }>>> {
   try {
@@ -21,10 +22,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const client = await clientPromise;
     const db = client.db("nailsalon");
     
-    // Buscar usuario admin
+    // Buscar usuario admin (compatibilidad: admin y salon_admin)
     const user = await db.collection<User>("users").findOne({ 
       username: data.username,
-      role: 'admin'
+      role: { $in: ['admin', 'salon_admin', 'platform_admin'] }
     });
 
     if (!user || !user.password) {
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       userId: user._id,
       username: user.username,
       role: user.role,
+      salonId: user.salonId || DEFAULT_SALON_ID,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 horas
     });

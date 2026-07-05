@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { User, ApiResponse } from "@/lib/types";
 import { hashPassword } from "@/lib/auth";
+import { DEFAULT_SALON_ID } from "@/lib/tenant";
 
 export async function POST(): Promise<NextResponse<ApiResponse>> {
   try {
@@ -10,7 +11,7 @@ export async function POST(): Promise<NextResponse<ApiResponse>> {
     
     // Verificar si ya existe un admin
     const existingAdmin = await db.collection<User>("users").findOne({ 
-      role: 'admin'
+      role: { $in: ['admin', 'salon_admin'] }
     });
 
     if (existingAdmin) {
@@ -26,7 +27,8 @@ export async function POST(): Promise<NextResponse<ApiResponse>> {
     const adminUser: Omit<User, '_id'> = {
       username: 'admin',
       password: hashedPassword,
-      role: 'admin',
+      role: 'salon_admin',
+      salonId: DEFAULT_SALON_ID,
       nombre: 'Administrador',
       fechaCreacion: new Date()
     };

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { Reserva, ApiResponse, User } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
+import { getTenantFromRequest, DEFAULT_SALON_ID } from "@/lib/tenant";
+import { tenantQuery } from "@/lib/tenant";
 import {
   validateReservaInput,
   findActiveSlotConflict,
@@ -11,14 +13,17 @@ import {
 } from "@/lib/reservaValidation";
 
 // GET: Obtiene todas las reservas
-export async function GET(): Promise<NextResponse<ApiResponse<Reserva[]>>> {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<ApiResponse<Reserva[]>>> {
   try {
+    const { salonId } = await getTenantFromRequest(request);
     const client = await clientPromise;
     const db = client.db("nailsalon");
 
     const reservas = await db
       .collection<Reserva>("reservas")
-      .find({})
+      .find(tenantQuery(salonId))
       .sort({ fechaCreacion: -1 })
       .toArray();
 
@@ -62,11 +67,14 @@ export async function POST(
 
     const client = await clientPromise;
     const db = client.db("nailsalon");
+    const { salonId } = await getTenantFromRequest(request);
 
     const slotConflict = await findActiveSlotConflict(
       db,
       data.fechaCita,
-      data.horaCita
+      data.horaCita,
+      undefined,
+      salonId
     );
     if (slotConflict) {
       return NextResponse.json(
@@ -99,6 +107,7 @@ export async function POST(
     let cliente = await db.collection<User>("users").findOne({
       telefono: telefonoNormalizado,
       role: "cliente",
+      ...tenantQuery(salonId),
     });
 
     if (cliente) {
@@ -117,6 +126,7 @@ export async function POST(
         nombre: nombreNormalizado,
         telefono: telefonoNormalizado,
         role: "cliente",
+        salonId,
         fechaCreacion: new Date(),
       };
 
@@ -131,6 +141,7 @@ export async function POST(
     const dayConflict = await findClientDayConflict(db, data.fechaCita, {
       clienteId,
       telefono: telefonoNormalizado,
+      salonId,
     });
     if (dayConflict) {
       return NextResponse.json(
@@ -144,6 +155,7 @@ export async function POST(
     }
 
     const nuevaReserva: Omit<Reserva, "_id"> = {
+      salonId: salonId || DEFAULT_SALON_ID,
       clienteId,
       nombre: nombreNormalizado,
       telefono: telefonoNormalizado,

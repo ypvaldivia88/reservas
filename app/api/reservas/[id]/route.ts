@@ -3,6 +3,9 @@ import clientPromise from "@/lib/mongodb";
 import { Reserva, ApiResponse, FORMAS_UNAS } from "@/lib/types";
 import { ObjectId } from "mongodb";
 import { phoneUtils } from "@/lib/utils";
+import { getTenantFromRequest, DEFAULT_SALON_ID } from "@/lib/tenant";
+import { tenantQuery } from "@/lib/tenant";
+import { createIncomeFromReserva } from "@/lib/finances";
 import {
   findActiveSlotConflict,
   findClientDayConflict,
@@ -166,7 +169,8 @@ export async function PATCH(
         db,
         newFechaCita,
         newHoraCita,
-        id
+        id,
+        existingReserva.salonId || DEFAULT_SALON_ID
       );
       if (slotConflict) {
         return NextResponse.json(
@@ -189,6 +193,7 @@ export async function PATCH(
         clienteId: existingReserva.clienteId,
         telefono: newTelefono,
         excludeId: id,
+        salonId: existingReserva.salonId || DEFAULT_SALON_ID,
       });
       if (dayConflict) {
         return NextResponse.json(
@@ -210,6 +215,18 @@ export async function PATCH(
       return NextResponse.json(
         { success: false, error: "Reserva no encontrada" },
         { status: 404 }
+      );
+    }
+
+    // Auto-registrar ingreso al completar reserva (no destructivo)
+    if (updateData.estado === "completada" && updateData.costo !== undefined) {
+      const salonId = existingReserva.salonId || DEFAULT_SALON_ID;
+      await createIncomeFromReserva(
+        db,
+        salonId,
+        id,
+        updateData.costo,
+        `Reserva ${existingReserva.nombre} - ${existingReserva.fechaCita}`
       );
     }
 
