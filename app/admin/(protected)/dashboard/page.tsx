@@ -442,25 +442,6 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Reservas / Calendario */}
-      <div
-        id="reservas-section"
-        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-8 border border-gray-200 dark:border-white/20"
-      >
-        <ReservasTable
-          reservas={reservas}
-          saving={saving}
-          onEdit={(reserva) => setEditingReserva(normalizeReservaForEdit(reserva))}
-          onDelete={setDeletingReserva}
-          onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
-            handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
-          }}
-          externalViewMode={reservasViewMode}
-          externalEstadoFilter={reservasEstadoFilter}
-          onViewModeChange={setReservasViewMode}
-        />
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-6 mb-8">
         <button
@@ -563,6 +544,25 @@ function DashboardContent() {
             </p>
           </div>
         </button>
+      </div>
+
+      {/* Reservas / Calendario */}
+      <div
+        id="reservas-section"
+        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-8 border border-gray-200 dark:border-white/20"
+      >
+        <ReservasTable
+          reservas={reservas}
+          saving={saving}
+          onEdit={(reserva) => setEditingReserva(normalizeReservaForEdit(reserva))}
+          onDelete={setDeletingReserva}
+          onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
+            handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
+          }}
+          externalViewMode={reservasViewMode}
+          externalEstadoFilter={reservasEstadoFilter}
+          onViewModeChange={setReservasViewMode}
+        />
       </div>
 
       {/* Clientes Table */}
