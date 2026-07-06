@@ -4,12 +4,11 @@ import { useRouter, usePathname } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
 import AdminRoleGuard from "@/components/AdminRoleGuard";
 import ThemeToggle from "@/components/ThemeToggle";
+import HamburgerButton from "@/components/HamburgerButton";
 import { Button } from "@/components/ui/Button";
 import {
   HomeIcon,
   LogoutIcon,
-  MenuIcon,
-  CloseIcon,
 } from "@/components/ui/Icons";
 import Link from "next/link";
 
@@ -104,12 +103,10 @@ export default function AdminProtectedLayout({
                   </Button>
                 </>
               ) : (
-                <Button
+                <HamburgerButton
+                  isOpen={isMobileMenuOpen}
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  variant="ghost"
-                  size="sm"
-                  icon={isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-                  aria-label="Menú de administración"
+                  ariaLabel="Menú de administración"
                 />
               )}
             </div>
@@ -125,33 +122,30 @@ export default function AdminProtectedLayout({
                 className="rounded-full p-2"
               />
               <ThemeToggle />
-              <Button
+              <HamburgerButton
+                isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                variant="ghost"
-                size="sm"
-                icon={isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-                aria-label="Menú de administración"
+                ariaLabel="Menú de administración"
               />
             </div>
           </div>
 
-          {/* Menú hamburguesa (salón: páginas secundarias; plataforma: perfil y sesión) */}
+          {/* Menú secundario expandible (Sitio, Plan, Perfil, Sesión) */}
           {isMobileMenuOpen && (
             <div
-              className={`mt-4 space-y-2 pb-2 ${
+              className={`mt-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg p-3 space-y-2 animate-fadeInUp ${
                 isPlatformRoute ? "md:hidden" : ""
               }`}
             >
               {!isPlatformRoute &&
                 salonSecondaryItems.map((item) => (
-                  <Link key={item.href} href={item.href} className="w-full">
+                  <Link key={item.href} href={item.href} className="block" onClick={closeMenu}>
                     <Button
                       variant={
                         pathname.startsWith(item.href) ? "primary" : "outlined-secondary"
                       }
                       size="sm"
                       fullWidth
-                      onClick={closeMenu}
                     >
                       {item.label}
                     </Button>
@@ -159,13 +153,8 @@ export default function AdminProtectedLayout({
                 ))}
 
               {isPlatformRoute && (
-                <Link href={profileHref} className="w-full">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    onClick={closeMenu}
-                  >
+                <Link href={profileHref} className="block" onClick={closeMenu}>
+                  <Button variant="primary" size="sm" fullWidth>
                     Mi Perfil
                   </Button>
                 </Link>

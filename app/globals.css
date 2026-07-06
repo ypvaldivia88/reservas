@@ -98,6 +98,21 @@ html {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
   
     /* Custom gradient text - Blue tones only */
     .gradient-text {
@@ -225,4 +240,8 @@ html {
 /* opcional: cursor de agarre más claro mientras se arrastra */
 .grabbing {
   cursor: grabbing !important;
+}
+
+.safe-area-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
