@@ -9,7 +9,6 @@ import {
 } from "@/lib/types";
 import { ObjectId } from "mongodb";
 import { AppError } from "@/lib/api/errors";
-import { prepareFinancesForSalon } from "@/lib/finances";
 
 export const GET = adminHandler(async ({ salonId, request }) => {
   const tipo = request.nextUrl.searchParams.get("tipo");
@@ -25,7 +24,6 @@ export const GET = adminHandler(async ({ salonId, request }) => {
   }
 
   const db = await getDb();
-  await prepareFinancesForSalon(db, salonId);
   const transactions = await db
     .collection<FinancialTransaction>(Collections.FINANCIAL_TRANSACTIONS)
     .find(filter)

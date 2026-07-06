@@ -1,4 +1,4 @@
-import { Db } from "mongodb";
+import { Db, AnyBulkWriteOperation, Document } from "mongodb";
 import {
   FinancialReport,
   FinancialTransaction,
@@ -31,6 +31,8 @@ export const DEFAULT_FINANCIAL_CATEGORIES = [
   { nombre: "Otros ingresos", tipo: "income" as TransactionType, color: "#14b8a6" },
   ...DEFAULT_EXPENSE_CATEGORIES,
 ];
+
+const syncInFlight = new Map<string, Promise<void>>();
 
 export async function ensureExpenseCategories(
   db: Db,
@@ -88,23 +90,29 @@ export async function syncIncomeCategoriesFromServicios(
     const servicio = servicios[i];
     const servicioId = servicio._id.toString();
 
-    await db.collection(Collections.FINANCIAL_CATEGORIES).updateOne(
-      { ...tenantQuery(salonId), servicioId },
-      {
-        $set: {
-          nombre: servicio.nombre,
-          tipo: "income",
-          activo: true,
-          color: INCOME_COLORS[i % INCOME_COLORS.length],
-        },
-        $setOnInsert: {
-          salonId,
-          servicioId,
-          fechaCreacion: new Date(),
-        },
-      },
-      { upsert: true }
-    );
+    const existing = await db
+      .collection(Collections.FINANCIAL_CATEGORIES)
+      .findOne({ ...tenantQuery(salonId), servicioId });
+
+    const categoryData = {
+      nombre: servicio.nombre as string,
+      tipo: "income" as TransactionType,
+      activo: true,
+      color: INCOME_COLORS[i % INCOME_COLORS.length],
+    };
+
+    if (existing) {
+      await db
+        .collection(Collections.FINANCIAL_CATEGORIES)
+        .updateOne({ _id: existing._id }, { $set: categoryData });
+    } else {
+      await db.collection(Collections.FINANCIAL_CATEGORIES).insertOne({
+        salonId,
+        servicioId,
+        ...categoryData,
+        fechaCreacion: new Date(),
+      });
+    }
   }
 }
 
@@ -162,19 +170,106 @@ export async function syncIncomesFromReservas(
     })
     .toArray();
 
+  if (reservas.length === 0) return;
+
+  const reservaIds = reservas.map((r) => r._id.toString());
+  const existingTxs = await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .find({
+      ...tenantQuery(salonId),
+      fuente: "reserva",
+      reservaId: { $in: reservaIds },
+    })
+    .toArray();
+
+  const existingByReservaId = new Map(
+    existingTxs.map((tx) => [String(tx.reservaId), tx])
+  );
+
+  const incomeCategories = await db
+    .collection(Collections.FINANCIAL_CATEGORIES)
+    .find({
+      ...tenantQuery(salonId),
+      tipo: "income",
+      activo: true,
+      servicioId: { $exists: true },
+    })
+    .toArray();
+
+  const categoryByServicioId = new Map(
+    incomeCategories.map((cat) => [
+      String(cat.servicioId),
+      {
+        categoriaId: cat._id?.toString(),
+        categoriaNombre: cat.nombre as string,
+      },
+    ])
+  );
+
+  const fallbackCategory =
+    incomeCategories.length > 0 ?
+      {
+        categoriaId: incomeCategories[0]._id?.toString(),
+        categoriaNombre: incomeCategories[0].nombre as string,
+      }
+    : {};
+
+  const bulkOps: AnyBulkWriteOperation<Document>[] = [];
+
   for (const reserva of reservas) {
     const costo = Number(reserva.costo);
     if (isNaN(costo) || costo < 0) continue;
 
-    await createIncomeFromReserva(
-      db,
-      salonId,
-      reserva._id.toString(),
-      costo,
-      `Reserva ${reserva.nombre} - ${reserva.fechaCita}`,
-      reserva.fechaCita as string,
-      reserva.servicioId as string | undefined
-    );
+    const reservaId = reserva._id.toString();
+    const servicioId = reserva.servicioId as string | undefined;
+    const category =
+      (servicioId && categoryByServicioId.get(servicioId)) || fallbackCategory;
+    const descripcion = `Reserva ${reserva.nombre} - ${reserva.fechaCita}`;
+    const fecha = reserva.fechaCita as string;
+    const existing = existingByReservaId.get(reservaId);
+
+    if (existing) {
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: existing._id },
+          update: {
+            $set: {
+              monto: costo,
+              descripcion,
+              fecha,
+              ...(category.categoriaId ? { categoriaId: category.categoriaId } : {}),
+              ...(category.categoriaNombre ?
+                { categoriaNombre: category.categoriaNombre }
+              : {}),
+            },
+          },
+        },
+      });
+    } else {
+      bulkOps.push({
+        insertOne: {
+          document: {
+            salonId,
+            tipo: "income",
+            categoriaId: category.categoriaId,
+            categoriaNombre: category.categoriaNombre,
+            monto: costo,
+            moneda: "USD",
+            fecha,
+            descripcion,
+            fuente: "reserva",
+            reservaId,
+            fechaCreacion: new Date(),
+          },
+        },
+      });
+    }
+  }
+
+  if (bulkOps.length > 0) {
+    await db
+      .collection(Collections.FINANCIAL_TRANSACTIONS)
+      .bulkWrite(bulkOps, { ordered: false });
   }
 }
 
@@ -182,9 +277,21 @@ export async function prepareFinancesForSalon(
   db: Db,
   salonId: string
 ): Promise<void> {
-  await ensureExpenseCategories(db, salonId);
-  await syncIncomeCategoriesFromServicios(db, salonId);
-  await syncIncomesFromReservas(db, salonId);
+  const inFlight = syncInFlight.get(salonId);
+  if (inFlight) return inFlight;
+
+  const work = (async () => {
+    await ensureExpenseCategories(db, salonId);
+    await syncIncomeCategoriesFromServicios(db, salonId);
+    await syncIncomesFromReservas(db, salonId);
+  })();
+
+  syncInFlight.set(salonId, work);
+  try {
+    await work;
+  } finally {
+    syncInFlight.delete(salonId);
+  }
 }
 
 export async function createIncomeFromReserva(
