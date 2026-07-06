@@ -78,6 +78,8 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           </div>
         </section>
 
+        <DynamicServicesSection slug={profile.slug} />
+
         {/* Features */}
         {content.features && content.features.length > 0 && (
           <section className="py-12 sm:py-16 md:py-20 bg-white/50 dark:bg-gray-800/30">
@@ -117,7 +119,6 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
         )}
 
         <StatsSection stats={content.stats} primaryColor={primary} />
-        <DynamicServicesSection slug={profile.slug} />
 
         <section
           id="galeria"
