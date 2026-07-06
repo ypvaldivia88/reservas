@@ -99,7 +99,7 @@ export default function RegistroPage() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = "/admin/dashboard";
+        window.location.href = "/admin/calendario";
       } else {
         setError(data.error || "Error al registrar");
       }

@@ -145,11 +145,11 @@ export default function AdminProtectedLayout({
         </div>
       </header>
 
-      {/* Navegación común (solo salones, no plataforma) */}
+      {/* Navegación (solo salones, no plataforma) */}
       {!isPlatformRoute && <AdminNav />}
 
       {/* Contenido de cada página */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 md:pb-8 lg:px-8">
         <AdminRoleGuard>{children}</AdminRoleGuard>
       </div>
     </div>

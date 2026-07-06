@@ -173,7 +173,7 @@ export default function ImagenesAdmin() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <Button
-                onClick={() => router.push("/admin/dashboard")}
+                onClick={() => router.push("/admin/calendario")}
                 variant="ghost"
                 size="sm"
               >

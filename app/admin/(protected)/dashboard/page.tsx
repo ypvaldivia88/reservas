@@ -55,6 +55,24 @@ function DashboardContent() {
   }, []);
 
   useEffect(() => {
+    const view = searchParams.get("view");
+    if (view === "month" || view === "agenda") {
+      setReservasViewMode(view);
+      setReservasEstadoFilter(view === "agenda" ? "pendiente" : "todos");
+    } else {
+      setReservasViewMode("month");
+      setReservasEstadoFilter("todos");
+    }
+
+    const reservaId = searchParams.get("reserva");
+    if (!reservaId && view) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     // Close dropdown when clicking outside
     const handleClickOutside = () => {
       if (openMenuClienteId) {
@@ -321,7 +339,7 @@ function DashboardContent() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-700 dark:text-gray-300 font-medium">
-            Cargando dashboard...
+            Cargando calendario...
           </p>
         </div>
       </div>
@@ -338,6 +356,25 @@ function DashboardContent() {
           </p>
         </div>
       )}
+
+      {/* Reservas / Calendario */}
+      <div
+        id="reservas-section"
+        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-8 border border-gray-200 dark:border-white/20"
+      >
+        <ReservasTable
+          reservas={reservas}
+          saving={saving}
+          onEdit={setEditingReserva}
+          onDelete={setDeletingReserva}
+          onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
+            handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
+          }}
+          externalViewMode={reservasViewMode}
+          externalEstadoFilter={reservasEstadoFilter}
+          onViewModeChange={setReservasViewMode}
+        />
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-6 mb-8">
@@ -441,25 +478,6 @@ function DashboardContent() {
             </p>
           </div>
         </button>
-      </div>
-
-      {/* Reservas Table */}
-      <div
-        id="reservas-section"
-        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-8 border border-gray-200 dark:border-white/20"
-      >
-        <ReservasTable
-          reservas={reservas}
-          saving={saving}
-          onEdit={setEditingReserva}
-          onDelete={setDeletingReserva}
-          onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
-            handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
-          }}
-          externalViewMode={reservasViewMode}
-          externalEstadoFilter={reservasEstadoFilter}
-          onViewModeChange={setReservasViewMode}
-        />
       </div>
 
       {/* Clientes Table */}
@@ -1031,16 +1049,16 @@ function DashboardContent() {
                     editingReserva.estado === "confirmada") && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Costo{" "}
+                        Ingreso / Costo{" "}
                         {editingReserva.estado === "completada" ?
-                          "(requerido)"
+                          "(editable)"
                         : "(opcional)"}
                       </label>
                       <input
                         type="number"
                         min="0"
                         step="0.01"
-                        value={editingReserva.costo || ""}
+                        value={editingReserva.costo ?? ""}
                         onChange={(e) =>
                           setEditingReserva({
                             ...editingReserva,
@@ -1051,8 +1069,11 @@ function DashboardContent() {
                           })
                         }
                         className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                        required={editingReserva.estado === "completada"}
+                        placeholder="0.00"
                       />
+                      <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        Se registra automáticamente en finanzas al guardar.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1513,7 +1534,7 @@ export default function AdminDashboard() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
             <p className="text-gray-700 dark:text-gray-300">
-              Cargando dashboard...
+              Cargando calendario...
             </p>
           </div>
         </div>

@@ -22,8 +22,11 @@ export async function createIncomeFromReserva(
   salonId: string,
   reservaId: string,
   monto: number,
-  descripcion: string
+  descripcion: string,
+  fecha?: string
 ): Promise<void> {
+  const fechaTransaccion = fecha ?? new Date().toISOString().split("T")[0];
+
   const existing = await db.collection("financial_transactions").findOne({
     ...tenantQuery(salonId),
     reservaId,
@@ -37,7 +40,7 @@ export async function createIncomeFromReserva(
         $set: {
           monto,
           descripcion,
-          fecha: new Date().toISOString().split("T")[0],
+          fecha: fechaTransaccion,
         },
       }
     );
@@ -57,7 +60,7 @@ export async function createIncomeFromReserva(
     categoriaNombre: categoria?.nombre ?? "Servicios de uñas",
     monto,
     moneda: "USD",
-    fecha: new Date().toISOString().split("T")[0],
+    fecha: fechaTransaccion,
     descripcion,
     fuente: "reserva",
     reservaId,
