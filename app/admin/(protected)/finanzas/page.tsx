@@ -81,13 +81,18 @@ export default function FinanzasPage() {
   const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
     ""
   );
-  const [desde, setDesde] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-  });
-  const [hasta, setHasta] = useState(
-    () => new Date().toISOString().split("T")[0]
+  const [desde, setDesde] = useState(() => getDatePresetRange("this_month").desde);
+  const [hasta, setHasta] = useState(() => getDatePresetRange("this_month").hasta);
+  const [activeDatePreset, setActiveDatePreset] = useState<DatePreset | null>(
+    "this_month"
   );
+
+  const applyDatePreset = (preset: DatePreset) => {
+    const range = getDatePresetRange(preset);
+    setDesde(range.desde);
+    setHasta(range.hasta);
+    setActiveDatePreset(preset);
+  };
 
   const [form, setForm] = useState({
     tipo: "income" as TransactionType,
@@ -229,13 +234,37 @@ export default function FinanzasPage() {
       )}
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 items-end bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+        <div>
+          <p className="text-xs text-gray-500 mb-2">Período rápido</p>
+          <div className="flex flex-wrap gap-2">
+            {DATE_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => applyDatePreset(preset.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeDatePreset === preset.id
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3 items-end">
         <div>
           <label className="text-xs text-gray-500 block mb-1">Desde</label>
           <input
             type="date"
             value={desde}
-            onChange={(e) => setDesde(e.target.value)}
+            onChange={(e) => {
+              setDesde(e.target.value);
+              setActiveDatePreset(null);
+            }}
             className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
           />
         </div>
@@ -244,7 +273,10 @@ export default function FinanzasPage() {
           <input
             type="date"
             value={hasta}
-            onChange={(e) => setHasta(e.target.value)}
+            onChange={(e) => {
+              setHasta(e.target.value);
+              setActiveDatePreset(null);
+            }}
             className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
           />
         </div>
@@ -278,6 +310,7 @@ export default function FinanzasPage() {
               </option>
             ))}
           </select>
+        </div>
         </div>
       </div>
 
