@@ -34,6 +34,23 @@ class SalonRepository extends BaseRepository {
     const result = await col.insertOne(salon as Record<string, unknown>);
     return { ...salon, _id: result.insertedId.toString() };
   }
+
+  async updateBySalonId(
+    salonId: string,
+    updates: Partial<Salon>
+  ): Promise<Salon | null> {
+    const col = await this.collection();
+    const result = await col.findOneAndUpdate(
+      { salonId },
+      { $set: updates },
+      { returnDocument: "after" }
+    );
+    if (!result) return null;
+    return {
+      ...result,
+      _id: result._id?.toString(),
+    } as Salon;
+  }
 }
 
 export const salonRepository = new SalonRepository();

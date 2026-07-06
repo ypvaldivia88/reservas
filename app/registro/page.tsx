@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { BusinessTemplate } from "@/lib/types";
 
 function slugify(text: string): string {
   return text
@@ -19,6 +20,7 @@ export default function RegistroPage() {
     nombre: "",
     slug: "",
     whatsappNumber: "",
+    businessTemplate: "generic" as BusinessTemplate,
     adminNombre: "",
     adminUsername: "",
     adminPassword: "",
@@ -27,6 +29,17 @@ export default function RegistroPage() {
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "ok" | "taken">("idle");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [templates, setTemplates] = useState<
+    { id: BusinessTemplate; nombre: string; descripcion: string; icon: string; branding: { primaryColor?: string; secondaryColor?: string } }[]
+  >([]);
+
+  useEffect(() => {
+    fetch("/api/business-templates")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setTemplates(data.data);
+      });
+  }, []);
 
   const checkSlug = useCallback(async (slug: string) => {
     if (slug.length < 3) {
@@ -77,6 +90,7 @@ export default function RegistroPage() {
           nombre: form.nombre,
           slug: form.slug,
           whatsappNumber: form.whatsappNumber,
+          businessTemplate: form.businessTemplate,
           adminNombre: form.adminNombre,
           adminUsername: form.adminUsername,
           adminPassword: form.adminPassword,
@@ -128,7 +142,7 @@ export default function RegistroPage() {
               URL de tu salón
             </label>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 shrink-0">/reserva?slug=</span>
+              <span className="text-sm text-gray-500 shrink-0">/</span>
               <input
                 required
                 value={form.slug}
@@ -148,6 +162,29 @@ export default function RegistroPage() {
             {slugStatus === "taken" && (
               <p className="text-xs text-red-600 mt-1">✗ Ya en uso</p>
             )}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium block mb-2">
+              Tipo de negocio
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {templates.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, businessTemplate: t.id }))}
+                  className={`p-3 rounded-xl border-2 text-left transition-all ${
+                    form.businessTemplate === t.id
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="text-xl">{t.icon}</span>
+                  <p className="text-sm font-medium mt-1">{t.nombre}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>

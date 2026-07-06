@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
     '/admin/schedule',
     '/admin/servicios',
     '/admin/contenido',
+    '/admin/sitio',
     '/admin/finanzas',
     '/admin/suscripcion',
     '/admin/platform',

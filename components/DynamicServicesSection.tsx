@@ -2,20 +2,26 @@
 import { useState, useEffect } from "react";
 import { Servicio, ImageData } from "@/lib/types";
 
-export default function DynamicServicesSection() {
+interface DynamicServicesSectionProps {
+  slug?: string;
+}
+
+export default function DynamicServicesSection({ slug }: DynamicServicesSectionProps) {
   const [servicios, setServicios] = useState<(Servicio & { imagen?: ImageData })[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
+  const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
+
   useEffect(() => {
     loadServicios();
-  }, []);
+  }, [slug]);
 
   const loadServicios = async () => {
     try {
       const [resServicios, resImagenes] = await Promise.all([
-        fetch("/api/servicios"),
-        fetch("/api/imagenes"),
+        fetch(`/api/servicios${slugQuery}`),
+        fetch(`/api/imagenes${slugQuery}`),
       ]);
 
       if (resServicios.ok && resImagenes.ok) {

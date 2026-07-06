@@ -1,5 +1,80 @@
 // ─── Multi-tenant ───────────────────────────────────────────────────────────
 
+export type BusinessTemplate =
+  | 'manicure'
+  | 'peluqueria'
+  | 'barberia'
+  | 'tatuajes'
+  | 'generic';
+
+export interface SalonBranding {
+  logoUrl?: string;
+  logoSmallUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  heroImageUrl?: string;
+}
+
+export interface SalonFeature {
+  title: string;
+  description: string;
+}
+
+export interface SalonStat {
+  number: string;
+  label: string;
+}
+
+export interface SalonTestimonial {
+  name: string;
+  text: string;
+  rating: number;
+  service?: string;
+}
+
+export interface SalonProcessStep {
+  title: string;
+  description: string;
+}
+
+export interface SalonContent {
+  heroTitle?: string;
+  heroHighlight?: string;
+  heroSubtitle?: string;
+  featuresTitle?: string;
+  featuresSubtitle?: string;
+  features?: SalonFeature[];
+  stats?: SalonStat[];
+  testimonialsTitle?: string;
+  testimonialsSubtitle?: string;
+  testimonials?: SalonTestimonial[];
+  processTitle?: string;
+  processSubtitle?: string;
+  processSteps?: SalonProcessStep[];
+  processCta?: string;
+  galleryTitle?: string;
+  gallerySubtitle?: string;
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
+export interface SalonContact {
+  address?: string;
+  addressUrl?: string;
+  phone?: string;
+  hours?: string;
+}
+
+export interface SalonSocial {
+  facebook?: string;
+  instagram?: string;
+  whatsapp?: string;
+  tiktok?: string;
+}
+
 export interface Salon {
   _id?: string;
   salonId: string;
@@ -9,14 +84,42 @@ export interface Salon {
   timezone?: string;
   currency?: string;
   status: 'active' | 'inactive' | 'suspended';
+  businessTemplate?: BusinessTemplate;
+  branding?: SalonBranding;
+  content?: SalonContent;
+  contact?: SalonContact;
+  social?: SalonSocial;
   fechaCreacion?: Date;
   fechaActualizacion?: Date;
+}
+
+export interface SalonCmsUpdateRequest {
+  nombre?: string;
+  whatsappNumber?: string;
+  businessTemplate?: BusinessTemplate;
+  branding?: Partial<SalonBranding>;
+  content?: Partial<SalonContent>;
+  contact?: Partial<SalonContact>;
+  social?: Partial<SalonSocial>;
+}
+
+export interface SalonPublicProfile {
+  salonId: string;
+  slug: string;
+  nombre: string;
+  whatsappNumber?: string;
+  businessTemplate: BusinessTemplate;
+  branding: SalonBranding;
+  content: SalonContent;
+  contact: SalonContact;
+  social: SalonSocial;
 }
 
 export interface SalonRegistrationRequest {
   nombre: string;
   slug: string;
   whatsappNumber?: string;
+  businessTemplate?: BusinessTemplate;
   adminNombre: string;
   adminUsername: string;
   adminPassword: string;
