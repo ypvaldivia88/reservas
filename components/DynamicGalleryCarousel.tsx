@@ -27,33 +27,32 @@ export default function DynamicGalleryCarousel({
   const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
 
   useEffect(() => {
-    loadGalleryData();
-  }, [slug]);
+    const loadGalleryData = async () => {
+      try {
+        const imagenesRes = await fetch(`/api/imagenes${slugQuery}`);
 
-  const loadGalleryData = async () => {
-    try {
-      const imagenesRes = await fetch(`/api/imagenes${slugQuery}`);
+        if (imagenesRes.ok) {
+          const imagenesData = await imagenesRes.json();
 
-      if (imagenesRes.ok) {
-        const imagenesData = await imagenesRes.json();
+          if (imagenesData.success) {
+            const imagenes: ImageData[] = imagenesData.data;
 
-        if (imagenesData.success) {
-          const imagenes: ImageData[] = imagenesData.data;
+            const dashboardImages = imagenes.filter(
+              (img) => img.enGaleriaDashboard
+            );
 
-          // Filter images that are marked for dashboard gallery
-          const dashboardImages = imagenes.filter(
-            (img) => img.enGaleriaDashboard
-          );
-
-          setGalleryImages(dashboardImages);
+            setGalleryImages(dashboardImages);
+          }
         }
+      } catch (error) {
+        console.error("Error loading gallery data:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading gallery data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadGalleryData();
+  }, [slugQuery]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

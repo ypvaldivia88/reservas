@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Servicio, ImageData } from "@/lib/types";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
@@ -628,12 +629,12 @@ export default function ServiciosAdmin() {
                         <span className="text-xl">⚠️</span>
                         <span>
                           No hay imágenes disponibles. Ve a{" "}
-                          <a
+                          <Link
                             href="/admin/contenido"
                             className="underline font-semibold hover:text-orange-900 dark:hover:text-orange-200"
                           >
                             Contenido
-                          </a>{" "}
+                          </Link>{" "}
                           para subir imágenes.
                         </span>
                       </p>

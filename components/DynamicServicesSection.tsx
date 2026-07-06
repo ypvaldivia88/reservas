@@ -14,47 +14,46 @@ export default function DynamicServicesSection({ slug }: DynamicServicesSectionP
   const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
 
   useEffect(() => {
-    loadServicios();
-  }, [slug]);
+    const loadServicios = async () => {
+      try {
+        const [resServicios, resImagenes] = await Promise.all([
+          fetch(`/api/servicios${slugQuery}`),
+          fetch(`/api/imagenes${slugQuery}`),
+        ]);
 
-  const loadServicios = async () => {
-    try {
-      const [resServicios, resImagenes] = await Promise.all([
-        fetch(`/api/servicios${slugQuery}`),
-        fetch(`/api/imagenes${slugQuery}`),
-      ]);
+        if (resServicios.ok && resImagenes.ok) {
+          const dataServicios = await resServicios.json();
+          const dataImagenes = await resImagenes.json();
 
-      if (resServicios.ok && resImagenes.ok) {
-        const dataServicios = await resServicios.json();
-        const dataImagenes = await resImagenes.json();
+          if (dataServicios.success && dataImagenes.success) {
+            const serviciosActivos = dataServicios.data.filter(
+              (s: Servicio) => s.activo
+            );
 
-        if (dataServicios.success && dataImagenes.success) {
-          const serviciosActivos = dataServicios.data.filter(
-            (s: Servicio) => s.activo
-          );
+            const serviciosConImagenes = serviciosActivos.map(
+              (servicio: Servicio) => {
+                const imagen = dataImagenes.data.find(
+                  (img: ImageData) => img._id === servicio.imagenId
+                );
+                return {
+                  ...servicio,
+                  imagen,
+                };
+              }
+            );
 
-          // Map servicios with their images
-          const serviciosConImagenes = serviciosActivos.map(
-            (servicio: Servicio) => {
-              const imagen = dataImagenes.data.find(
-                (img: ImageData) => img._id === servicio.imagenId
-              );
-              return {
-                ...servicio,
-                imagen,
-              };
-            }
-          );
-
-          setServicios(serviciosConImagenes);
+            setServicios(serviciosConImagenes);
+          }
         }
+      } catch (error) {
+        console.error("Error cargando servicios:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error cargando servicios:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadServicios();
+  }, [slugQuery]);
 
   if (loading) {
     return (
