@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
@@ -116,9 +117,9 @@ export default function AdminLogin() {
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 space-y-3">
           <p>
             ¿Nuevo salón?{" "}
-            <a href="/registro" className="text-violet-600 hover:underline font-medium">
+            <Link href="/registro" className="text-violet-600 hover:underline font-medium">
               Regístrate gratis
-            </a>
+            </Link>
           </p>
         </div>
       </div>

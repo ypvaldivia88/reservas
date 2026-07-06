@@ -3,47 +3,56 @@ import { useEffect, useRef, useState } from "react";
 import { ImageData } from "@/lib/types";
 import Image from "next/image";
 
-export default function DynamicGalleryCarousel() {
+interface DynamicGalleryCarouselProps {
+  slug?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function DynamicGalleryCarousel({
+  slug,
+  title = "Nuestros Trabajos",
+  subtitle = "Una muestra de nuestras creaciones más recientes",
+}: DynamicGalleryCarouselProps) {
   const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
-  // drag state stored in refs to avoid re-renders
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const startScrollRef = useRef(0);
-  // flag to detect if user actually moved (dragged) — prevents opening on release after drag
   const movedRef = useRef(false);
 
+  const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
+
   useEffect(() => {
-    loadGalleryData();
-  }, []);
+    const loadGalleryData = async () => {
+      try {
+        const imagenesRes = await fetch(`/api/imagenes${slugQuery}`);
 
-  const loadGalleryData = async () => {
-    try {
-      const imagenesRes = await fetch("/api/imagenes");
+        if (imagenesRes.ok) {
+          const imagenesData = await imagenesRes.json();
 
-      if (imagenesRes.ok) {
-        const imagenesData = await imagenesRes.json();
+          if (imagenesData.success) {
+            const imagenes: ImageData[] = imagenesData.data;
 
-        if (imagenesData.success) {
-          const imagenes: ImageData[] = imagenesData.data;
+            const dashboardImages = imagenes.filter(
+              (img) => img.enGaleriaDashboard
+            );
 
-          // Filter images that are marked for dashboard gallery
-          const dashboardImages = imagenes.filter(
-            (img) => img.enGaleriaDashboard
-          );
-
-          setGalleryImages(dashboardImages);
+            setGalleryImages(dashboardImages);
+          }
         }
+      } catch (error) {
+        console.error("Error loading gallery data:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading gallery data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadGalleryData();
+  }, [slugQuery]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

@@ -8,6 +8,7 @@ import {
   SalonRegistrationResult,
   PaymentRequest,
   TenantSubscription,
+  BusinessTemplate,
 } from "@/lib/types";
 import {
   salonRepository,
@@ -18,6 +19,10 @@ import { userRepository } from "@/lib/repositories/user.repository";
 import { DEFAULT_FINANCIAL_CATEGORIES } from "@/lib/finances";
 import { scheduleUtils } from "@/lib/utils";
 import { getSubscriptionPeriodEnd } from "@/lib/subscription";
+import {
+  getBusinessTemplate,
+  isValidBusinessTemplate,
+} from "@/lib/business-templates";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const TRIAL_DAYS = 14;
@@ -75,6 +80,12 @@ export class SalonService {
     const trialEnd = new Date(now);
     trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
 
+    const businessTemplate: BusinessTemplate =
+      data.businessTemplate && isValidBusinessTemplate(data.businessTemplate)
+        ? data.businessTemplate
+        : "generic";
+    const templateConfig = getBusinessTemplate(businessTemplate);
+
     const db = await getDb();
 
     await salonRepository.create({
@@ -85,6 +96,18 @@ export class SalonService {
       timezone: "America/Havana",
       currency: "USD",
       status: "active",
+      businessTemplate,
+      branding: templateConfig.branding,
+      content: {
+        ...templateConfig.content,
+        heroTitle: nombre,
+        heroHighlight: templateConfig.content.heroHighlight,
+      },
+      contact: templateConfig.contact,
+      social: {
+        ...templateConfig.social,
+        whatsapp: data.whatsappNumber?.trim(),
+      },
       fechaCreacion: now,
     });
 
@@ -110,6 +133,18 @@ export class SalonService {
         salonId,
         activo: true,
         fechaCreacion: now,
+      }))
+    );
+
+    await db.collection(Collections.SERVICIOS).insertMany(
+      templateConfig.defaultServices.map((s, i) => ({
+        ...s,
+        salonId,
+        precio: 0,
+        activo: true,
+        orden: i + 1,
+        fechaCreacion: now,
+        fechaActualizacion: now,
       }))
     );
 
