@@ -9,6 +9,7 @@ import {
   BusinessTemplate,
   Salon,
   SalonCmsUpdateRequest,
+  SalonDirectoryItem,
   SalonPublicProfile,
 } from "@/lib/types";
 import { DEFAULT_SALON_ID } from "@/lib/tenant";
@@ -136,6 +137,32 @@ export class SalonCmsService {
     const updated = await salonRepository.updateBySalonId(salonId, updates);
     if (!updated) throw AppError.notFound("Salón no encontrado");
     return toPublicProfile(updated);
+  }
+
+  async listActiveDirectory(): Promise<SalonDirectoryItem[]> {
+    const salons = await salonRepository.listActive();
+
+    return salons.map((salon) => {
+      const template = salon.businessTemplate || "generic";
+      const merged = mergeSalonCms(
+        template,
+        salon.branding,
+        salon.content,
+        salon.contact,
+        salon.social
+      );
+
+      return {
+        slug: salon.slug,
+        nombre: salon.nombre,
+        businessTemplate: template,
+        categoryLabel: getBusinessTemplate(template).nombre,
+        subtitle: merged.content.heroSubtitle,
+        logoUrl: merged.branding.logoSmallUrl || merged.branding.logoUrl,
+        primaryColor: merged.branding.primaryColor || "#2563eb",
+        secondaryColor: merged.branding.secondaryColor || "#7c3aed",
+      };
+    });
   }
 }
 
