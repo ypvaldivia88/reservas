@@ -40,6 +40,28 @@ export const DEFAULT_FINANCIAL_CATEGORIES = [
 
 const syncInFlight = new Map<string, Promise<void>>();
 
+export async function ensureReservaIncomeIndexes(db: Db): Promise<void> {
+  const col = db.collection(Collections.FINANCIAL_TRANSACTIONS);
+  const indexes = await col.indexes();
+  const legacyIndex = indexes.find((idx) => idx.name === "uniq_reserva_income");
+
+  if (legacyIndex && !Object.prototype.hasOwnProperty.call(legacyIndex.key, "metodoPago")) {
+    await col.dropIndex("uniq_reserva_income");
+  }
+
+  await col.createIndex(
+    { salonId: 1, reservaId: 1, metodoPago: 1 },
+    {
+      name: "uniq_reserva_income_by_method",
+      unique: true,
+      partialFilterExpression: {
+        fuente: "reserva",
+        reservaId: { $exists: true },
+      },
+    }
+  );
+}
+
 function getPrimaryServicioId(reserva: {
   servicioIds?: string[];
   servicioId?: string;
@@ -479,6 +501,7 @@ export async function prepareFinancesForSalon(
   if (inFlight) return inFlight;
 
   const work = (async () => {
+    await ensureReservaIncomeIndexes(db);
     await ensureExpenseCategories(db, salonId);
     await syncIncomeCategoriesFromServicios(db, salonId);
     await syncIncomesFromReservas(db, salonId);
@@ -507,6 +530,8 @@ export async function createIncomeFromReserva(
   const fechaTransaccion = fecha ?? new Date().toISOString().split("T")[0];
   const inFlight = syncInFlight.get(salonId);
   if (inFlight) await inFlight;
+
+  await ensureReservaIncomeIndexes(db);
 
   await syncReservaIncomeTransactions(
     db,

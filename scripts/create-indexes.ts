@@ -8,7 +8,7 @@
 import "./load-env";
 import clientPromise from "@/lib/mongodb";
 import { DB_NAME } from "@/lib/db/collections";
-import { dedupeAllReservaIncomeTransactions } from "@/lib/finances";
+import { dedupeAllReservaIncomeTransactions, ensureReservaIncomeIndexes } from "@/lib/finances";
 
 async function createIndexes() {
   try {
@@ -87,19 +87,9 @@ async function createIndexes() {
       console.log("ℹ️  No se encontraron duplicados");
     }
 
-    await db.collection("financial_transactions").createIndex(
-      { salonId: 1, reservaId: 1 },
-      {
-        name: "uniq_reserva_income",
-        unique: true,
-        partialFilterExpression: {
-          fuente: "reserva",
-          reservaId: { $exists: true },
-        },
-      }
-    );
+    await ensureReservaIncomeIndexes(db);
     console.log(
-      "✅ Índice creado: financial_transactions.salonId + reservaId (único por ingreso de reserva)"
+      "✅ Índice creado: financial_transactions.salonId + reservaId + metodoPago (único por método de cobro)"
     );
 
     console.log("\n✨ Todos los índices creados exitosamente!");
