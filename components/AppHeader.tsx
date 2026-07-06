@@ -13,6 +13,10 @@ export default function AppHeader() {
     return null;
   }
 
+  if (pathname === "/reserva") {
+    return null;
+  }
+
   const isSlugRoute =
     pathname &&
     !RESERVED_PATHS.includes(pathname) &&

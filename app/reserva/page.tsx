@@ -1,9 +1,31 @@
 import Image from "next/image";
+import Header from "@/components/Header";
+import TenantHeader from "@/components/TenantHeader";
+import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import ReservaForm from "@/components/ReservaForm";
 import NailShapeGuide from "@/components/NailShapeGuide";
+import { salonCmsService } from "@/lib/services/salon-cms.service";
 
-export default function ReservaPage() {
-  return (
+interface ReservaPageProps {
+  searchParams: Promise<{ slug?: string }>;
+}
+
+export default async function ReservaPage({ searchParams }: ReservaPageProps) {
+  const { slug } = await searchParams;
+
+  let header = <Header isHomePage={false} />;
+  let profile = null;
+
+  if (slug) {
+    try {
+      profile = await salonCmsService.getPublicBySlug(slug);
+      header = <TenantHeader profile={profile} isHomePage={false} />;
+    } catch {
+      // Sin slug válido, se mantiene el header genérico
+    }
+  }
+
+  const pageContent = (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       {/* Hero Section - Mobile First */}
       <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8">
@@ -220,5 +242,18 @@ export default function ReservaPage() {
         </div>
       </footer>
     </div>
+  );
+
+  return (
+    <>
+      {header}
+      {profile ? (
+        <TenantBrandingProvider branding={profile.branding}>
+          {pageContent}
+        </TenantBrandingProvider>
+      ) : (
+        pageContent
+      )}
+    </>
   );
 }
