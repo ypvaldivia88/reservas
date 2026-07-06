@@ -150,7 +150,7 @@ export class SalonService {
 
     const basicPlan = await db
       .collection(Collections.SUBSCRIPTION_PLANS)
-      .findOne({ nombre: "Básico", activo: true });
+      .findOne({ activo: true }, { sort: { orden: 1 } });
 
     if (basicPlan) {
       await db.collection(Collections.TENANT_SUBSCRIPTIONS).insertOne({

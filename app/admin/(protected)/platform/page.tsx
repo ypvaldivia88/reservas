@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import PlatformNav from "@/components/PlatformNav";
+import { getBillingCycleLabel, formatSubscriptionAmount } from "@/lib/subscription";
 
 interface PaymentItem {
   _id: string;
@@ -91,7 +92,7 @@ export default function PlatformPaymentsPage() {
                       {p.salonNombre ?? "Salón"} — {p.planNombre ?? "Plan"}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {p.ciclo === "yearly" ? "Anual" : "Mensual"} ·{" "}
+                      {getBillingCycleLabel(p.ciclo as "monthly" | "semiannual" | "yearly")} ·{" "}
                       <span className="font-mono">{p.codigoReferencia}</span>
                     </p>
                     <p className="text-sm text-gray-500">
@@ -99,7 +100,7 @@ export default function PlatformPaymentsPage() {
                     </p>
                   </div>
                   <p className="text-xl font-bold text-violet-600">
-                    {p.montoFinal.toFixed(2)} CUP
+                    {formatSubscriptionAmount(p.montoFinal)}
                   </p>
                 </div>
                 {filter === "pending" && (

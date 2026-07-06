@@ -1,7 +1,8 @@
 // WhatsApp notification service using WhatsApp Web/App links
 // This allows the client to send a message directly from their own WhatsApp
 
-import { BillingCycle, SubscriptionPlan } from "@/lib/types";
+import { BillingCycle } from "@/lib/types";
+import { getBillingCycleLabel, SUBSCRIPTION_CURRENCY } from "@/lib/subscription";
 
 // Platform WhatsApp for subscription payments
 const platformPhone =
@@ -408,7 +409,7 @@ export interface SubscriptionPaymentDetails {
 export function generateSubscriptionPaymentWhatsAppLink(
   details: SubscriptionPaymentDetails
 ): string {
-  const cicloLabel = details.ciclo === 'yearly' ? 'Anual' : 'Mensual';
+  const cicloLabel = getBillingCycleLabel(details.ciclo);
   const descuentoText =
     details.descuentoPorcentaje > 0
       ? `\n🏷️ *Descuento:* ${details.descuentoPorcentaje}%`
@@ -419,8 +420,8 @@ export function generateSubscriptionPaymentWhatsAppLink(
 🏪 *Salón:* ${details.salonNombre}
 📦 *Plan:* ${details.planNombre}
 📅 *Ciclo:* ${cicloLabel}
-💰 *Precio original:* ${details.montoOriginal.toFixed(2)} CUP${descuentoText}
-✅ *Total a pagar:* ${details.montoFinal.toFixed(2)} CUP
+💰 *Precio original:* ${details.montoOriginal.toFixed(2)} ${SUBSCRIPTION_CURRENCY}${descuentoText}
+✅ *Total a pagar:* ${details.montoFinal.toFixed(2)} ${SUBSCRIPTION_CURRENCY}
 
 🔖 *Código de referencia:* ${details.codigoReferencia}
 
