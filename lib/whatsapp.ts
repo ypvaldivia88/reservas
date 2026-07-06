@@ -54,7 +54,7 @@ export function generateWhatsAppNotificationLink(
   const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
   // Build the admin edit link
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const adminLink = `${baseUrl}/admin/dashboard?reserva=${reservaId}`;
+  const adminLink = `${baseUrl}/admin/calendario?reserva=${reservaId}`;
 
   // Build the message
   const message = `🆕 *Nueva Reserva de Uñas*
@@ -345,7 +345,7 @@ export function generateClientCancellationWhatsAppLink(
   const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
   // Build the admin link
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const adminLink = `${baseUrl}/admin/dashboard?reserva=${reservaId}`;
+  const adminLink = `${baseUrl}/admin/calendario?reserva=${reservaId}`;
   
   // Build the message
   const message = `❌ *Solicitud de Cancelación de Reserva*

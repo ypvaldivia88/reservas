@@ -2,6 +2,13 @@ import { AppError } from "@/lib/api/errors";
 import { Servicio, Categoria } from "@/lib/types";
 import { servicioRepository } from "@/lib/repositories/servicio.repository";
 import { categoriaRepository } from "@/lib/repositories/categoria.repository";
+import { getDb } from "@/lib/mongodb";
+import { syncIncomeCategoriesFromServicios } from "@/lib/finances";
+
+async function syncIncomeCategories(salonId: string) {
+  const db = await getDb();
+  await syncIncomeCategoriesFromServicios(db, salonId);
+}
 
 export class ServicioService {
   async list(salonId: string): Promise<Servicio[]> {
@@ -19,7 +26,7 @@ export class ServicioService {
       throw new AppError("Faltan campos requeridos: nombre, descripcion", 400);
     }
 
-    return servicioRepository.create(salonId, {
+    const servicio = await servicioRepository.create(salonId, {
       nombre: nombre as string,
       descripcion: descripcion as string,
       precio: (precio as number) || 0,
@@ -28,6 +35,8 @@ export class ServicioService {
       activo: activo !== undefined ? (activo as boolean) : true,
       orden: (orden as number) || 0,
     });
+    await syncIncomeCategories(salonId);
+    return servicio;
   }
 
   async update(salonId: string, body: Record<string, unknown>) {
@@ -51,12 +60,14 @@ export class ServicioService {
       updateData
     );
     if (!updated) throw AppError.notFound("Servicio no encontrado");
+    await syncIncomeCategories(salonId);
   }
 
   async delete(salonId: string, id: string) {
     if (!id) throw new AppError("ID es requerido", 400);
     const deleted = await servicioRepository.remove(salonId, id);
     if (!deleted) throw AppError.notFound("Servicio no encontrado");
+    await syncIncomeCategories(salonId);
   }
 }
 

@@ -7,6 +7,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const protectedAdminPaths = [
     '/admin/dashboard',
+    '/admin/calendario',
     '/admin/schedule',
     '/admin/servicios',
     '/admin/contenido',

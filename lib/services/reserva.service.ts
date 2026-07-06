@@ -151,13 +151,28 @@ export class ReservaService {
     const updated = await reservaRepository.update(effectiveSalonId, id, updateData);
     if (!updated) throw AppError.notFound("Reserva no encontrada");
 
-    if (updateData.estado === "completada" && updateData.costo !== undefined) {
+    const finalEstado = updateData.estado ?? existing.estado;
+    const finalCosto =
+      updateData.costo !== undefined ? updateData.costo : existing.costo;
+    const finalFechaCita = updateData.fechaCita ?? existing.fechaCita;
+    const finalServicioId =
+      updateData.servicioId !== undefined ?
+        updateData.servicioId
+      : existing.servicioId;
+
+    if (
+      finalCosto !== undefined &&
+      finalCosto >= 0 &&
+      (finalEstado === "confirmada" || finalEstado === "completada")
+    ) {
       await createIncomeFromReserva(
         db,
         effectiveSalonId,
         id,
-        updateData.costo,
-        `Reserva ${existing.nombre} - ${existing.fechaCita}`
+        finalCosto,
+        `Reserva ${existing.nombre} - ${finalFechaCita}`,
+        finalFechaCita,
+        finalServicioId
       );
     }
   }

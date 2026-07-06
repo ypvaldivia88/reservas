@@ -50,6 +50,9 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
     const costo = Number(data.costo);
     if (!isNaN(costo) && costo >= 0) updateData.costo = costo;
   }
+  if (data.servicioId !== undefined) {
+    updateData.servicioId = data.servicioId || undefined;
+  }
 
   try {
     await reservaService.update(salonId, params.id, updateData);

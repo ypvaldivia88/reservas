@@ -8,6 +8,7 @@ import { AppError } from "@/lib/api/errors";
 
 export const GET = adminHandler(async ({ salonId }) => {
   const db = await getDb();
+
   const categories = await db
     .collection<FinancialCategory>(Collections.FINANCIAL_CATEGORIES)
     .find({ ...tenantQuery(salonId), activo: true })

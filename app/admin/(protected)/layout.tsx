@@ -24,6 +24,14 @@ export default function AdminProtectedLayout({
   const isPlatformRoute = pathname.startsWith("/admin/platform");
   const profileHref = isPlatformRoute ? "/admin/platform/perfil" : "/admin/perfil";
 
+  const salonSecondaryItems = [
+    { href: "/admin/sitio", label: "Sitio" },
+    { href: "/admin/suscripcion", label: "Plan" },
+    { href: profileHref, label: "Mi Perfil" },
+  ];
+
+  const closeMenu = () => setIsMobileMenuOpen(false);
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -79,19 +87,31 @@ export default function AdminProtectedLayout({
                 className="rounded-full p-2"
               />
 
-              <Link href={profileHref}>
-                <Button variant="primary" size="sm">
-                  Mi Perfil
-                </Button>
-              </Link>
-              <Button
-                onClick={handleLogout}
-                variant="outlined-secondary"
-                size="sm"
-                icon={<LogoutIcon />}
-              >
-                Cerrar Sesión
-              </Button>
+              {isPlatformRoute ? (
+                <>
+                  <Link href={profileHref}>
+                    <Button variant="primary" size="sm">
+                      Mi Perfil
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={handleLogout}
+                    variant="outlined-secondary"
+                    size="sm"
+                    icon={<LogoutIcon />}
+                  >
+                    Cerrar Sesión
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  variant="ghost"
+                  size="sm"
+                  icon={isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+                  aria-label="Menú de administración"
+                />
+              )}
             </div>
 
             {/* Mobile View - Hamburger Menu */}
@@ -110,28 +130,51 @@ export default function AdminProtectedLayout({
                 variant="ghost"
                 size="sm"
                 icon={isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-                aria-label="Toggle menu"
+                aria-label="Menú de administración"
               />
             </div>
           </div>
 
-          {/* Mobile Menu Dropdown */}
+          {/* Menú hamburguesa (salón: páginas secundarias; plataforma: perfil y sesión) */}
           {isMobileMenuOpen && (
-            <div className="md:hidden mt-4 space-y-2 pb-2">
-              <Link href={profileHref} className="w-full">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Mi Perfil
-                </Button>
-              </Link>
+            <div
+              className={`mt-4 space-y-2 pb-2 ${
+                isPlatformRoute ? "md:hidden" : ""
+              }`}
+            >
+              {!isPlatformRoute &&
+                salonSecondaryItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="w-full">
+                    <Button
+                      variant={
+                        pathname.startsWith(item.href) ? "primary" : "outlined-secondary"
+                      }
+                      size="sm"
+                      fullWidth
+                      onClick={closeMenu}
+                    >
+                      {item.label}
+                    </Button>
+                  </Link>
+                ))}
+
+              {isPlatformRoute && (
+                <Link href={profileHref} className="w-full">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    fullWidth
+                    onClick={closeMenu}
+                  >
+                    Mi Perfil
+                  </Button>
+                </Link>
+              )}
+
               <Button
                 onClick={() => {
                   handleLogout();
-                  setIsMobileMenuOpen(false);
+                  closeMenu();
                 }}
                 variant="outlined-secondary"
                 size="sm"
@@ -145,11 +188,11 @@ export default function AdminProtectedLayout({
         </div>
       </header>
 
-      {/* Navegación común (solo salones, no plataforma) */}
+      {/* Navegación (solo salones, no plataforma) */}
       {!isPlatformRoute && <AdminNav />}
 
       {/* Contenido de cada página */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 md:pb-8 lg:px-8">
         <AdminRoleGuard>{children}</AdminRoleGuard>
       </div>
     </div>

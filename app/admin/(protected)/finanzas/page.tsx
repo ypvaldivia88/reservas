@@ -14,6 +14,8 @@ export default function FinanzasPage() {
   const [categories, setCategories] = useState<FinancialCategory[]>([]);
   const [report, setReport] = useState<FinancialReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [filterTipo, setFilterTipo] = useState<"" | TransactionType>("");
   const [desde, setDesde] = useState(() => {
@@ -34,7 +36,23 @@ export default function FinanzasPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
+      setSyncing(true);
+      const syncController = new AbortController();
+      const syncTimeout = setTimeout(() => syncController.abort(), 20000);
+      try {
+        await fetch("/api/finanzas/sync", {
+          method: "POST",
+          signal: syncController.signal,
+        });
+      } catch {
+        // La página debe cargar aunque la sincronización falle o tarde demasiado
+      } finally {
+        clearTimeout(syncTimeout);
+        setSyncing(false);
+      }
+
       const tipoParam = filterTipo ? `&tipo=${filterTipo}` : "";
       const [txRes, catRes, repRes] = await Promise.all([
         fetch(
@@ -43,6 +61,11 @@ export default function FinanzasPage() {
         fetch("/api/finanzas/categories"),
         fetch(`/api/finanzas/reports?desde=${desde}&hasta=${hasta}`),
       ]);
+
+      if (!txRes.ok || !catRes.ok || !repRes.ok) {
+        throw new Error("Error en la respuesta del servidor");
+      }
+
       const [txData, catData, repData] = await Promise.all([
         txRes.json(),
         catRes.json(),
@@ -51,8 +74,13 @@ export default function FinanzasPage() {
       if (txData.success) setTransactions(txData.data);
       if (catData.success) setCategories(catData.data);
       if (repData.success) setReport(repData.data);
+
+      if (!txData.success || !catData.success || !repData.success) {
+        throw new Error("No se pudieron obtener los datos de finanzas");
+      }
     } catch (e) {
       console.error(e);
+      setError("No se pudieron cargar las finanzas. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -103,13 +131,25 @@ export default function FinanzasPage() {
             Finanzas
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-            Gestiona ingresos, gastos y reportes de tu salón
+            Ingresos por servicio del salón, gastos y reportes
           </p>
         </div>
         <Button variant="primary" onClick={() => setShowForm(true)}>
           + Nueva transacción
         </Button>
       </div>
+
+      {syncing && (
+        <p className="text-sm text-blue-600 dark:text-blue-400">
+          Sincronizando ingresos de turnos...
+        </p>
+      )}
+
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-300">
+          {error}
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 items-end bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
