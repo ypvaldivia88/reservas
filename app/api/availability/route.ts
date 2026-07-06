@@ -3,6 +3,12 @@ import clientPromise from "@/lib/mongodb";
 import { AvailabilityOverride, Schedule, Reserva, ApiResponse, DayOfWeek } from "@/lib/types";
 import { dateUtils, scheduleUtils, phoneUtils } from "@/lib/utils";
 import { ACTIVE_RESERVATION_STATES } from "@/lib/reservaValidation";
+import { tenantQuery } from "@/lib/tenant";
+import { resolvePublicTenant } from "@/lib/services/tenant-context.service";
+import { adminHandler } from "@/lib/api/handlers";
+import { ok, created } from "@/lib/api/responses";
+import { AppError } from "@/lib/api/errors";
+import { handleError } from "@/lib/api/responses";
 
 // Función helper para obtener el día de la semana de una fecha
 function getDayOfWeek(dateString: string): DayOfWeek {
@@ -20,17 +26,23 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     const daysParam = searchParams.get("days") || "30"; // Por defecto 30 días
     const telefonoParam = searchParams.get("telefono");
 
+    const { salonId } = await resolvePublicTenant(request);
+    const tenantFilter = tenantQuery(salonId);
+
     const client = await clientPromise;
     const db = client.db("nailsalon");
 
     // Obtener el horario por defecto
     let schedule = await db
       .collection<Schedule>("schedules")
-      .findOne({ name: "default" });
+      .findOne({ name: "default", ...tenantFilter });
 
     if (!schedule) {
       // Crear horario por defecto si no existe
-      const defaultSchedule = scheduleUtils.createDefaultSchedule();
+      const defaultSchedule = {
+        ...scheduleUtils.createDefaultSchedule(),
+        salonId,
+      };
       const result = await db
         .collection("schedules")
         .insertOne(defaultSchedule);
@@ -70,6 +82,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       .collection("availability_overrides")
       .find({
         date: { $gte: startDateStr, $lte: endDateStr },
+        ...tenantFilter,
       })
       .toArray()) as unknown as AvailabilityOverride[];
 
@@ -85,6 +98,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       .find({
         fechaCita: { $gte: startDateStr, $lte: endDateStr },
         estado: { $in: ACTIVE_RESERVATION_STATES },
+        ...tenantFilter,
       })
       .toArray()) as unknown as Reserva[];
 
@@ -198,99 +212,51 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 }
 
 // POST: Crear un override de disponibilidad para una fecha específica
-export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<AvailabilityOverride>>> {
-  try {
-    const data = await request.json();
+export const POST = adminHandler(async ({ salonId, request }) => {
+  const data = await request.json();
 
-    if (!data.date) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'La fecha es requerida'
-        },
-        { status: 400 }
-      );
-    }
+  if (!data.date) throw new AppError("La fecha es requerida", 400);
 
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
+  const client = await clientPromise;
+  const db = client.db("nailsalon");
 
-    const override: Omit<AvailabilityOverride, '_id'> = {
-      date: data.date,
-      slots: data.slots || [],
-      isWorkingDay: data.isWorkingDay !== undefined ? data.isWorkingDay : true,
-      reason: data.reason || '',
-      createdAt: new Date()
-    };
+  const override: Omit<AvailabilityOverride, "_id"> = {
+    salonId,
+    date: data.date,
+    slots: data.slots || [],
+    isWorkingDay: data.isWorkingDay !== undefined ? data.isWorkingDay : true,
+    reason: data.reason || "",
+    createdAt: new Date(),
+  };
 
-    const result = await db.collection<AvailabilityOverride>("availability_overrides").findOneAndUpdate(
-      { date: data.date },
+  const result = await db
+    .collection<AvailabilityOverride>("availability_overrides")
+    .findOneAndUpdate(
+      { date: data.date, ...tenantQuery(salonId) },
       { $set: override },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, returnDocument: "after" }
     );
 
-    if (!result) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Error al crear el override de disponibilidad'
-        },
-        { status: 500 }
-      );
-    }
+  if (!result) throw AppError.internal("Error al crear el override de disponibilidad");
 
-    return NextResponse.json({
-      success: true,
-      data: result as AvailabilityOverride,
-      message: 'Override de disponibilidad creado exitosamente'
-    });
-
-  } catch (error) {
-    console.error('Error en POST /api/availability:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Error interno del servidor'
-      },
-      { status: 500 }
-    );
-  }
-}
+  return created(
+    result as AvailabilityOverride,
+    "Override de disponibilidad creado exitosamente"
+  );
+});
 
 // DELETE: Eliminar un override de disponibilidad
-export async function DELETE(request: NextRequest): Promise<NextResponse<ApiResponse>> {
-  try {
-    const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
+export const DELETE = adminHandler(async ({ salonId, request }) => {
+  const date = request.nextUrl.searchParams.get("date");
+  if (!date) throw new AppError("La fecha es requerida", 400);
 
-    if (!date) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'La fecha es requerida'
-        },
-        { status: 400 }
-      );
-    }
+  const client = await clientPromise;
+  const db = client.db("nailsalon");
 
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
+  await db.collection<AvailabilityOverride>("availability_overrides").deleteOne({
+    date,
+    ...tenantQuery(salonId),
+  });
 
-    await db.collection<AvailabilityOverride>("availability_overrides").deleteOne({ date });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Override eliminado exitosamente'
-    });
-
-  } catch (error) {
-    console.error('Error en DELETE /api/availability:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Error interno del servidor'
-      },
-      { status: 500 }
-    );
-  }
-}
+  return ok(undefined, { message: "Override eliminado exitosamente" });
+});

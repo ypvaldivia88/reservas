@@ -1,6 +1,7 @@
 import { Db, ObjectId } from "mongodb";
 import { Reserva, FORMAS_UNAS } from "@/lib/types";
 import { dateUtils, phoneUtils } from "@/lib/utils";
+import { tenantQuery } from "@/lib/tenant";
 
 export const ACTIVE_RESERVATION_STATES = ["pendiente", "confirmada"] as const;
 
@@ -79,23 +80,32 @@ export async function findActiveSlotConflict(
   db: Db,
   fechaCita: string,
   horaCita: string,
-  excludeId?: string
+  excludeId?: string,
+  salonId?: string
 ): Promise<Reserva | null> {
-  return (await db.collection("reservas").findOne({
+  const filter: Record<string, unknown> = {
     fechaCita,
     horaCita,
     estado: { $in: ACTIVE_RESERVATION_STATES },
     ...buildExcludeIdFilter(excludeId),
-  })) as Reserva | null;
+  };
+  if (salonId) Object.assign(filter, tenantQuery(salonId));
+
+  return (await db.collection("reservas").findOne(filter)) as Reserva | null;
 }
 
 /** Evita más de una reserva activa por cliente en el mismo día. */
 export async function findClientDayConflict(
   db: Db,
   fechaCita: string,
-  options: { clienteId?: string; telefono?: string; excludeId?: string }
+  options: {
+    clienteId?: string;
+    telefono?: string;
+    excludeId?: string;
+    salonId?: string;
+  }
 ): Promise<Reserva | null> {
-  const { clienteId, telefono, excludeId } = options;
+  const { clienteId, telefono, excludeId, salonId } = options;
 
   const clientFilters: Record<string, unknown>[] = [];
   if (clienteId) clientFilters.push({ clienteId });
@@ -103,12 +113,15 @@ export async function findClientDayConflict(
 
   if (clientFilters.length === 0) return null;
 
-  return (await db.collection("reservas").findOne({
+  const filter: Record<string, unknown> = {
     fechaCita,
     estado: { $in: ACTIVE_RESERVATION_STATES },
     $or: clientFilters,
     ...buildExcludeIdFilter(excludeId),
-  })) as Reserva | null;
+  };
+  if (salonId) Object.assign(filter, tenantQuery(salonId));
+
+  return (await db.collection("reservas").findOne(filter)) as Reserva | null;
 }
 
 export function clientDayConflictMessage(existingHora?: string): string {

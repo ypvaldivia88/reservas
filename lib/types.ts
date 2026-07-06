@@ -1,6 +1,135 @@
-// Tipos para la aplicación de reservas
+// ─── Multi-tenant ───────────────────────────────────────────────────────────
+
+export interface Salon {
+  _id?: string;
+  salonId: string;
+  slug: string;
+  nombre: string;
+  whatsappNumber?: string;
+  timezone?: string;
+  currency?: string;
+  status: 'active' | 'inactive' | 'suspended';
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
+}
+
+export interface SalonRegistrationRequest {
+  nombre: string;
+  slug: string;
+  whatsappNumber?: string;
+  adminNombre: string;
+  adminUsername: string;
+  adminPassword: string;
+}
+
+export interface SalonRegistrationResult {
+  salonId: string;
+  slug: string;
+  nombre: string;
+  adminUsername: string;
+  trialEndsAt: string;
+}
+
+// ─── Suscripciones ──────────────────────────────────────────────────────────
+
+export type BillingCycle = 'monthly' | 'yearly';
+export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'cancelled' | 'pending_payment';
+export type PaymentRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface SubscriptionPlan {
+  _id?: string;
+  nombre: string;
+  descripcion: string;
+  precioMensual: number;
+  precioAnual: number;
+  /** Descuento porcentual incluido en el plan (ej. 20 = 20% off) */
+  descuentoPorcentaje: number;
+  /** Descuento adicional al pagar anual (ej. 15 = 15% extra) */
+  descuentoAnualPorcentaje: number;
+  caracteristicas: string[];
+  activo: boolean;
+  orden?: number;
+  fechaCreacion?: Date;
+}
+
+export interface TenantSubscription {
+  _id?: string;
+  salonId: string;
+  planId: string;
+  ciclo: BillingCycle;
+  status: SubscriptionStatus;
+  descuentoAplicado: number;
+  periodoInicio?: Date;
+  periodoFin?: Date;
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
+}
+
+export interface PaymentRequest {
+  _id?: string;
+  salonId: string;
+  planId: string;
+  ciclo: BillingCycle;
+  montoOriginal: number;
+  descuentoPorcentaje: number;
+  montoFinal: number;
+  codigoReferencia: string;
+  status: PaymentRequestStatus;
+  notas?: string;
+  fechaCreacion?: Date;
+  fechaResolucion?: Date;
+}
+
+// ─── Finanzas ───────────────────────────────────────────────────────────────
+
+export type TransactionType = 'income' | 'expense';
+export type TransactionSource = 'manual' | 'reserva' | 'import';
+
+export interface FinancialCategory {
+  _id?: string;
+  salonId: string;
+  nombre: string;
+  tipo: TransactionType;
+  color?: string;
+  activo: boolean;
+  fechaCreacion?: Date;
+}
+
+export interface FinancialTransaction {
+  _id?: string;
+  salonId: string;
+  tipo: TransactionType;
+  categoriaId?: string;
+  categoriaNombre?: string;
+  monto: number;
+  moneda?: string;
+  fecha: string;
+  descripcion: string;
+  fuente: TransactionSource;
+  reservaId?: string;
+  fechaCreacion?: Date;
+}
+
+export interface FinancialReport {
+  periodo: { desde: string; hasta: string };
+  resumen: {
+    ingresos: number;
+    gastos: number;
+    balance: number;
+  };
+  ingresosPorCategoria: { categoria: string; total: number }[];
+  gastosPorCategoria: { categoria: string; total: number }[];
+  ingresosPorMes: { mes: string; total: number }[];
+  gastosPorMes: { mes: string; total: number }[];
+  ingresosPorReservas: number;
+  ingresosManuales: number;
+}
+
+// ─── Reservas ───────────────────────────────────────────────────────────────
+
 export interface Reserva {
   _id?: string;
+  salonId?: string;
   clienteId?: string;
   nombre: string;
   telefono: string;
@@ -43,16 +172,27 @@ export const FORMAS_UNAS: FormaUna[] = [
 export const LARGOS_UNAS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 // Tipos para autenticación y usuarios
-export type UserRole = 'admin' | 'cliente';
+export type UserRole = 'platform_admin' | 'salon_admin' | 'admin' | 'cliente';
 
 export interface User {
   _id?: string;
+  salonId?: string;
   nombre: string;
   telefono?: string; // Solo para clientes
   username?: string; // Solo para admin
   password?: string; // Solo para admin (hasheado)
   role: UserRole;
   fechaCreacion?: Date;
+}
+
+export interface SessionData {
+  token: string;
+  userId: string;
+  username?: string;
+  role: UserRole;
+  salonId?: string;
+  createdAt: Date;
+  expiresAt: Date;
 }
 
 export interface LoginCredentials {
@@ -65,9 +205,29 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  nombre?: string;
+  username?: string;
+}
+
+export interface AdminUserUpdateRequest {
+  nombre?: string;
+  username?: string;
+  newPassword?: string;
+}
+
+export interface UserProfile {
+  _id: string;
+  nombre: string;
+  username?: string;
+  role: UserRole;
+  salonId?: string;
+}
+
 // Tipos para imágenes y galerías
 export interface ImageData {
   _id?: string;
+  salonId?: string;
   nombre: string;
   descripcion?: string;
   blobUrl: string; // URL de Vercel Blob Storage (REQUIRED)
@@ -86,6 +246,7 @@ export interface ImageData {
 
 export interface Servicio {
   _id?: string;
+  salonId?: string;
   nombre: string;
   descripcion: string;
   precio?: number;
@@ -99,6 +260,7 @@ export interface Servicio {
 
 export interface Categoria {
   _id?: string;
+  salonId?: string;
   nombre: string;
   descripcion?: string;
   imagenId?: string; // Referencia a ImageData
@@ -110,6 +272,7 @@ export interface Categoria {
 
 export interface GaleriaItem {
   _id?: string;
+  salonId?: string;
   titulo: string;
   descripcion?: string;
   imagenId: string; // Referencia a ImageData
@@ -136,6 +299,7 @@ export interface DaySchedule {
 
 export interface Schedule {
   _id?: string;
+  salonId?: string;
   name: string; // "default" para el horario por defecto
   description?: string;
   schedule: DaySchedule[];
@@ -145,6 +309,7 @@ export interface Schedule {
 
 export interface AvailabilityOverride {
   _id?: string;
+  salonId?: string;
   date: string; // Formato YYYY-MM-DD
   slots: TimeSlot[];
   isWorkingDay: boolean;

@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "echo \"No tests specified\" && exit 0",
-    "clean": "rm -rf .next out"
+    "clean": "rm -rf .next out",
+    "migrate:multi-tenant": "npx tsx scripts/migrate-multi-tenant.ts"
   },
   "dependencies": {
     "@vercel/blob": "^2.0.0",

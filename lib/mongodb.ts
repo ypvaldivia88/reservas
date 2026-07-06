@@ -1,4 +1,5 @@
 import { MongoClient, Db } from "mongodb";
+import { DB_NAME } from "@/lib/db/collections";
 
 // Verificar que la URI de MongoDB esté configurada
 if (!process.env.MONGODB_URI) {
@@ -7,11 +8,11 @@ if (!process.env.MONGODB_URI) {
 
 const uri: string = process.env.MONGODB_URI;
 const options = {
-  maxPoolSize: 10, // Máximo número de conexiones en el pool
-  serverSelectionTimeoutMS: 5000, // Timeout para selección de servidor
-  socketTimeoutMS: 45000, // Timeout para operaciones de socket
-  maxIdleTimeMS: 30000, // Tiempo máximo de conexiones inactivas
-  retryWrites: true, // Reintentar operaciones de escritura en caso de fallo
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  maxIdleTimeMS: 30000,
+  retryWrites: true,
 };
 
 let client: MongoClient;
@@ -23,29 +24,31 @@ declare global {
 }
 
 if (process.env.NODE_ENV === "development") {
-  // En desarrollo, reutiliza el cliente para no abrir muchas conexiones
   if (!global._mongoClientPromise) {
     client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  // En producción, es mejor crear una nueva conexión
   client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
 
-// Función helper para obtener la base de datos
-export async function getDatabase(dbName: string = "nailsalon"): Promise<Db> {
-  const client = await clientPromise;
-  return client.db(dbName);
+/** Punto único de acceso a la base de datos (DIP) */
+export async function getDb(dbName: string = DB_NAME): Promise<Db> {
+  const mongoClient = await clientPromise;
+  return mongoClient.db(dbName);
 }
 
-// Función para probar la conexión
+/** @deprecated Usar getDb() */
+export async function getDatabase(dbName: string = DB_NAME): Promise<Db> {
+  return getDb(dbName);
+}
+
 export async function testConnection(): Promise<boolean> {
   try {
-    const client = await clientPromise;
-    await client.db("admin").command({ ping: 1 });
+    const mongoClient = await clientPromise;
+    await mongoClient.db("admin").command({ ping: 1 });
     console.log("✅ MongoDB connection successful");
     return true;
   } catch (error) {
