@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Reserva, User, Servicio } from "@/lib/types";
+import { Reserva, User, Servicio, PaymentMethod } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
+import { PAYMENT_METHOD_OPTIONS } from "@/lib/paymentMethods";
 import { Button } from "@/components/ui/Button";
 import ReservasTable from "@/components/ReservasTable";
 import {
@@ -62,6 +63,7 @@ function DashboardContent() {
     ...reserva,
     servicioIds: getReservaServicioIds(reserva),
     servicioId: getReservaServicioIds(reserva)[0],
+    metodoPago: reserva.metodoPago ?? "transferencia",
   });
 
   const sumServiciosPrecio = (servicioIds: string[]): number =>
@@ -195,6 +197,7 @@ function DashboardContent() {
           costo: reserva.costo,
           servicioIds: getReservaServicioIds(reserva),
           servicioId: getReservaServicioIds(reserva)[0],
+          metodoPago: reserva.metodoPago,
         }),
       });
 
@@ -1135,6 +1138,45 @@ function DashboardContent() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Forma de cobro
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {PAYMENT_METHOD_OPTIONS.map((option) => (
+                            <label
+                              key={option.value}
+                              className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                                editingReserva.metodoPago === option.value ?
+                                  "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="metodoPago"
+                                value={option.value}
+                                checked={editingReserva.metodoPago === option.value}
+                                onChange={() =>
+                                  setEditingReserva({
+                                    ...editingReserva,
+                                    metodoPago: option.value as PaymentMethod,
+                                  })
+                                }
+                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div>
+                                <span className="block text-sm font-medium text-gray-900 dark:text-white">
+                                  {option.label}
+                                </span>
+                                <span className="block text-xs text-gray-500 dark:text-gray-400">
+                                  Moneda: {option.moneda}
+                                </span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                           Ingreso / Costo{" "}
                           {editingReserva.estado === "completada" ?
                             "(editable)"
@@ -1222,6 +1264,13 @@ function DashboardContent() {
                           if (editingReserva.costo == null) {
                             setActionMessage(
                               "❌ Por favor ingresa el costo antes de completar la reserva"
+                            );
+                            setTimeout(() => setActionMessage(""), 3000);
+                            return;
+                          }
+                          if (!editingReserva.metodoPago) {
+                            setActionMessage(
+                              "❌ Selecciona la forma de cobro (transferencia o efectivo CUP)"
                             );
                             setTimeout(() => setActionMessage(""), 3000);
                             return;

@@ -1,11 +1,12 @@
 import { adminHandler, publicHandler } from "@/lib/api/handlers";
 import { ok } from "@/lib/api/responses";
 import { reservaService } from "@/lib/services/reserva.service";
-import { FORMAS_UNAS, Reserva } from "@/lib/types";
+import { FORMAS_UNAS, Reserva, PaymentMethod } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
 import { AppError } from "@/lib/api/errors";
 import { isMongoDuplicateKeyError } from "@/lib/reservaValidation";
 import { clientDayConflictMessage } from "@/lib/reservaValidation";
+import { isPaymentMethod } from "@/lib/paymentMethods";
 
 export const GET = publicHandler(async ({ salonId, params }) => {
   const data = await reservaService.getById(salonId, params.id);
@@ -59,6 +60,12 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
   } else if (data.servicioId !== undefined) {
     updateData.servicioId = data.servicioId || undefined;
     updateData.servicioIds = data.servicioId ? [data.servicioId] : [];
+  }
+  if (data.metodoPago !== undefined) {
+    if (data.metodoPago && !isPaymentMethod(data.metodoPago)) {
+      throw new AppError("Forma de cobro inválida", 400);
+    }
+    updateData.metodoPago = data.metodoPago || undefined;
   }
 
   try {

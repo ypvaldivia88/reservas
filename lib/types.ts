@@ -187,6 +187,7 @@ export interface PaymentRequest {
 
 export type TransactionType = 'income' | 'expense';
 export type TransactionSource = 'manual' | 'reserva' | 'import';
+export type PaymentMethod = 'transferencia' | 'efectivo_cup';
 
 export interface FinancialCategory {
   _id?: string;
@@ -207,6 +208,7 @@ export interface FinancialTransaction {
   categoriaNombre?: string;
   monto: number;
   moneda?: string;
+  metodoPago?: PaymentMethod;
   fecha: string;
   descripcion: string;
   fuente: TransactionSource;
@@ -227,6 +229,12 @@ export interface FinancialReport {
   gastosPorMes: { mes: string; total: number }[];
   ingresosPorReservas: number;
   ingresosManuales: number;
+  ingresosPorMetodoPago: {
+    metodo: PaymentMethod;
+    label: string;
+    moneda: string;
+    total: number;
+  }[];
 }
 
 // ─── Reservas ───────────────────────────────────────────────────────────────
@@ -248,6 +256,7 @@ export interface Reserva {
   /** @deprecated Usar servicioIds. Se mantiene por compatibilidad con datos existentes. */
   servicioId?: string;
   servicioIds?: string[]; // Servicios consumidos al cerrar el turno
+  metodoPago?: PaymentMethod; // Forma de cobro al cerrar el turno
 }
 
 export interface ApiResponse<T = unknown> {

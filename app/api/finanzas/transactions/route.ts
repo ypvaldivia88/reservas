@@ -6,9 +6,14 @@ import { tenantQuery } from "@/lib/tenant";
 import {
   FinancialTransaction,
   FinancialCategory,
+  PaymentMethod,
 } from "@/lib/types";
 import { ObjectId } from "mongodb";
 import { AppError } from "@/lib/api/errors";
+import {
+  getMonedaForPaymentMethod,
+  isPaymentMethod,
+} from "@/lib/paymentMethods";
 
 export const GET = adminHandler(async ({ salonId, request }) => {
   const tipo = request.nextUrl.searchParams.get("tipo");
@@ -35,7 +40,7 @@ export const GET = adminHandler(async ({ salonId, request }) => {
 
 export const POST = adminHandler(async ({ salonId, request }) => {
   const body = await request.json();
-  const { tipo, monto, fecha, descripcion, categoriaId } = body;
+  const { tipo, monto, fecha, descripcion, categoriaId, metodoPago } = body;
 
   if (!tipo || !["income", "expense"].includes(tipo)) {
     throw new AppError("tipo debe ser income o expense", 400);
@@ -45,6 +50,14 @@ export const POST = adminHandler(async ({ salonId, request }) => {
   }
   if (!fecha || !descripcion) {
     throw new AppError("fecha y descripcion son requeridos", 400);
+  }
+  if (tipo === "income") {
+    if (!metodoPago || !isPaymentMethod(metodoPago)) {
+      throw new AppError(
+        "metodoPago debe ser transferencia o efectivo_cup para ingresos",
+        400
+      );
+    }
   }
 
   const db = await getDb();
@@ -56,13 +69,20 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     categoriaNombre = cat?.nombre;
   }
 
+  const resolvedMetodoPago: PaymentMethod | undefined =
+    tipo === "income" ? (metodoPago as PaymentMethod) : undefined;
+
   const transaction: Omit<FinancialTransaction, "_id"> = {
     salonId,
     tipo,
     categoriaId,
     categoriaNombre,
     monto: Number(monto),
-    moneda: "USD",
+    moneda:
+      tipo === "income" ?
+        getMonedaForPaymentMethod(resolvedMetodoPago)
+      : "USD",
+    metodoPago: resolvedMetodoPago,
     fecha,
     descripcion: descripcion.trim(),
     fuente: "manual",

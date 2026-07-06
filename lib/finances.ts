@@ -2,10 +2,17 @@ import { Db } from "mongodb";
 import {
   FinancialReport,
   FinancialTransaction,
+  PaymentMethod,
   TransactionType,
 } from "@/lib/types";
 import { tenantQuery } from "@/lib/tenant";
 import { Collections } from "@/lib/db/collections";
+import {
+  getMonedaForPaymentMethod,
+  getPaymentMethodMeta,
+  isPaymentMethod,
+  PAYMENT_METHOD_OPTIONS,
+} from "@/lib/paymentMethods";
 
 const INCOME_COLORS = [
   "#22c55e",
@@ -96,13 +103,16 @@ async function upsertReservaIncomeTransaction(
   monto: number,
   descripcion: string,
   fecha: string,
-  servicioId?: string
+  servicioId?: string,
+  metodoPago?: PaymentMethod
 ): Promise<void> {
   const { categoriaId, categoriaNombre } = await resolveIncomeCategory(
     db,
     salonId,
     servicioId
   );
+  const resolvedMetodoPago = metodoPago ?? "transferencia";
+  const moneda = getMonedaForPaymentMethod(resolvedMetodoPago);
 
   await db.collection(Collections.FINANCIAL_TRANSACTIONS).findOneAndUpdate(
     {
@@ -116,12 +126,13 @@ async function upsertReservaIncomeTransaction(
         descripcion,
         fecha,
         tipo: "income",
+        metodoPago: resolvedMetodoPago,
+        moneda,
         ...(categoriaId ? { categoriaId } : {}),
         ...(categoriaNombre ? { categoriaNombre } : {}),
       },
       $setOnInsert: {
         salonId,
-        moneda: "USD",
         fuente: "reserva",
         reservaId,
         fechaCreacion: new Date(),
@@ -283,6 +294,10 @@ export async function syncIncomesFromReservas(
     const descripcion = `Reserva ${reserva.nombre} - ${reserva.fechaCita}`;
     const fecha = reserva.fechaCita as string;
 
+    const metodoPago = isPaymentMethod(reserva.metodoPago) ?
+      reserva.metodoPago
+    : undefined;
+
     await upsertReservaIncomeTransaction(
       db,
       salonId,
@@ -290,7 +305,8 @@ export async function syncIncomesFromReservas(
       costo,
       descripcion,
       fecha,
-      servicioId
+      servicioId,
+      metodoPago
     );
   }
 }
@@ -323,7 +339,8 @@ export async function createIncomeFromReserva(
   monto: number,
   descripcion: string,
   fecha?: string,
-  servicioId?: string
+  servicioId?: string,
+  metodoPago?: PaymentMethod
 ): Promise<void> {
   const fechaTransaccion = fecha ?? new Date().toISOString().split("T")[0];
   const inFlight = syncInFlight.get(salonId);
@@ -336,7 +353,8 @@ export async function createIncomeFromReserva(
     monto,
     descripcion,
     fechaTransaccion,
-    servicioId
+    servicioId,
+    metodoPago
   );
 }
 
@@ -362,6 +380,7 @@ export async function generateFinancialReport(
   const gastosPorCategoriaMap = new Map<string, number>();
   const ingresosPorMesMap = new Map<string, number>();
   const gastosPorMesMap = new Map<string, number>();
+  const ingresosPorMetodoPagoMap = new Map<PaymentMethod, number>();
   let ingresosPorReservas = 0;
   let ingresosManuales = 0;
 
@@ -378,6 +397,13 @@ export async function generateFinancialReport(
       ingresosPorMesMap.set(
         mes,
         (ingresosPorMesMap.get(mes) ?? 0) + tx.monto
+      );
+      const metodo: PaymentMethod =
+        tx.metodoPago ??
+        (tx.moneda === "CUP" ? "efectivo_cup" : "transferencia");
+      ingresosPorMetodoPagoMap.set(
+        metodo,
+        (ingresosPorMetodoPagoMap.get(metodo) ?? 0) + tx.monto
       );
       if (tx.fuente === "reserva") {
         ingresosPorReservas += tx.monto;
@@ -417,5 +443,13 @@ export async function generateFinancialReport(
     gastosPorMes: toMonthArray(gastosPorMesMap),
     ingresosPorReservas: Math.round(ingresosPorReservas * 100) / 100,
     ingresosManuales: Math.round(ingresosManuales * 100) / 100,
+    ingresosPorMetodoPago: PAYMENT_METHOD_OPTIONS.map((option) => ({
+      metodo: option.value,
+      label: option.label,
+      moneda: option.moneda,
+      total:
+        Math.round((ingresosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
+        100,
+    })).filter((item) => item.total > 0),
   };
 }

@@ -7,7 +7,13 @@ import {
   FinancialCategory,
   FinancialReport,
   TransactionType,
+  PaymentMethod,
 } from "@/lib/types";
+import {
+  formatTransactionAmount,
+  getPaymentMethodMeta,
+  PAYMENT_METHOD_OPTIONS,
+} from "@/lib/paymentMethods";
 
 export default function FinanzasPage() {
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
@@ -32,6 +38,7 @@ export default function FinanzasPage() {
     fecha: new Date().toISOString().split("T")[0],
     descripcion: "",
     categoriaId: "",
+    metodoPago: "transferencia" as PaymentMethod,
   });
 
   const loadData = useCallback(async () => {
@@ -109,6 +116,7 @@ export default function FinanzasPage() {
         fecha: new Date().toISOString().split("T")[0],
         descripcion: "",
         categoriaId: "",
+        metodoPago: "transferencia",
       });
       loadData();
     }
@@ -189,10 +197,10 @@ export default function FinanzasPage() {
 
       {/* Resumen */}
       {report && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
             <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-              Ingresos
+              Ingresos totales
             </p>
             <p className="text-2xl font-bold text-green-800 dark:text-green-300">
               ${report.resumen.ingresos.toFixed(2)}
@@ -202,6 +210,21 @@ export default function FinanzasPage() {
               {report.ingresosManuales.toFixed(2)}
             </p>
           </div>
+          {report.ingresosPorMetodoPago.map((item) => (
+            <div
+              key={item.metodo}
+              className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800"
+            >
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                {item.label}
+              </p>
+              <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">
+                {item.moneda === "CUP"
+                  ? `${item.total.toFixed(2)} CUP`
+                  : `$${item.total.toFixed(2)}`}
+              </p>
+            </div>
+          ))}
           <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
             <p className="text-sm text-red-700 dark:text-red-400 font-medium">
               Gastos
@@ -218,7 +241,7 @@ export default function FinanzasPage() {
             }`}
           >
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Balance
+              Balance (USD)
             </p>
             <p
               className={`text-2xl font-bold ${
@@ -307,6 +330,7 @@ export default function FinanzasPage() {
                   <th className="px-4 py-3 text-left">Tipo</th>
                   <th className="px-4 py-3 text-left">Descripción</th>
                   <th className="px-4 py-3 text-left">Categoría</th>
+                  <th className="px-4 py-3 text-left">Cobro</th>
                   <th className="px-4 py-3 text-right">Monto</th>
                   <th className="px-4 py-3 text-right">Acciones</th>
                 </tr>
@@ -335,12 +359,22 @@ export default function FinanzasPage() {
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {tx.tipo === "income"
+                        ? getPaymentMethodMeta(tx.metodoPago).label
+                        : "—"}
+                    </td>
                     <td
                       className={`px-4 py-3 text-right font-medium ${
                         tx.tipo === "income" ? "text-green-600" : "text-red-600"
                       }`}
                     >
-                      {tx.tipo === "income" ? "+" : "-"}${tx.monto.toFixed(2)}
+                      {tx.tipo === "income" ? "+" : "-"}
+                      {formatTransactionAmount(
+                        tx.monto,
+                        tx.metodoPago,
+                        tx.moneda
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {tx.fuente === "manual" && (
@@ -405,8 +439,37 @@ export default function FinanzasPage() {
                   ))}
                 </select>
               </div>
+              {form.tipo === "income" && (
+                <div>
+                  <label className="text-sm font-medium block mb-1">
+                    Forma de cobro
+                  </label>
+                  <select
+                    value={form.metodoPago}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        metodoPago: e.target.value as PaymentMethod,
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  >
+                    {PAYMENT_METHOD_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label} ({option.moneda})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
-                <label className="text-sm font-medium block mb-1">Monto ($)</label>
+                <label className="text-sm font-medium block mb-1">
+                  Monto (
+                  {form.tipo === "income"
+                    ? getPaymentMethodMeta(form.metodoPago).moneda
+                    : "USD"}
+                  )
+                </label>
                 <input
                   type="number"
                   step="0.01"
