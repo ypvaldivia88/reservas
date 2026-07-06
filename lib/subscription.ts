@@ -36,7 +36,36 @@ export function getBillingCyclePeriodSuffix(ciclo: BillingCycle): string {
 }
 
 export function formatSubscriptionAmount(monto: number): string {
-  return `${monto.toFixed(2)} ${SUBSCRIPTION_CURRENCY}`;
+  const safe = Number.isFinite(monto) ? monto : 0;
+  return `${safe.toFixed(2)} ${SUBSCRIPTION_CURRENCY}`;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export function normalizeSubscriptionPlan(
+  plan: SubscriptionPlan
+): SubscriptionPlan {
+  const defaults = DEFAULT_PLANS[0];
+  const raw = plan as SubscriptionPlan & {
+    descuentoSemestral?: unknown;
+    descuentoAnual?: unknown;
+  };
+
+  return {
+    ...plan,
+    precioMensual: toNumber(plan.precioMensual, defaults.precioMensual),
+    descuentoSemestralPorcentaje: toNumber(
+      plan.descuentoSemestralPorcentaje ?? raw.descuentoSemestral,
+      defaults.descuentoSemestralPorcentaje
+    ),
+    descuentoAnualPorcentaje: toNumber(
+      plan.descuentoAnualPorcentaje ?? raw.descuentoAnual,
+      defaults.descuentoAnualPorcentaje
+    ),
+  };
 }
 
 export function calculatePlanPrice(
@@ -49,21 +78,25 @@ export function calculatePlanPrice(
   montoFinal: number;
   precioMensualEquivalente: number;
 } {
+  const normalizedPlan = normalizeSubscriptionPlan(plan);
   const months = BILLING_CYCLE_MONTHS[ciclo];
-  const montoOriginal = plan.precioMensual * months;
+  const montoOriginal = normalizedPlan.precioMensual * months;
 
   const descuentoCiclo =
     ciclo === "yearly"
-      ? plan.descuentoAnualPorcentaje
+      ? normalizedPlan.descuentoAnualPorcentaje
       : ciclo === "semiannual"
-        ? plan.descuentoSemestralPorcentaje
+        ? normalizedPlan.descuentoSemestralPorcentaje
         : 0;
 
-  const descuentoTotal = Math.min(descuentoCiclo + descuentoExtra, 100);
+  const descuentoTotal = Math.min(
+    toNumber(descuentoCiclo) + toNumber(descuentoExtra),
+    100
+  );
   const montoFinal =
     Math.round(montoOriginal * (1 - descuentoTotal / 100) * 100) / 100;
   const precioMensualEquivalente =
-    Math.round((montoFinal / months) * 100) / 100;
+    months > 0 ? Math.round((montoFinal / months) * 100) / 100 : 0;
 
   return {
     montoOriginal,
