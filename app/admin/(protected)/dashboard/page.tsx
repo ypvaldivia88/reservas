@@ -51,6 +51,43 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const getReservaServicioIds = (reserva: Reserva): string[] => {
+    if (reserva.servicioIds && reserva.servicioIds.length > 0) {
+      return reserva.servicioIds;
+    }
+    return reserva.servicioId ? [reserva.servicioId] : [];
+  };
+
+  const normalizeReservaForEdit = (reserva: Reserva): Reserva => ({
+    ...reserva,
+    servicioIds: getReservaServicioIds(reserva),
+    servicioId: getReservaServicioIds(reserva)[0],
+  });
+
+  const sumServiciosPrecio = (servicioIds: string[]): number =>
+    servicioIds.reduce((total, servicioId) => {
+      const servicio = servicios.find((s) => s._id === servicioId);
+      return total + (servicio?.precio ?? 0);
+    }, 0);
+
+  const toggleReservaServicio = (servicioId: string) => {
+    if (!editingReserva) return;
+
+    const currentIds = getReservaServicioIds(editingReserva);
+    const nextIds =
+      currentIds.includes(servicioId) ?
+        currentIds.filter((id) => id !== servicioId)
+      : [...currentIds, servicioId];
+    const nextCosto = sumServiciosPrecio(nextIds);
+
+    setEditingReserva({
+      ...editingReserva,
+      servicioIds: nextIds,
+      servicioId: nextIds[0],
+      costo: nextIds.length > 0 ? nextCosto : editingReserva.costo,
+    });
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -92,7 +129,7 @@ function DashboardContent() {
       // Find and open the reservation for editing
       const reserva = reservas.find((r) => r._id === reservaId);
       if (reserva) {
-        setEditingReserva(reserva);
+        setEditingReserva(normalizeReservaForEdit(reserva));
         setActionMessage(
           "Reserva abierta desde WhatsApp. Puedes confirmar, editar o descartar."
         );
@@ -156,7 +193,8 @@ function DashboardContent() {
           horaCita: reserva.horaCita,
           estado: reserva.estado,
           costo: reserva.costo,
-          servicioId: reserva.servicioId,
+          servicioIds: getReservaServicioIds(reserva),
+          servicioId: getReservaServicioIds(reserva)[0],
         }),
       });
 
@@ -376,7 +414,7 @@ function DashboardContent() {
         <ReservasTable
           reservas={reservas}
           saving={saving}
-          onEdit={setEditingReserva}
+          onEdit={(reserva) => setEditingReserva(normalizeReservaForEdit(reserva))}
           onDelete={setDeletingReserva}
           onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
             handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
@@ -1059,31 +1097,40 @@ function DashboardContent() {
                   {(editingReserva.estado === "completada" ||
                     editingReserva.estado === "confirmada") && (
                     <>
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Servicio
+                          Servicios consumidos
                         </label>
-                        <select
-                          value={editingReserva.servicioId || ""}
-                          onChange={(e) =>
-                            setEditingReserva({
-                              ...editingReserva,
-                              servicioId: e.target.value || undefined,
-                            })
-                          }
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
-                        >
-                          <option value="">Seleccionar servicio</option>
+                        <div className="flex flex-wrap gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 border-2 border-gray-300 dark:border-gray-600 rounded-xl">
                           {servicios
                             .filter((s) => s.activo)
                             .map((servicio) => (
-                              <option key={servicio._id} value={servicio._id}>
-                                {servicio.nombre}
-                              </option>
+                              <label
+                                key={servicio._id}
+                                className="flex items-center gap-2 text-sm cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={getReservaServicioIds(
+                                    editingReserva
+                                  ).includes(servicio._id!)}
+                                  onChange={() =>
+                                    toggleReservaServicio(servicio._id!)
+                                  }
+                                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">
+                                  {servicio.nombre}
+                                  {servicio.precio ?
+                                    ` ($${servicio.precio.toFixed(2)})`
+                                  : ""}
+                                </span>
+                              </label>
                             ))}
-                        </select>
+                        </div>
                         <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                          Categoría del ingreso en finanzas.
+                          Puedes seleccionar varios servicios. El ingreso se
+                          registra una sola vez con el total del turno.
                         </p>
                       </div>
                       <div>

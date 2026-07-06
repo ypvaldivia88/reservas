@@ -50,8 +50,15 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
     const costo = Number(data.costo);
     if (!isNaN(costo) && costo >= 0) updateData.costo = costo;
   }
-  if (data.servicioId !== undefined) {
+  if (data.servicioIds !== undefined) {
+    const servicioIds = Array.isArray(data.servicioIds) ?
+      data.servicioIds.filter((id: unknown) => typeof id === "string" && id)
+    : [];
+    updateData.servicioIds = servicioIds;
+    updateData.servicioId = servicioIds[0] || undefined;
+  } else if (data.servicioId !== undefined) {
     updateData.servicioId = data.servicioId || undefined;
+    updateData.servicioIds = data.servicioId ? [data.servicioId] : [];
   }
 
   try {

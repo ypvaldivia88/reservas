@@ -76,6 +76,21 @@ async function createIndexes() {
     );
     console.log("✅ Índice creado: imagenes.categoriaId + activo");
 
+    await db.collection("financial_transactions").createIndex(
+      { salonId: 1, reservaId: 1 },
+      {
+        name: "uniq_reserva_income",
+        unique: true,
+        partialFilterExpression: {
+          fuente: "reserva",
+          reservaId: { $exists: true },
+        },
+      }
+    );
+    console.log(
+      "✅ Índice creado: financial_transactions.salonId + reservaId (único por ingreso de reserva)"
+    );
+
     console.log("\n✨ Todos los índices creados exitosamente!");
 
     process.exit(0);

@@ -245,7 +245,9 @@ export interface Reserva {
   horaCita: string; // Formato HH:mm
   estado?: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
   costo?: number; // Costo de la reserva al completarla (para estadísticas futuras). Debe ser >= 0
-  servicioId?: string; // Servicio asociado para categorizar el ingreso en finanzas
+  /** @deprecated Usar servicioIds. Se mantiene por compatibilidad con datos existentes. */
+  servicioId?: string;
+  servicioIds?: string[]; // Servicios consumidos al cerrar el turno
 }
 
 export interface ApiResponse<T = unknown> {

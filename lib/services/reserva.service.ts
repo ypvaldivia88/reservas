@@ -148,6 +148,18 @@ export class ReservaService {
       }
     }
 
+    if (data.servicioIds !== undefined) {
+      const servicioIds = Array.isArray(data.servicioIds) ?
+        data.servicioIds.filter((id: unknown) => typeof id === "string" && id)
+      : [];
+      updateData.servicioIds = servicioIds;
+      updateData.servicioId = servicioIds[0] || undefined;
+    } else if (data.servicioId !== undefined) {
+      updateData.servicioId = data.servicioId || undefined;
+      updateData.servicioIds =
+        data.servicioId ? [data.servicioId as string] : [];
+    }
+
     const updated = await reservaRepository.update(effectiveSalonId, id, updateData);
     if (!updated) throw AppError.notFound("Reserva no encontrada");
 
@@ -155,10 +167,14 @@ export class ReservaService {
     const finalCosto =
       updateData.costo !== undefined ? updateData.costo : existing.costo;
     const finalFechaCita = updateData.fechaCita ?? existing.fechaCita;
+    const finalServicioIds =
+      updateData.servicioIds ??
+      existing.servicioIds ??
+      (existing.servicioId ? [existing.servicioId] : undefined);
     const finalServicioId =
-      updateData.servicioId !== undefined ?
-        updateData.servicioId
-      : existing.servicioId;
+      finalServicioIds && finalServicioIds.length > 0 ?
+        finalServicioIds[0]
+      : updateData.servicioId ?? existing.servicioId;
 
     if (
       finalCosto !== undefined &&
