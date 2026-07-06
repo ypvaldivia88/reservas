@@ -39,8 +39,11 @@ export const DEFAULT_FINANCIAL_CATEGORIES = [
 ];
 
 const syncInFlight = new Map<string, Promise<void>>();
+let reservaIncomeIndexesReady = false;
 
 export async function ensureReservaIncomeIndexes(db: Db): Promise<void> {
+  if (reservaIncomeIndexesReady) return;
+
   const col = db.collection(Collections.FINANCIAL_TRANSACTIONS);
   const indexes = await col.indexes();
   const legacyIndex = indexes.find((idx) => idx.name === "uniq_reserva_income");
@@ -60,6 +63,8 @@ export async function ensureReservaIncomeIndexes(db: Db): Promise<void> {
       },
     }
   );
+
+  reservaIncomeIndexesReady = true;
 }
 
 function getPrimaryServicioId(reserva: {
@@ -371,33 +376,33 @@ export async function syncIncomeCategoriesFromServicios(
     );
   }
 
-  for (let i = 0; i < servicios.length; i++) {
-    const servicio = servicios[i];
-    const servicioId = servicio._id.toString();
+  if (servicios.length > 0) {
+    await db.collection(Collections.FINANCIAL_CATEGORIES).bulkWrite(
+      servicios.map((servicio, i) => {
+        const servicioId = servicio._id.toString();
+        const categoryData = {
+          nombre: servicio.nombre as string,
+          tipo: "income" as TransactionType,
+          activo: true,
+          color: INCOME_COLORS[i % INCOME_COLORS.length],
+        };
 
-    const existing = await db
-      .collection(Collections.FINANCIAL_CATEGORIES)
-      .findOne({ ...tenantQuery(salonId), servicioId });
-
-    const categoryData = {
-      nombre: servicio.nombre as string,
-      tipo: "income" as TransactionType,
-      activo: true,
-      color: INCOME_COLORS[i % INCOME_COLORS.length],
-    };
-
-    if (existing) {
-      await db
-        .collection(Collections.FINANCIAL_CATEGORIES)
-        .updateOne({ _id: existing._id }, { $set: categoryData });
-    } else {
-      await db.collection(Collections.FINANCIAL_CATEGORIES).insertOne({
-        salonId,
-        servicioId,
-        ...categoryData,
-        fechaCreacion: new Date(),
-      });
-    }
+        return {
+          updateOne: {
+            filter: { ...tenantQuery(salonId), servicioId },
+            update: {
+              $set: categoryData,
+              $setOnInsert: {
+                salonId,
+                servicioId,
+                fechaCreacion: new Date(),
+              },
+            },
+            upsert: true,
+          },
+        };
+      })
+    );
   }
 }
 
@@ -459,36 +464,43 @@ export async function syncIncomesFromReservas(
 
   if (reservas.length === 0) return;
 
-  for (const reserva of reservas) {
-    const costo = Number(reserva.costo);
-    if (isNaN(costo) || costo < 0) continue;
+  const SYNC_BATCH_SIZE = 20;
 
-    const reservaId = reserva._id.toString();
-    const servicioId = getPrimaryServicioId({
-      servicioIds: reserva.servicioIds as string[] | undefined,
-      servicioId: reserva.servicioId as string | undefined,
-    });
-    const descripcion = `Reserva ${reserva.nombre} - ${reserva.fechaCita}`;
-    const fecha = reserva.fechaCita as string;
+  for (let i = 0; i < reservas.length; i += SYNC_BATCH_SIZE) {
+    const batch = reservas.slice(i, i + SYNC_BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (reserva) => {
+        const costo = Number(reserva.costo);
+        if (isNaN(costo) || costo < 0) return;
 
-    const metodoPago = isPaymentMethod(reserva.metodoPago)
-      ? reserva.metodoPago
-      : undefined;
-    const usesCobroSplit =
-      reserva.cobroEfectivo !== undefined ||
-      reserva.cobroTransferencia !== undefined;
+        const reservaId = reserva._id.toString();
+        const servicioId = getPrimaryServicioId({
+          servicioIds: reserva.servicioIds as string[] | undefined,
+          servicioId: reserva.servicioId as string | undefined,
+        });
+        const descripcion = `Reserva ${reserva.nombre} - ${reserva.fechaCita}`;
+        const fecha = reserva.fechaCita as string;
 
-    await syncReservaIncomeTransactions(
-      db,
-      salonId,
-      reservaId,
-      costo,
-      descripcion,
-      fecha,
-      servicioId,
-      reserva.cobroEfectivo as number | undefined,
-      reserva.cobroTransferencia as number | undefined,
-      usesCobroSplit ? undefined : metodoPago
+        const metodoPago = isPaymentMethod(reserva.metodoPago)
+          ? reserva.metodoPago
+          : undefined;
+        const usesCobroSplit =
+          reserva.cobroEfectivo !== undefined ||
+          reserva.cobroTransferencia !== undefined;
+
+        await syncReservaIncomeTransactions(
+          db,
+          salonId,
+          reservaId,
+          costo,
+          descripcion,
+          fecha,
+          servicioId,
+          reserva.cobroEfectivo as number | undefined,
+          reserva.cobroTransferencia as number | undefined,
+          usesCobroSplit ? undefined : metodoPago
+        );
+      })
     );
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/Button";
+import FinanzasSkeleton from "@/components/FinanzasSkeleton";
 import {
   FinancialTransaction,
   FinancialCategory,
@@ -14,6 +15,9 @@ import {
   getPaymentMethodMeta,
   PAYMENT_METHOD_OPTIONS,
 } from "@/lib/paymentMethods";
+
+const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
+const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 type DatePreset =
   | "today"
@@ -76,6 +80,8 @@ export default function FinanzasPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
+  const syncInFlightRef = useRef(false);
+  const isInitialLoadRef = useRef(true);
   const [showForm, setShowForm] = useState(false);
   const [filterTipo, setFilterTipo] = useState<"" | TransactionType>("");
   const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
@@ -103,63 +109,82 @@ export default function FinanzasPage() {
     metodoPago: "transferencia" as PaymentMethod,
   });
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      setSyncing(true);
-      const syncController = new AbortController();
-      const syncTimeout = setTimeout(() => syncController.abort(), 20000);
-      try {
-        await fetch("/api/finanzas/sync", {
-          method: "POST",
-          signal: syncController.signal,
-        });
-      } catch {
-        // La página debe cargar aunque la sincronización falle o tarde demasiado
-      } finally {
-        clearTimeout(syncTimeout);
-        setSyncing(false);
-      }
+  const fetchDashboard = useCallback(
+    async (options?: { showLoading?: boolean }) => {
+      const showLoading = options?.showLoading ?? false;
+      if (showLoading) setLoading(true);
+      setError("");
 
       const tipoParam = filterTipo ? `&tipo=${filterTipo}` : "";
       const metodoParam =
         filterMetodoPago ? `&metodoPago=${filterMetodoPago}` : "";
-      const [txRes, catRes, repRes] = await Promise.all([
-        fetch(
-          `/api/finanzas/transactions?desde=${desde}&hasta=${hasta}${tipoParam}${metodoParam}`
-        ),
-        fetch("/api/finanzas/categories"),
-        fetch(`/api/finanzas/reports?desde=${desde}&hasta=${hasta}`),
-      ]);
 
-      if (!txRes.ok || !catRes.ok || !repRes.ok) {
-        throw new Error("Error en la respuesta del servidor");
+      try {
+        const res = await fetch(
+          `/api/finanzas/dashboard?desde=${desde}&hasta=${hasta}${tipoParam}${metodoParam}`
+        );
+
+        if (!res.ok) {
+          throw new Error("Error en la respuesta del servidor");
+        }
+
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error("No se pudieron obtener los datos de finanzas");
+        }
+
+        setTransactions(data.data.transactions);
+        setCategories(data.data.categories);
+        setReport(data.data.report);
+      } catch (e) {
+        console.error(e);
+        setError("No se pudieron cargar las finanzas. Intenta de nuevo.");
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    },
+    [desde, hasta, filterTipo, filterMetodoPago]
+  );
+
+  const runSync = useCallback(
+    async (force = false) => {
+      if (syncInFlightRef.current) return;
+
+      const lastSync = sessionStorage.getItem(SYNC_STORAGE_KEY);
+      const now = Date.now();
+      if (
+        !force &&
+        lastSync &&
+        now - Number(lastSync) < SYNC_INTERVAL_MS
+      ) {
+        return;
       }
 
-      const [txData, catData, repData] = await Promise.all([
-        txRes.json(),
-        catRes.json(),
-        repRes.json(),
-      ]);
-      if (txData.success) setTransactions(txData.data);
-      if (catData.success) setCategories(catData.data);
-      if (repData.success) setReport(repData.data);
-
-      if (!txData.success || !catData.success || !repData.success) {
-        throw new Error("No se pudieron obtener los datos de finanzas");
+      syncInFlightRef.current = true;
+      setSyncing(true);
+      try {
+        await fetch("/api/finanzas/sync", { method: "POST" });
+        sessionStorage.setItem(SYNC_STORAGE_KEY, String(Date.now()));
+        await fetchDashboard();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        syncInFlightRef.current = false;
+        setSyncing(false);
       }
-    } catch (e) {
-      console.error(e);
-      setError("No se pudieron cargar las finanzas. Intenta de nuevo.");
-    } finally {
-      setLoading(false);
-    }
-  }, [desde, hasta, filterTipo, filterMetodoPago]);
+    },
+    [fetchDashboard]
+  );
+
+  const loadData = useCallback(async () => {
+    await fetchDashboard({ showLoading: true });
+    void runSync();
+  }, [fetchDashboard, runSync]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    void fetchDashboard({ showLoading: true });
+    void runSync();
+  }, [fetchDashboard, runSync]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +214,11 @@ export default function FinanzasPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("¿Eliminar esta transacción?")) return;
     await fetch(`/api/finanzas/transactions/${id}`, { method: "DELETE" });
-    loadData();
+    await fetchDashboard();
+  };
+
+  const handleManualSync = async () => {
+    await runSync(true);
   };
 
   const incomeCategories = categories.filter((c) => c.tipo === "income");
@@ -216,14 +245,23 @@ export default function FinanzasPage() {
             Ingresos por servicio del salón, gastos y reportes
           </p>
         </div>
-        <Button variant="primary" onClick={() => setShowForm(true)}>
-          + Nueva transacción
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" onClick={() => setShowForm(true)}>
+            + Nueva transacción
+          </Button>
+          <Button
+            variant="outlined-secondary"
+            onClick={handleManualSync}
+            loading={syncing}
+          >
+            Sincronizar reservas
+          </Button>
+        </div>
       </div>
 
-      {syncing && (
+      {syncing && !loading && (
         <p className="text-sm text-blue-600 dark:text-blue-400">
-          Sincronizando ingresos de turnos...
+          Sincronizando ingresos de reservas en segundo plano...
         </p>
       )}
 
@@ -314,6 +352,10 @@ export default function FinanzasPage() {
         </div>
       </div>
 
+      {loading ? (
+        <FinanzasSkeleton />
+      ) : (
+        <>
       {/* Resumen */}
       {report && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -454,9 +496,7 @@ export default function FinanzasPage() {
             Transacciones
           </h3>
         </div>
-        {loading ? (
-          <p className="p-5 text-gray-500">Cargando...</p>
-        ) : transactions.length === 0 ? (
+        {transactions.length === 0 ? (
           <p className="p-5 text-gray-500">No hay transacciones en el período</p>
         ) : (
           <div className="overflow-x-auto">
@@ -530,6 +570,8 @@ export default function FinanzasPage() {
           </div>
         )}
       </div>
+        </>
+      )}
 
       {/* Modal nueva transacción */}
       {showForm && (
