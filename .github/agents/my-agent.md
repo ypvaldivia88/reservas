@@ -19,20 +19,20 @@ Objetivos
 Fuentes de verdad (lee y referencia)
 - Guía principal: [README.md](https://github.com/ypvaldivia88/reservas/blob/main/README.md)
 - Flujos funcionales:
-  - Autenticación: [AUTENTICACION.md](https://github.com/ypvaldivia88/reservas/blob/main/AUTENTICACION.md)
-  - Calendario y reservas: [CALENDARIO_IMPLEMENTATION.md](https://github.com/ypvaldivia88/reservas/blob/main/CALENDARIO_IMPLEMENTATION.md)
-  - Gestión de imágenes: [GESTION_IMAGENES.md](https://github.com/ypvaldivia88/reservas/blob/main/GESTION_IMAGENES.md)
-  - Notificaciones WhatsApp: [WHATSAPP_NOTIFICATIONS.md](https://github.com/ypvaldivia88/reservas/blob/main/WHATSAPP_NOTIFICATIONS.md)
+  - Autenticación: [AUTENTICACION.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/AUTENTICACION.md)
+  - Calendario y reservas: [CALENDARIO_IMPLEMENTATION.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/CALENDARIO_IMPLEMENTATION.md)
+  - Gestión de imágenes: [GESTION_IMAGENES.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/GESTION_IMAGENES.md)
+  - Notificaciones WhatsApp: [WHATSAPP_NOTIFICATIONS.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/WHATSAPP_NOTIFICATIONS.md)
 - Seguridad:
-  - Evaluación: [SECURITY_ASSESSMENT.md](https://github.com/ypvaldivia88/reservas/blob/main/SECURITY_ASSESSMENT.md)
-  - Resumen: [SECURITY_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/SECURITY_SUMMARY.md)
+  - Evaluación: [SECURITY_ASSESSMENT.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/SECURITY_ASSESSMENT.md)
+  - Resumen: [SECURITY_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/SECURITY_SUMMARY.md)
 - Implementación y cambios:
-  - Guía de implementación: [IMPLEMENTACION.md](https://github.com/ypvaldivia88/reservas/blob/main/IMPLEMENTACION.md)
-  - Resumen técnico: [IMPLEMENTATION_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/IMPLEMENTATION_SUMMARY.md)
-  - Resumen para PRs: [PR_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/PR_SUMMARY.md)
+  - Guía de implementación: [IMPLEMENTACION.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/IMPLEMENTACION.md)
+  - Resumen técnico: [IMPLEMENTATION_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/IMPLEMENTATION_SUMMARY.md)
+  - Resumen para PRs: [PR_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/PR_SUMMARY.md)
 - Guías de uso y UI:
-  - Guía de usuario: [USER_GUIDE.md](https://github.com/ypvaldivia88/reservas/blob/main/USER_GUIDE.md)
-  - Guía visual: [VISUAL_GUIDE.md](https://github.com/ypvaldivia88/reservas/blob/main/VISUAL_GUIDE.md)
+  - Guía de usuario: [USER_GUIDE.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/USER_GUIDE.md)
+  - Guía visual: [VISUAL_GUIDE.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/VISUAL_GUIDE.md)
 
 Contexto del código
 - Lenguaje: TypeScript
@@ -58,7 +58,7 @@ Estilo de código y convenciones
 - Sigue patrones existentes antes de introducir uno nuevo; si introduces uno, razona el cambio.
 
 Seguridad y privacidad
-- Cumple con [SECURITY_ASSESSMENT.md](https://github.com/ypvaldivia88/reservas/blob/main/SECURITY_ASSESSMENT.md) y [SECURITY_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/SECURITY_SUMMARY.md).
+- Cumple con [SECURITY_ASSESSMENT.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/SECURITY_ASSESSMENT.md) y [SECURITY_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/SECURITY_SUMMARY.md).
 - No expongas secretos ni datos sensibles en código, logs o PRs.
 - Valida entradas de usuario y maneja errores de red/servidor.
 - Revisa autenticación/autorizarción al tocar rutas, middleware o APIs.
@@ -83,7 +83,7 @@ Procedimiento de trabajo del agente
 
 5) Documentación y PR
    - Actualiza docs afectados (p. ej., IMPLEMENTACION.md, USER_GUIDE.md).
-   - Prepara el resumen de PR siguiendo [PR_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/PR_SUMMARY.md): contexto, cambios, riesgos, pruebas, screenshots si aplica.
+   - Prepara el resumen de PR siguiendo [PR_SUMMARY.md](https://github.com/ypvaldivia88/reservas/blob/main/docs/PR_SUMMARY.md): contexto, cambios, riesgos, pruebas, screenshots si aplica.
 
 Criterios de aceptación generales
 - El build y lint deben pasar.
