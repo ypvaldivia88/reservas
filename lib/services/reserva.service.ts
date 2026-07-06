@@ -161,6 +161,25 @@ export class ReservaService {
         data.servicioId ? [data.servicioId as string] : [];
     }
 
+    if (data.cobroEfectivo !== undefined || data.cobroTransferencia !== undefined) {
+      const cobroEfectivo = Number(
+        data.cobroEfectivo !== undefined
+          ? data.cobroEfectivo
+          : existing.cobroEfectivo
+      );
+      const cobroTransferencia = Number(
+        data.cobroTransferencia !== undefined
+          ? data.cobroTransferencia
+          : existing.cobroTransferencia
+      );
+      const cobroTotal =
+        (isNaN(cobroEfectivo) ? 0 : cobroEfectivo) +
+        (isNaN(cobroTransferencia) ? 0 : cobroTransferencia);
+      if (cobroTotal > 0) {
+        updateData.costo = cobroTotal;
+      }
+    }
+
     const updated = await reservaRepository.update(effectiveSalonId, id, updateData);
     if (!updated) throw AppError.notFound("Reserva no encontrada");
 
@@ -176,25 +195,26 @@ export class ReservaService {
       finalServicioIds && finalServicioIds.length > 0 ?
         finalServicioIds[0]
       : updateData.servicioId ?? existing.servicioId;
+    const finalCobroEfectivo =
+      updateData.cobroEfectivo !== undefined
+        ? updateData.cobroEfectivo
+        : existing.cobroEfectivo;
+    const finalCobroTransferencia =
+      updateData.cobroTransferencia !== undefined
+        ? updateData.cobroTransferencia
+        : existing.cobroTransferencia;
     const finalMetodoPago: PaymentMethod | undefined =
-      updateData.metodoPago !== undefined ?
-        updateData.metodoPago
-      : isPaymentMethod(existing.metodoPago) ?
-        existing.metodoPago
-      : undefined;
+      updateData.metodoPago !== undefined
+        ? updateData.metodoPago
+        : isPaymentMethod(existing.metodoPago)
+          ? existing.metodoPago
+          : undefined;
 
     if (
       finalCosto !== undefined &&
       finalCosto >= 0 &&
       (finalEstado === "confirmada" || finalEstado === "completada")
     ) {
-      if (!finalMetodoPago) {
-        throw new AppError(
-          "Selecciona la forma de cobro (transferencia o efectivo CUP)",
-          400
-        );
-      }
-
       await createIncomeFromReserva(
         db,
         effectiveSalonId,
@@ -203,6 +223,8 @@ export class ReservaService {
         `Reserva ${existing.nombre} - ${finalFechaCita}`,
         finalFechaCita,
         finalServicioId,
+        finalCobroEfectivo,
+        finalCobroTransferencia,
         finalMetodoPago
       );
     }

@@ -58,7 +58,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
   if (tipo === "income") {
     if (!metodoPago || !isPaymentMethod(metodoPago)) {
       throw new AppError(
-        "metodoPago debe ser transferencia o efectivo_cup para ingresos",
+        "metodoPago debe ser transferencia o efectivo para ingresos",
         400
       );
     }
@@ -82,10 +82,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     categoriaId,
     categoriaNombre,
     monto: Number(monto),
-    moneda:
-      tipo === "income" ?
-        getMonedaForPaymentMethod(resolvedMetodoPago)
-      : "USD",
+    moneda: getMonedaForPaymentMethod(resolvedMetodoPago),
     metodoPago: resolvedMetodoPago,
     fecha,
     descripcion: descripcion.trim(),

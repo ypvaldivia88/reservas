@@ -9,7 +9,6 @@ import { tenantQuery, DEFAULT_SALON_ID } from "@/lib/tenant";
 import { Collections } from "@/lib/db/collections";
 import {
   getMonedaForPaymentMethod,
-  getPaymentMethodMeta,
   isPaymentMethod,
   PAYMENT_METHOD_OPTIONS,
 } from "@/lib/paymentMethods";
@@ -57,7 +56,10 @@ async function dedupeReservaIncomeTransactions(
 ): Promise<number> {
   const duplicateGroups = await db
     .collection(Collections.FINANCIAL_TRANSACTIONS)
-    .aggregate<{ _id: string; ids: { toString(): string }[] }>([
+    .aggregate<{
+      _id: { reservaId: string; metodoKey: string };
+      ids: { toString(): string }[];
+    }>([
       {
         $match: {
           ...tenantQuery(salonId),
@@ -66,8 +68,13 @@ async function dedupeReservaIncomeTransactions(
         },
       },
       {
+        $addFields: {
+          metodoKey: { $ifNull: ["$metodoPago", "__sin_desglose__"] },
+        },
+      },
+      {
         $group: {
-          _id: "$reservaId",
+          _id: { reservaId: "$reservaId", metodoKey: "$metodoKey" },
           count: { $sum: 1 },
           ids: { $push: "$_id" },
         },
@@ -79,12 +86,18 @@ async function dedupeReservaIncomeTransactions(
   let removed = 0;
 
   for (const group of duplicateGroups) {
+    const metodoFilter =
+      group._id.metodoKey === "__sin_desglose__"
+        ? { metodoPago: { $exists: false } }
+        : { metodoPago: group._id.metodoKey };
+
     const txs = await db
       .collection(Collections.FINANCIAL_TRANSACTIONS)
       .find({
         ...tenantQuery(salonId),
         fuente: "reserva",
-        reservaId: group._id,
+        reservaId: group._id.reservaId,
+        ...metodoFilter,
       })
       .sort({ fechaCreacion: -1 })
       .toArray();
@@ -139,14 +152,18 @@ async function upsertReservaIncomeTransaction(
     salonId,
     servicioId
   );
-  const resolvedMetodoPago = metodoPago ?? "transferencia";
-  const moneda = getMonedaForPaymentMethod(resolvedMetodoPago);
+
+  const metodoFilter =
+    metodoPago != null
+      ? { metodoPago }
+      : { metodoPago: { $exists: false } };
 
   await db.collection(Collections.FINANCIAL_TRANSACTIONS).findOneAndUpdate(
     {
       ...tenantQuery(salonId),
       reservaId,
       fuente: "reserva",
+      ...metodoFilter,
     },
     {
       $set: {
@@ -154,8 +171,8 @@ async function upsertReservaIncomeTransaction(
         descripcion,
         fecha,
         tipo: "income",
-        metodoPago: resolvedMetodoPago,
-        moneda,
+        moneda: getMonedaForPaymentMethod(metodoPago),
+        ...(metodoPago ? { metodoPago } : {}),
         ...(categoriaId ? { categoriaId } : {}),
         ...(categoriaNombre ? { categoriaNombre } : {}),
       },
@@ -167,6 +184,112 @@ async function upsertReservaIncomeTransaction(
       },
     },
     { upsert: true }
+  );
+}
+
+interface CobroBreakdownItem {
+  metodo: PaymentMethod | null;
+  monto: number;
+}
+
+function resolveCobroBreakdown(reserva: {
+  costo: number;
+  cobroEfectivo?: number;
+  cobroTransferencia?: number;
+  metodoPago?: unknown;
+}): CobroBreakdownItem[] {
+  const items: CobroBreakdownItem[] = [];
+
+  const efectivo = Number(reserva.cobroEfectivo);
+  if (!isNaN(efectivo) && efectivo > 0) {
+    items.push({ metodo: "efectivo_cup", monto: efectivo });
+  }
+
+  const transferencia = Number(reserva.cobroTransferencia);
+  if (!isNaN(transferencia) && transferencia > 0) {
+    items.push({ metodo: "transferencia", monto: transferencia });
+  }
+
+  if (items.length > 0) return items;
+
+  if (isPaymentMethod(reserva.metodoPago)) {
+    return [{ metodo: reserva.metodoPago, monto: reserva.costo }];
+  }
+
+  return [{ metodo: null, monto: reserva.costo }];
+}
+
+async function cleanupReservaIncomeTransactions(
+  db: Db,
+  salonId: string,
+  reservaId: string,
+  keepMethods: (PaymentMethod | null)[]
+): Promise<void> {
+  const txs = await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .find({
+      ...tenantQuery(salonId),
+      fuente: "reserva",
+      reservaId,
+    })
+    .toArray();
+
+  const keepKeys = new Set(
+    keepMethods.map((m) => (m == null ? "__sin_desglose__" : m))
+  );
+
+  const toDelete = txs.filter((tx) => {
+    const key =
+      tx.metodoPago != null && isPaymentMethod(tx.metodoPago)
+        ? tx.metodoPago
+        : "__sin_desglose__";
+    return !keepKeys.has(key);
+  });
+
+  if (toDelete.length > 0) {
+    await db.collection(Collections.FINANCIAL_TRANSACTIONS).deleteMany({
+      _id: { $in: toDelete.map((tx) => tx._id) },
+    });
+  }
+}
+
+async function syncReservaIncomeTransactions(
+  db: Db,
+  salonId: string,
+  reservaId: string,
+  costo: number,
+  descripcion: string,
+  fecha: string,
+  servicioId?: string,
+  cobroEfectivo?: number,
+  cobroTransferencia?: number,
+  legacyMetodoPago?: PaymentMethod
+): Promise<void> {
+  const breakdown = resolveCobroBreakdown({
+    costo,
+    cobroEfectivo,
+    cobroTransferencia,
+    metodoPago: legacyMetodoPago,
+  });
+
+  for (const item of breakdown) {
+    await upsertReservaIncomeTransaction(
+      db,
+      salonId,
+      reservaId,
+      item.monto,
+      descripcion,
+      fecha,
+      servicioId,
+      item.metodo ?? undefined
+    );
+  }
+
+  await cleanupReservaIncomeTransactions(
+    db,
+    salonId,
+    reservaId,
+    breakdown.map((item) => item.metodo)
   );
 }
 
@@ -322,11 +445,11 @@ export async function syncIncomesFromReservas(
     const descripcion = `Reserva ${reserva.nombre} - ${reserva.fechaCita}`;
     const fecha = reserva.fechaCita as string;
 
-    const metodoPago = isPaymentMethod(reserva.metodoPago) ?
-      reserva.metodoPago
-    : undefined;
+    const metodoPago = isPaymentMethod(reserva.metodoPago)
+      ? reserva.metodoPago
+      : undefined;
 
-    await upsertReservaIncomeTransaction(
+    await syncReservaIncomeTransactions(
       db,
       salonId,
       reservaId,
@@ -334,6 +457,8 @@ export async function syncIncomesFromReservas(
       descripcion,
       fecha,
       servicioId,
+      reserva.cobroEfectivo as number | undefined,
+      reserva.cobroTransferencia as number | undefined,
       metodoPago
     );
   }
@@ -368,13 +493,15 @@ export async function createIncomeFromReserva(
   descripcion: string,
   fecha?: string,
   servicioId?: string,
-  metodoPago?: PaymentMethod
+  cobroEfectivo?: number,
+  cobroTransferencia?: number,
+  legacyMetodoPago?: PaymentMethod
 ): Promise<void> {
   const fechaTransaccion = fecha ?? new Date().toISOString().split("T")[0];
   const inFlight = syncInFlight.get(salonId);
   if (inFlight) await inFlight;
 
-  await upsertReservaIncomeTransaction(
+  await syncReservaIncomeTransactions(
     db,
     salonId,
     reservaId,
@@ -382,7 +509,9 @@ export async function createIncomeFromReserva(
     descripcion,
     fechaTransaccion,
     servicioId,
-    metodoPago
+    cobroEfectivo,
+    cobroTransferencia,
+    legacyMetodoPago
   );
 }
 
@@ -474,7 +603,6 @@ export async function generateFinancialReport(
     ingresosPorMetodoPago: PAYMENT_METHOD_OPTIONS.map((option) => ({
       metodo: option.value,
       label: option.label,
-      moneda: option.moneda,
       total:
         Math.round((ingresosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
         100,

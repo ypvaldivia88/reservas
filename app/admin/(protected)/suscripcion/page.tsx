@@ -199,11 +199,11 @@ export default function SuscripcionPage() {
               <div className="mt-4">
                 {pricing.descuentoTotal > 0 && (
                   <p className="text-sm text-gray-400 line-through">
-                    ${pricing.montoOriginal.toFixed(2)}
+                    {pricing.montoOriginal.toFixed(2)} CUP
                   </p>
                 )}
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  ${pricing.montoFinal.toFixed(2)}
+                  {pricing.montoFinal.toFixed(2)} CUP
                   <span className="text-sm font-normal text-gray-500">
                     /{ciclo === "monthly" ? "mes" : "año"}
                   </span>
@@ -248,21 +248,21 @@ export default function SuscripcionPage() {
               <span className="text-gray-600 dark:text-gray-400">
                 Precio original
               </span>
-              <span>${preview.montoOriginal.toFixed(2)}</span>
+              <span>{preview.montoOriginal.toFixed(2)} CUP</span>
             </div>
             {preview.descuentoTotal > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>Descuento ({preview.descuentoTotal}%)</span>
                 <span>
-                  -$
-                  {(preview.montoOriginal - preview.montoFinal).toFixed(2)}
+                  -
+                  {(preview.montoOriginal - preview.montoFinal).toFixed(2)} CUP
                 </span>
               </div>
             )}
             <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200 dark:border-gray-700">
               <span>Total</span>
               <span className="text-blue-600">
-                ${preview.montoFinal.toFixed(2)}
+                {preview.montoFinal.toFixed(2)} CUP
               </span>
             </div>
           </div>

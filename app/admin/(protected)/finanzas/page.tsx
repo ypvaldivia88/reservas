@@ -15,6 +15,60 @@ import {
   PAYMENT_METHOD_OPTIONS,
 } from "@/lib/paymentMethods";
 
+type DatePreset =
+  | "today"
+  | "this_week"
+  | "this_month"
+  | "last_month"
+  | "this_year"
+  | "last_year";
+
+const DATE_PRESETS: { id: DatePreset; label: string }[] = [
+  { id: "today", label: "Hoy" },
+  { id: "this_week", label: "Esta semana" },
+  { id: "this_month", label: "Mes actual" },
+  { id: "last_month", label: "Mes anterior" },
+  { id: "this_year", label: "Año actual" },
+  { id: "last_year", label: "Año anterior" },
+];
+
+function formatLocalDate(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getDatePresetRange(preset: DatePreset): { desde: string; hasta: string } {
+  const now = new Date();
+  const today = formatLocalDate(now);
+
+  switch (preset) {
+    case "today":
+      return { desde: today, hasta: today };
+    case "this_week": {
+      const mondayOffset = now.getDay() === 0 ? 6 : now.getDay() - 1;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - mondayOffset);
+      return { desde: formatLocalDate(monday), hasta: today };
+    }
+    case "this_month":
+      return {
+        desde: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`,
+        hasta: today,
+      };
+    case "last_month": {
+      const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const last = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { desde: formatLocalDate(first), hasta: formatLocalDate(last) };
+    }
+    case "this_year":
+      return { desde: `${now.getFullYear()}-01-01`, hasta: today };
+    case "last_year":
+      return {
+        desde: `${now.getFullYear() - 1}-01-01`,
+        hasta: `${now.getFullYear() - 1}-12-31`,
+      };
+  }
+}
+
 export default function FinanzasPage() {
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [categories, setCategories] = useState<FinancialCategory[]>([]);
@@ -27,13 +81,18 @@ export default function FinanzasPage() {
   const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
     ""
   );
-  const [desde, setDesde] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-  });
-  const [hasta, setHasta] = useState(
-    () => new Date().toISOString().split("T")[0]
+  const [desde, setDesde] = useState(() => getDatePresetRange("this_month").desde);
+  const [hasta, setHasta] = useState(() => getDatePresetRange("this_month").hasta);
+  const [activeDatePreset, setActiveDatePreset] = useState<DatePreset | null>(
+    "this_month"
   );
+
+  const applyDatePreset = (preset: DatePreset) => {
+    const range = getDatePresetRange(preset);
+    setDesde(range.desde);
+    setHasta(range.hasta);
+    setActiveDatePreset(preset);
+  };
 
   const [form, setForm] = useState({
     tipo: "income" as TransactionType,
@@ -142,7 +201,6 @@ export default function FinanzasPage() {
     return {
       metodo: option.value,
       label: option.label,
-      moneda: option.moneda,
       total: found?.total ?? 0,
     };
   });
@@ -176,13 +234,37 @@ export default function FinanzasPage() {
       )}
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 items-end bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+        <div>
+          <p className="text-xs text-gray-500 mb-2">Período rápido</p>
+          <div className="flex flex-wrap gap-2">
+            {DATE_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => applyDatePreset(preset.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeDatePreset === preset.id
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3 items-end">
         <div>
           <label className="text-xs text-gray-500 block mb-1">Desde</label>
           <input
             type="date"
             value={desde}
-            onChange={(e) => setDesde(e.target.value)}
+            onChange={(e) => {
+              setDesde(e.target.value);
+              setActiveDatePreset(null);
+            }}
             className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
           />
         </div>
@@ -191,7 +273,10 @@ export default function FinanzasPage() {
           <input
             type="date"
             value={hasta}
-            onChange={(e) => setHasta(e.target.value)}
+            onChange={(e) => {
+              setHasta(e.target.value);
+              setActiveDatePreset(null);
+            }}
             className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
           />
         </div>
@@ -226,6 +311,7 @@ export default function FinanzasPage() {
             ))}
           </select>
         </div>
+        </div>
       </div>
 
       {/* Resumen */}
@@ -236,11 +322,11 @@ export default function FinanzasPage() {
               Ingresos totales
             </p>
             <p className="text-2xl font-bold text-green-800 dark:text-green-300">
-              ${report.resumen.ingresos.toFixed(2)}
+              {formatTransactionAmount(report.resumen.ingresos)}
             </p>
             <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-              Reservas: ${report.ingresosPorReservas.toFixed(2)} · Manual: $
-              {report.ingresosManuales.toFixed(2)}
+              Reservas: {formatTransactionAmount(report.ingresosPorReservas)} ·
+              Manual: {formatTransactionAmount(report.ingresosManuales)}
             </p>
           </div>
           {ingresosPorMetodoPago.map((item) => (
@@ -252,9 +338,7 @@ export default function FinanzasPage() {
                 {item.label}
               </p>
               <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">
-                {item.moneda === "CUP"
-                  ? `${item.total.toFixed(2)} CUP`
-                  : `$${item.total.toFixed(2)}`}
+                {formatTransactionAmount(item.total)}
               </p>
             </div>
           ))}
@@ -263,7 +347,7 @@ export default function FinanzasPage() {
               Gastos
             </p>
             <p className="text-2xl font-bold text-red-800 dark:text-red-300">
-              ${report.resumen.gastos.toFixed(2)}
+              {formatTransactionAmount(report.resumen.gastos)}
             </p>
           </div>
           <div
@@ -274,7 +358,7 @@ export default function FinanzasPage() {
             }`}
           >
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Balance (USD)
+              Balance (CUP)
             </p>
             <p
               className={`text-2xl font-bold ${
@@ -283,7 +367,7 @@ export default function FinanzasPage() {
                   : "text-orange-800 dark:text-orange-300"
               }`}
             >
-              ${report.resumen.balance.toFixed(2)}
+              {formatTransactionAmount(report.resumen.balance)}
             </p>
           </div>
         </div>
@@ -306,9 +390,7 @@ export default function FinanzasPage() {
                     {item.label}
                   </span>
                   <span className="font-medium text-green-600">
-                    {item.moneda === "CUP"
-                      ? `${item.total.toFixed(2)} CUP`
-                      : `$${item.total.toFixed(2)}`}
+                    {formatTransactionAmount(item.total)}
                   </span>
                 </li>
               ))}
@@ -331,7 +413,7 @@ export default function FinanzasPage() {
                       {item.categoria}
                     </span>
                     <span className="font-medium text-green-600">
-                      ${item.total.toFixed(2)}
+                      {formatTransactionAmount(item.total)}
                     </span>
                   </li>
                 ))}
@@ -355,7 +437,7 @@ export default function FinanzasPage() {
                       {item.categoria}
                     </span>
                     <span className="font-medium text-red-600">
-                      ${item.total.toFixed(2)}
+                      {formatTransactionAmount(item.total)}
                     </span>
                   </li>
                 ))}
@@ -511,7 +593,7 @@ export default function FinanzasPage() {
                   >
                     {PAYMENT_METHOD_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label} ({option.moneda})
+                        {option.label}
                       </option>
                     ))}
                   </select>
@@ -519,11 +601,7 @@ export default function FinanzasPage() {
               )}
               <div>
                 <label className="text-sm font-medium block mb-1">
-                  Monto (
-                  {form.tipo === "income"
-                    ? getPaymentMethodMeta(form.metodoPago).moneda
-                    : "USD"}
-                  )
+                  Monto (CUP)
                 </label>
                 <input
                   type="number"

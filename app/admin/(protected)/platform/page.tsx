@@ -99,7 +99,7 @@ export default function PlatformPaymentsPage() {
                     </p>
                   </div>
                   <p className="text-xl font-bold text-violet-600">
-                    ${p.montoFinal.toFixed(2)}
+                    {p.montoFinal.toFixed(2)} CUP
                   </p>
                 </div>
                 {filter === "pending" && (

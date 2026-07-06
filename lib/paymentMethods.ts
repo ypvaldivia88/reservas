@@ -1,12 +1,13 @@
 import { PaymentMethod } from "@/lib/types";
 
+export const MONEDA = "CUP" as const;
+
 export const PAYMENT_METHOD_OPTIONS: {
   value: PaymentMethod;
   label: string;
-  moneda: string;
 }[] = [
-  { value: "transferencia", label: "Transferencia", moneda: "USD" },
-  { value: "efectivo_cup", label: "Efectivo CUP", moneda: "CUP" },
+  { value: "transferencia", label: "Transferencia" },
+  { value: "efectivo_cup", label: "Efectivo" },
 ];
 
 export function isPaymentMethod(value: unknown): value is PaymentMethod {
@@ -20,18 +21,14 @@ export function getPaymentMethodMeta(metodo?: PaymentMethod) {
   );
 }
 
-export function getMonedaForPaymentMethod(metodo?: PaymentMethod): string {
-  return getPaymentMethodMeta(metodo).moneda;
+export function getMonedaForPaymentMethod(_metodo?: PaymentMethod): string {
+  return MONEDA;
 }
 
 export function formatTransactionAmount(
   monto: number,
-  metodo?: PaymentMethod,
-  moneda?: string
+  _metodo?: PaymentMethod,
+  _moneda?: string
 ): string {
-  const currency = moneda ?? getMonedaForPaymentMethod(metodo);
-  if (currency === "CUP") {
-    return `${monto.toFixed(2)} CUP`;
-  }
-  return `$${monto.toFixed(2)}`;
+  return `${monto.toFixed(2)} CUP`;
 }

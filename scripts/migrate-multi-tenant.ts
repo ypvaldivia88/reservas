@@ -37,7 +37,7 @@ async function migrate() {
         nombre: "Oh`Diosa",
         whatsappNumber: process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "+5363233073",
         timezone: "America/Havana",
-        currency: "USD",
+        currency: "CUP",
         status: "active",
         fechaCreacion: new Date(),
       },

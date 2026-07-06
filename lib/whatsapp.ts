@@ -419,8 +419,8 @@ export function generateSubscriptionPaymentWhatsAppLink(
 🏪 *Salón:* ${details.salonNombre}
 📦 *Plan:* ${details.planNombre}
 📅 *Ciclo:* ${cicloLabel}
-💰 *Precio original:* $${details.montoOriginal.toFixed(2)}${descuentoText}
-✅ *Total a pagar:* $${details.montoFinal.toFixed(2)}
+💰 *Precio original:* ${details.montoOriginal.toFixed(2)} CUP${descuentoText}
+✅ *Total a pagar:* ${details.montoFinal.toFixed(2)} CUP
 
 🔖 *Código de referencia:* ${details.codigoReferencia}
 
