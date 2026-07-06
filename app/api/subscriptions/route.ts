@@ -13,6 +13,7 @@ import {
   calculatePlanPrice,
   generatePaymentReference,
   isSubscriptionActive,
+  normalizeSubscriptionPlan,
 } from "@/lib/subscription";
 import { AppError } from "@/lib/api/errors";
 
@@ -61,7 +62,8 @@ export const POST = adminHandler(async ({ salonId, request }) => {
 
   if (!plan) throw AppError.notFound("Plan no encontrado");
 
-  const pricing = calculatePlanPrice(plan, ciclo);
+  const normalizedPlan = normalizeSubscriptionPlan(plan);
+  const pricing = calculatePlanPrice(normalizedPlan, ciclo);
   const codigoReferencia = generatePaymentReference();
 
   const paymentRequest: Omit<PaymentRequest, "_id"> = {
