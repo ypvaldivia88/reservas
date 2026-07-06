@@ -24,6 +24,9 @@ export default function FinanzasPage() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [filterTipo, setFilterTipo] = useState<"" | TransactionType>("");
+  const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
+    ""
+  );
   const [desde, setDesde] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
@@ -61,9 +64,11 @@ export default function FinanzasPage() {
       }
 
       const tipoParam = filterTipo ? `&tipo=${filterTipo}` : "";
+      const metodoParam =
+        filterMetodoPago ? `&metodoPago=${filterMetodoPago}` : "";
       const [txRes, catRes, repRes] = await Promise.all([
         fetch(
-          `/api/finanzas/transactions?desde=${desde}&hasta=${hasta}${tipoParam}`
+          `/api/finanzas/transactions?desde=${desde}&hasta=${hasta}${tipoParam}${metodoParam}`
         ),
         fetch("/api/finanzas/categories"),
         fetch(`/api/finanzas/reports?desde=${desde}&hasta=${hasta}`),
@@ -91,7 +96,7 @@ export default function FinanzasPage() {
     } finally {
       setLoading(false);
     }
-  }, [desde, hasta, filterTipo]);
+  }, [desde, hasta, filterTipo, filterMetodoPago]);
 
   useEffect(() => {
     loadData();
@@ -130,6 +135,17 @@ export default function FinanzasPage() {
 
   const incomeCategories = categories.filter((c) => c.tipo === "income");
   const expenseCategories = categories.filter((c) => c.tipo === "expense");
+  const ingresosPorMetodoPago = PAYMENT_METHOD_OPTIONS.map((option) => {
+    const found = report?.ingresosPorMetodoPago.find(
+      (item) => item.metodo === option.value
+    );
+    return {
+      metodo: option.value,
+      label: option.label,
+      moneda: option.moneda,
+      total: found?.total ?? 0,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -193,6 +209,23 @@ export default function FinanzasPage() {
             <option value="expense">Gastos</option>
           </select>
         </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Cobro</label>
+          <select
+            value={filterMetodoPago}
+            onChange={(e) =>
+              setFilterMetodoPago(e.target.value as "" | PaymentMethod)
+            }
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
+          >
+            <option value="">Todos</option>
+            {PAYMENT_METHOD_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Resumen */}
@@ -210,7 +243,7 @@ export default function FinanzasPage() {
               {report.ingresosManuales.toFixed(2)}
             </p>
           </div>
-          {report.ingresosPorMetodoPago.map((item) => (
+          {ingresosPorMetodoPago.map((item) => (
             <div
               key={item.metodo}
               className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800"
@@ -256,9 +289,31 @@ export default function FinanzasPage() {
         </div>
       )}
 
-      {/* Reportes por categoría */}
+      {/* Reportes por categoría y forma de cobro */}
       {report && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+              Ingresos por forma de cobro
+            </h3>
+            <ul className="space-y-2">
+              {ingresosPorMetodoPago.map((item) => (
+                <li
+                  key={item.metodo}
+                  className="flex justify-between text-sm"
+                >
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {item.label}
+                  </span>
+                  <span className="font-medium text-green-600">
+                    {item.moneda === "CUP"
+                      ? `${item.total.toFixed(2)} CUP`
+                      : `$${item.total.toFixed(2)}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
               Ingresos por categoría

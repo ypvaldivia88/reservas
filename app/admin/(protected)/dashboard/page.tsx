@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Reserva, User, Servicio, PaymentMethod } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
-import { PAYMENT_METHOD_OPTIONS } from "@/lib/paymentMethods";
+import { PAYMENT_METHOD_OPTIONS, getPaymentMethodMeta } from "@/lib/paymentMethods";
 import { Button } from "@/components/ui/Button";
 import ReservasTable from "@/components/ReservasTable";
 import {
@@ -941,6 +941,18 @@ function DashboardContent() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (
+                    editingReserva.costo != null &&
+                    (editingReserva.estado === "confirmada" ||
+                      editingReserva.estado === "completada") &&
+                    !editingReserva.metodoPago
+                  ) {
+                    setActionMessage(
+                      "❌ Selecciona la forma de cobro (transferencia o efectivo CUP)"
+                    );
+                    setTimeout(() => setActionMessage(""), 3000);
+                    return;
+                  }
                   handleUpdateReserva(editingReserva);
                 }}
                 className="space-y-6"
@@ -1177,7 +1189,9 @@ function DashboardContent() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Ingreso / Costo{" "}
+                          Ingreso / Costo (
+                          {getPaymentMethodMeta(editingReserva.metodoPago).moneda}
+                          ){" "}
                           {editingReserva.estado === "completada" ?
                             "(editable)"
                           : "(opcional)"}

@@ -19,9 +19,13 @@ export const GET = adminHandler(async ({ salonId, request }) => {
   const tipo = request.nextUrl.searchParams.get("tipo");
   const desde = request.nextUrl.searchParams.get("desde");
   const hasta = request.nextUrl.searchParams.get("hasta");
+  const metodoPago = request.nextUrl.searchParams.get("metodoPago");
 
   const filter: Record<string, unknown> = { ...tenantQuery(salonId) };
   if (tipo) filter.tipo = tipo;
+  if (metodoPago && isPaymentMethod(metodoPago)) {
+    filter.metodoPago = metodoPago;
+  }
   if (desde || hasta) {
     filter.fecha = {};
     if (desde) (filter.fecha as Record<string, string>).$gte = desde;
