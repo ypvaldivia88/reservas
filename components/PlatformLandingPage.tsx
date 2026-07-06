@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import TenantDirectory from "@/components/TenantDirectory";
+import { SalonDirectoryItem } from "@/lib/types";
 
 const features = [
   {
@@ -82,7 +84,11 @@ const steps = [
   },
 ];
 
-export default function PlatformLandingPage() {
+export default function PlatformLandingPage({
+  salons = [],
+}: {
+  salons?: SalonDirectoryItem[];
+}) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       {/* Hero */}
@@ -119,6 +125,8 @@ export default function PlatformLandingPage() {
           </div>
         </div>
       </section>
+
+      <TenantDirectory salons={salons} />
 
       {/* Features */}
       <section id="funciones" className="py-16 sm:py-20 bg-white dark:bg-gray-900/50">

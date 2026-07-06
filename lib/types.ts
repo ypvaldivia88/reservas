@@ -115,6 +115,17 @@ export interface SalonPublicProfile {
   social: SalonSocial;
 }
 
+export interface SalonDirectoryItem {
+  slug: string;
+  nombre: string;
+  businessTemplate: BusinessTemplate;
+  categoryLabel: string;
+  subtitle?: string;
+  logoUrl?: string;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
 export interface SalonRegistrationRequest {
   nombre: string;
   slug: string;

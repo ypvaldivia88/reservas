@@ -29,6 +29,14 @@ class SalonRepository extends BaseRepository {
     return col.find({}).sort({ fechaCreacion: -1 }).toArray() as unknown as Promise<Salon[]>;
   }
 
+  async listActive(): Promise<Salon[]> {
+    const col = await this.collection();
+    return col
+      .find({ status: "active" })
+      .sort({ nombre: 1 })
+      .toArray() as unknown as Promise<Salon[]>;
+  }
+
   async create(salon: Omit<Salon, "_id">): Promise<Salon> {
     const col = await this.collection();
     const result = await col.insertOne(salon as Record<string, unknown>);
