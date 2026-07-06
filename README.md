@@ -137,7 +137,7 @@ npm run format       # Formatear código con Prettier
 
 ⚠️ **IMPORTANTE:** Cambiar la contraseña inmediatamente después del primer inicio de sesión.
 
-Para más detalles sobre el sistema de autenticación, consulta [AUTENTICACION.md](./AUTENTICACION.md).
+Para más detalles sobre el sistema de autenticación, consulta [AUTENTICACION.md](./docs/AUTENTICACION.md).
 
 ### Panel de Administración
 - ✅ Ver lista completa de reservas

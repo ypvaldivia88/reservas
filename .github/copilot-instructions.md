@@ -180,7 +180,7 @@ npm run format           # Prettier formatting
 - **DB:** `lib/mongodb.ts` (connection pool)
 - **Auth:** `lib/auth.ts` (bcrypt hashing)
 - **Middleware:** `middleware.ts` (route protection, security headers)
-- **Docs:** `README.md`, `IMPLEMENTATION_SUMMARY.md`, `PHONE_NORMALIZATION.md`
+- **Docs:** `README.md`, `docs/IMPLEMENTATION_SUMMARY.md`, `docs/PHONE_NORMALIZATION.md`
 
 ## When Adding Features
 1. **Check types first:** Is your data model in `lib/types.ts`? Add it.
@@ -204,8 +204,8 @@ npm run format           # Prettier formatting
 - **First deploy:** Run `/api/auth/init` to create admin user
 
 ## Need More Context?
-- **Auth flow:** See `AUTENTICACION.md`
-- **Image system:** See `GESTION_IMAGENES.md`, `UNIFIED_CONTENT_MANAGEMENT.md`
-- **WhatsApp:** See `WHATSAPP_NOTIFICATIONS.md`
-- **Security:** See `SECURITY_ASSESSMENT.md`
-- **Implementation history:** See `IMPLEMENTATION_SUMMARY.md`
+- **Auth flow:** See `docs/AUTENTICACION.md`
+- **Image system:** See `docs/GESTION_IMAGENES.md`, `docs/UNIFIED_CONTENT_MANAGEMENT.md`
+- **WhatsApp:** See `docs/WHATSAPP_NOTIFICATIONS.md`
+- **Security:** See `docs/SECURITY_ASSESSMENT.md`
+- **Implementation history:** See `docs/IMPLEMENTATION_SUMMARY.md`
