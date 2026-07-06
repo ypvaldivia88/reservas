@@ -198,19 +198,23 @@ function resolveCobroBreakdown(reserva: {
   cobroTransferencia?: number;
   metodoPago?: unknown;
 }): CobroBreakdownItem[] {
-  const items: CobroBreakdownItem[] = [];
+  const hasSplitCobro =
+    reserva.cobroEfectivo !== undefined ||
+    reserva.cobroTransferencia !== undefined;
 
-  const efectivo = Number(reserva.cobroEfectivo);
+  const items: CobroBreakdownItem[] = [];
+  const efectivo = Number(reserva.cobroEfectivo ?? 0);
+  const transferencia = Number(reserva.cobroTransferencia ?? 0);
+
   if (!isNaN(efectivo) && efectivo > 0) {
     items.push({ metodo: "efectivo_cup", monto: efectivo });
   }
-
-  const transferencia = Number(reserva.cobroTransferencia);
   if (!isNaN(transferencia) && transferencia > 0) {
     items.push({ metodo: "transferencia", monto: transferencia });
   }
 
   if (items.length > 0) return items;
+  if (hasSplitCobro) return [];
 
   if (isPaymentMethod(reserva.metodoPago)) {
     return [{ metodo: reserva.metodoPago, monto: reserva.costo }];
@@ -448,6 +452,9 @@ export async function syncIncomesFromReservas(
     const metodoPago = isPaymentMethod(reserva.metodoPago)
       ? reserva.metodoPago
       : undefined;
+    const usesCobroSplit =
+      reserva.cobroEfectivo !== undefined ||
+      reserva.cobroTransferencia !== undefined;
 
     await syncReservaIncomeTransactions(
       db,
@@ -459,7 +466,7 @@ export async function syncIncomesFromReservas(
       servicioId,
       reserva.cobroEfectivo as number | undefined,
       reserva.cobroTransferencia as number | undefined,
-      metodoPago
+      usesCobroSplit ? undefined : metodoPago
     );
   }
 }

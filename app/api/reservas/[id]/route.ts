@@ -61,16 +61,16 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
     updateData.servicioId = data.servicioId || undefined;
     updateData.servicioIds = data.servicioId ? [data.servicioId] : [];
   }
-  if (data.cobroEfectivo !== undefined) {
-    const cobroEfectivo = Number(data.cobroEfectivo);
-    if (!isNaN(cobroEfectivo) && cobroEfectivo >= 0) {
-      updateData.cobroEfectivo = cobroEfectivo;
-    }
-  }
-  if (data.cobroTransferencia !== undefined) {
-    const cobroTransferencia = Number(data.cobroTransferencia);
-    if (!isNaN(cobroTransferencia) && cobroTransferencia >= 0) {
-      updateData.cobroTransferencia = cobroTransferencia;
+  if (data.cobroEfectivo !== undefined || data.cobroTransferencia !== undefined) {
+    const cobroEfectivo = Number(data.cobroEfectivo ?? 0);
+    const cobroTransferencia = Number(data.cobroTransferencia ?? 0);
+    updateData.cobroEfectivo =
+      isNaN(cobroEfectivo) || cobroEfectivo < 0 ? 0 : cobroEfectivo;
+    updateData.cobroTransferencia =
+      isNaN(cobroTransferencia) || cobroTransferencia < 0 ? 0 : cobroTransferencia;
+    const cobroTotal = updateData.cobroEfectivo + updateData.cobroTransferencia;
+    if (cobroTotal > 0) {
+      updateData.costo = cobroTotal;
     }
   }
   if (data.metodoPago !== undefined) {
