@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 
 export interface MobileNavLink {
@@ -38,6 +39,12 @@ export default function MobileNavDrawer({
   children,
   visibility = "mobile",
 }: MobileNavDrawerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -64,22 +71,24 @@ export default function MobileNavDrawer({
 
   const hideOnDesktop = visibility === "mobile";
 
-  return (
+  if (!mounted || !isOpen) return null;
+
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           hideOnDesktop ? "md:hidden" : ""
-        } ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        } opacity-100`}
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer panel */}
       <div
-        className={`fixed top-0 right-0 z-[70] h-full w-full max-w-[min(100vw,340px)] flex flex-col glass-strong shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`fixed top-0 right-0 z-[70] h-[100dvh] w-full max-w-[min(100vw,340px)] flex flex-col glass-strong shadow-2xl animate-slide-in-right ${
           hideOnDesktop ? "md:hidden" : ""
-        } ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        }`}
         style={accentStyle}
         role="dialog"
         aria-modal="true"
@@ -188,6 +197,7 @@ export default function MobileNavDrawer({
           </div>
         )}
       </div>
-    </>
+    </>,
+    document.body
   );
 }

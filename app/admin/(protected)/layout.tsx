@@ -5,7 +5,6 @@ import AdminNav from "@/components/AdminNav";
 import AdminRoleGuard from "@/components/AdminRoleGuard";
 import ThemeToggle from "@/components/ThemeToggle";
 import HamburgerButton from "@/components/HamburgerButton";
-import MobileNavDrawer from "@/components/MobileNavDrawer";
 import { Button } from "@/components/ui/Button";
 import {
   HomeIcon,
@@ -131,53 +130,36 @@ export default function AdminProtectedLayout({
             </div>
           </div>
 
-          <MobileNavDrawer
-            isOpen={isMobileMenuOpen}
-            onClose={closeMenu}
-            title="Administración"
-            visibility="all"
-          >
-            {!isPlatformRoute &&
-              salonSecondaryItems.map((item, index) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={closeMenu}
-                  className="block animate-fadeInUp"
-                  style={{ animationDelay: `${index * 60 + 80}ms`, animationFillMode: "both" }}
-                >
-                  <Button
-                    variant={
-                      pathname.startsWith(item.href) ? "primary" : "outlined-secondary"
-                    }
-                    size="sm"
-                    fullWidth
-                  >
-                    {item.label}
+          {/* Menú secundario expandible (Sitio, Plan, Perfil, Sesión) */}
+          {isMobileMenuOpen && (
+            <div
+              className={`mt-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg p-3 space-y-2 animate-fadeInUp ${
+                isPlatformRoute ? "md:hidden" : ""
+              }`}
+            >
+              {!isPlatformRoute &&
+                salonSecondaryItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="block" onClick={closeMenu}>
+                    <Button
+                      variant={
+                        pathname.startsWith(item.href) ? "primary" : "outlined-secondary"
+                      }
+                      size="sm"
+                      fullWidth
+                    >
+                      {item.label}
+                    </Button>
+                  </Link>
+                ))}
+
+              {isPlatformRoute && (
+                <Link href={profileHref} className="block" onClick={closeMenu}>
+                  <Button variant="primary" size="sm" fullWidth>
+                    Mi Perfil
                   </Button>
                 </Link>
-              ))}
+              )}
 
-            {isPlatformRoute && (
-              <Link
-                href={profileHref}
-                onClick={closeMenu}
-                className="block animate-fadeInUp"
-                style={{ animationDelay: "80ms", animationFillMode: "both" }}
-              >
-                <Button variant="primary" size="sm" fullWidth>
-                  Mi Perfil
-                </Button>
-              </Link>
-            )}
-
-            <div
-              className="animate-fadeInUp"
-              style={{
-                animationDelay: `${(isPlatformRoute ? 1 : salonSecondaryItems.length) * 60 + 80}ms`,
-                animationFillMode: "both",
-              }}
-            >
               <Button
                 onClick={() => {
                   handleLogout();
@@ -191,7 +173,7 @@ export default function AdminProtectedLayout({
                 Cerrar Sesión
               </Button>
             </div>
-          </MobileNavDrawer>
+          )}
         </div>
       </header>
 

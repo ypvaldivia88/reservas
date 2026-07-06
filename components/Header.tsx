@@ -72,6 +72,7 @@ export default function Header({ isHomePage = true }: HeaderProps) {
   }));
 
   return (
+    <>
     <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
@@ -123,14 +124,15 @@ export default function Header({ isHomePage = true }: HeaderProps) {
           </div>
         </div>
       </div>
-
-      <MobileNavDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        links={mobileLinks}
-        title="Oh`Diosa Nails"
-        cta={{ href: "/reserva", label: "Reservar Cita" }}
-      />
     </header>
+
+    <MobileNavDrawer
+      isOpen={isMobileMenuOpen}
+      onClose={() => setIsMobileMenuOpen(false)}
+      links={mobileLinks}
+      title="Oh`Diosa Nails"
+      cta={{ href: "/reserva", label: "Reservar Cita" }}
+    />
+  </>
   );
 }
