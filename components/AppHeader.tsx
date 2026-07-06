@@ -1,7 +1,9 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
+import PlatformHeader from "./PlatformHeader";
 
+const PLATFORM_PATHS = ["/", "/registro"];
 const RESERVED_PATHS = ["/", "/reserva", "/registro"];
 
 export default function AppHeader() {
@@ -18,6 +20,10 @@ export default function AppHeader() {
 
   if (isSlugRoute) {
     return null;
+  }
+
+  if (pathname && PLATFORM_PATHS.includes(pathname)) {
+    return <PlatformHeader />;
   }
 
   const isHomePage = pathname === "/";

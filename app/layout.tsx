@@ -16,25 +16,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Oh`Diosa - Salón de Manicure Profesional",
+  title: "ReservaSalón - Plataforma de reservas para salones de belleza",
   description:
-    "El mejor salón de manicure y cuidado de uñas. Diseños únicos, productos premium y profesionales expertas. Reserva tu cita hoy.",
+    "Crea la página web de tu salón, gestiona citas en línea y comparte un enlace único con tus clientes. 14 días de prueba gratis.",
   keywords: [
-    "manicure",
-    "uñas",
-    "nail art",
+    "reservas",
     "salon",
     "belleza",
-    "cuidado",
-    "diseños",
+    "manicure",
+    "agenda",
+    "citas",
+    "saas",
   ],
-  authors: [{ name: "Oh`Diosa Salón" }],
-  creator: "Oh`Diosa Salón",
-  publisher: "Oh`Diosa Salón",
+  authors: [{ name: "ReservaSalón" }],
+  creator: "ReservaSalón",
+  publisher: "ReservaSalón",
   openGraph: {
-    title: "Oh`Diosa - Salón de Manicure Profesional",
+    title: "ReservaSalón - Plataforma de reservas para salones",
     description:
-      "El mejor salón de manicure y cuidado de uñas. Diseños únicos, productos premium y profesionales expertas.",
+      "Digitaliza tu salón con reservas en línea, página web propia y panel de administración.",
     type: "website",
     locale: "es_ES",
   },
