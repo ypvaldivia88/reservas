@@ -15,7 +15,38 @@ function slugify(text: string): string {
     .slice(0, 48);
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard not available */
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="shrink-0 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition-colors"
+    >
+      {copied ? "¡Copiado!" : "Copiar"}
+    </button>
+  );
+}
+
+interface RegistrationSuccess {
+  nombre: string;
+  slug: string;
+  trialEndsAt: string;
+}
+
 export default function RegistroPage() {
+  const [origin, setOrigin] = useState("");
   const [form, setForm] = useState({
     nombre: "",
     slug: "",
@@ -29,9 +60,14 @@ export default function RegistroPage() {
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "ok" | "taken">("idle");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState<RegistrationSuccess | null>(null);
   const [templates, setTemplates] = useState<
     { id: BusinessTemplate; nombre: string; descripcion: string; icon: string; branding: { primaryColor?: string; secondaryColor?: string } }[]
   >([]);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     fetch("/api/business-templates")
@@ -68,6 +104,8 @@ export default function RegistroPage() {
     }));
   };
 
+  const publicUrl = form.slug && origin ? `${origin}/${form.slug}` : "";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -99,7 +137,11 @@ export default function RegistroPage() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = "/admin/calendario";
+        setSuccess({
+          nombre: data.data.nombre,
+          slug: data.data.slug,
+          trialEndsAt: data.data.trialEndsAt,
+        });
       } else {
         setError(data.error || "Error al registrar");
       }
@@ -110,10 +152,77 @@ export default function RegistroPage() {
     }
   };
 
+  if (success) {
+    const salonUrl = `${origin}/${success.slug}`;
+    const reservaUrl = `${origin}/reserva?slug=${success.slug}`;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              ¡{success.nombre} está listo!
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Tu salón fue creado con 14 días de prueba (hasta el {success.trialEndsAt}).
+              Comparte estos enlaces con tus clientes:
+            </p>
+
+            <div className="space-y-4 text-left mb-8">
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Página de tu salón
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 font-mono text-sm break-all">
+                    {salonUrl}
+                  </div>
+                  <CopyButton text={salonUrl} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Enlace directo de reservas
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 font-mono text-sm break-all">
+                    {reservaUrl}
+                  </div>
+                  <CopyButton text={reservaUrl} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href={`/${success.slug}`} className="flex-1">
+                <Button variant="outlined-primary" fullWidth size="lg">
+                  Ver mi página
+                </Button>
+              </Link>
+              <Link href="/admin/calendario" className="flex-1">
+                <Button variant="primary" fullWidth size="lg">
+                  Ir al panel admin
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-8">
+          <Link href="/" className="text-sm text-violet-600 hover:underline mb-4 inline-block">
+            ← Volver al inicio
+          </Link>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Registra tu salón
           </h1>
@@ -142,7 +251,9 @@ export default function RegistroPage() {
               URL de tu salón
             </label>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 shrink-0">/</span>
+              <span className="text-sm text-gray-500 shrink-0 hidden sm:inline">
+                {origin || "…"}/
+              </span>
               <input
                 required
                 value={form.slug}
@@ -153,6 +264,11 @@ export default function RegistroPage() {
                 className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
               />
             </div>
+            {publicUrl && slugStatus === "ok" && (
+              <p className="text-xs text-gray-500 mt-2 font-mono break-all">
+                Tu página: <span className="text-violet-600 dark:text-violet-400">{publicUrl}</span>
+              </p>
+            )}
             {slugStatus === "checking" && (
               <p className="text-xs text-gray-500 mt-1">Verificando...</p>
             )}
@@ -176,7 +292,7 @@ export default function RegistroPage() {
                   onClick={() => setForm((f) => ({ ...f, businessTemplate: t.id }))}
                   className={`p-3 rounded-xl border-2 text-left transition-all ${
                     form.businessTemplate === t.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      ? "border-violet-500 bg-violet-50 dark:bg-violet-900/20"
                       : "border-gray-200 dark:border-gray-600 hover:border-gray-300"
                   }`}
                 >
@@ -274,7 +390,7 @@ export default function RegistroPage() {
 
           <p className="text-center text-sm text-gray-500">
             ¿Ya tienes cuenta?{" "}
-            <Link href="/admin" className="text-blue-600 hover:underline">
+            <Link href="/admin" className="text-violet-600 hover:underline">
               Iniciar sesión
             </Link>
           </p>
