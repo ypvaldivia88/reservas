@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Reserva, User, Servicio } from "@/lib/types";
+import { Reserva, User, Servicio, PaymentMethod } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
+import { PAYMENT_METHOD_OPTIONS, getPaymentMethodMeta } from "@/lib/paymentMethods";
 import { Button } from "@/components/ui/Button";
 import ReservasTable from "@/components/ReservasTable";
 import {
@@ -51,6 +52,44 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const getReservaServicioIds = (reserva: Reserva): string[] => {
+    if (reserva.servicioIds && reserva.servicioIds.length > 0) {
+      return reserva.servicioIds;
+    }
+    return reserva.servicioId ? [reserva.servicioId] : [];
+  };
+
+  const normalizeReservaForEdit = (reserva: Reserva): Reserva => ({
+    ...reserva,
+    servicioIds: getReservaServicioIds(reserva),
+    servicioId: getReservaServicioIds(reserva)[0],
+    metodoPago: reserva.metodoPago ?? "transferencia",
+  });
+
+  const sumServiciosPrecio = (servicioIds: string[]): number =>
+    servicioIds.reduce((total, servicioId) => {
+      const servicio = servicios.find((s) => s._id === servicioId);
+      return total + (servicio?.precio ?? 0);
+    }, 0);
+
+  const toggleReservaServicio = (servicioId: string) => {
+    if (!editingReserva) return;
+
+    const currentIds = getReservaServicioIds(editingReserva);
+    const nextIds =
+      currentIds.includes(servicioId) ?
+        currentIds.filter((id) => id !== servicioId)
+      : [...currentIds, servicioId];
+    const nextCosto = sumServiciosPrecio(nextIds);
+
+    setEditingReserva({
+      ...editingReserva,
+      servicioIds: nextIds,
+      servicioId: nextIds[0],
+      costo: nextIds.length > 0 ? nextCosto : editingReserva.costo,
+    });
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -92,7 +131,7 @@ function DashboardContent() {
       // Find and open the reservation for editing
       const reserva = reservas.find((r) => r._id === reservaId);
       if (reserva) {
-        setEditingReserva(reserva);
+        setEditingReserva(normalizeReservaForEdit(reserva));
         setActionMessage(
           "Reserva abierta desde WhatsApp. Puedes confirmar, editar o descartar."
         );
@@ -156,7 +195,9 @@ function DashboardContent() {
           horaCita: reserva.horaCita,
           estado: reserva.estado,
           costo: reserva.costo,
-          servicioId: reserva.servicioId,
+          servicioIds: getReservaServicioIds(reserva),
+          servicioId: getReservaServicioIds(reserva)[0],
+          metodoPago: reserva.metodoPago,
         }),
       });
 
@@ -376,7 +417,7 @@ function DashboardContent() {
         <ReservasTable
           reservas={reservas}
           saving={saving}
-          onEdit={setEditingReserva}
+          onEdit={(reserva) => setEditingReserva(normalizeReservaForEdit(reserva))}
           onDelete={setDeletingReserva}
           onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
             handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
@@ -900,6 +941,18 @@ function DashboardContent() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (
+                    editingReserva.costo != null &&
+                    (editingReserva.estado === "confirmada" ||
+                      editingReserva.estado === "completada") &&
+                    !editingReserva.metodoPago
+                  ) {
+                    setActionMessage(
+                      "❌ Selecciona la forma de cobro (transferencia o efectivo CUP)"
+                    );
+                    setTimeout(() => setActionMessage(""), 3000);
+                    return;
+                  }
                   handleUpdateReserva(editingReserva);
                 }}
                 className="space-y-6"
@@ -1059,36 +1112,86 @@ function DashboardContent() {
                   {(editingReserva.estado === "completada" ||
                     editingReserva.estado === "confirmada") && (
                     <>
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Servicio
+                          Servicios consumidos
                         </label>
-                        <select
-                          value={editingReserva.servicioId || ""}
-                          onChange={(e) =>
-                            setEditingReserva({
-                              ...editingReserva,
-                              servicioId: e.target.value || undefined,
-                            })
-                          }
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
-                        >
-                          <option value="">Seleccionar servicio</option>
+                        <div className="flex flex-wrap gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 border-2 border-gray-300 dark:border-gray-600 rounded-xl">
                           {servicios
                             .filter((s) => s.activo)
                             .map((servicio) => (
-                              <option key={servicio._id} value={servicio._id}>
-                                {servicio.nombre}
-                              </option>
+                              <label
+                                key={servicio._id}
+                                className="flex items-center gap-2 text-sm cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={getReservaServicioIds(
+                                    editingReserva
+                                  ).includes(servicio._id!)}
+                                  onChange={() =>
+                                    toggleReservaServicio(servicio._id!)
+                                  }
+                                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">
+                                  {servicio.nombre}
+                                  {servicio.precio ?
+                                    ` ($${servicio.precio.toFixed(2)})`
+                                  : ""}
+                                </span>
+                              </label>
                             ))}
-                        </select>
+                        </div>
                         <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                          Categoría del ingreso en finanzas.
+                          Puedes seleccionar varios servicios. El ingreso se
+                          registra una sola vez con el total del turno.
                         </p>
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Ingreso / Costo{" "}
+                          Forma de cobro
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {PAYMENT_METHOD_OPTIONS.map((option) => (
+                            <label
+                              key={option.value}
+                              className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                                editingReserva.metodoPago === option.value ?
+                                  "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="metodoPago"
+                                value={option.value}
+                                checked={editingReserva.metodoPago === option.value}
+                                onChange={() =>
+                                  setEditingReserva({
+                                    ...editingReserva,
+                                    metodoPago: option.value as PaymentMethod,
+                                  })
+                                }
+                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div>
+                                <span className="block text-sm font-medium text-gray-900 dark:text-white">
+                                  {option.label}
+                                </span>
+                                <span className="block text-xs text-gray-500 dark:text-gray-400">
+                                  Moneda: {option.moneda}
+                                </span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Ingreso / Costo (
+                          {getPaymentMethodMeta(editingReserva.metodoPago).moneda}
+                          ){" "}
                           {editingReserva.estado === "completada" ?
                             "(editable)"
                           : "(opcional)"}
@@ -1175,6 +1278,13 @@ function DashboardContent() {
                           if (editingReserva.costo == null) {
                             setActionMessage(
                               "❌ Por favor ingresa el costo antes de completar la reserva"
+                            );
+                            setTimeout(() => setActionMessage(""), 3000);
+                            return;
+                          }
+                          if (!editingReserva.metodoPago) {
+                            setActionMessage(
+                              "❌ Selecciona la forma de cobro (transferencia o efectivo CUP)"
                             );
                             setTimeout(() => setActionMessage(""), 3000);
                             return;

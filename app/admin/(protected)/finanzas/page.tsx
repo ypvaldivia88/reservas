@@ -7,7 +7,13 @@ import {
   FinancialCategory,
   FinancialReport,
   TransactionType,
+  PaymentMethod,
 } from "@/lib/types";
+import {
+  formatTransactionAmount,
+  getPaymentMethodMeta,
+  PAYMENT_METHOD_OPTIONS,
+} from "@/lib/paymentMethods";
 
 export default function FinanzasPage() {
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
@@ -18,6 +24,9 @@ export default function FinanzasPage() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [filterTipo, setFilterTipo] = useState<"" | TransactionType>("");
+  const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
+    ""
+  );
   const [desde, setDesde] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
@@ -32,6 +41,7 @@ export default function FinanzasPage() {
     fecha: new Date().toISOString().split("T")[0],
     descripcion: "",
     categoriaId: "",
+    metodoPago: "transferencia" as PaymentMethod,
   });
 
   const loadData = useCallback(async () => {
@@ -54,9 +64,11 @@ export default function FinanzasPage() {
       }
 
       const tipoParam = filterTipo ? `&tipo=${filterTipo}` : "";
+      const metodoParam =
+        filterMetodoPago ? `&metodoPago=${filterMetodoPago}` : "";
       const [txRes, catRes, repRes] = await Promise.all([
         fetch(
-          `/api/finanzas/transactions?desde=${desde}&hasta=${hasta}${tipoParam}`
+          `/api/finanzas/transactions?desde=${desde}&hasta=${hasta}${tipoParam}${metodoParam}`
         ),
         fetch("/api/finanzas/categories"),
         fetch(`/api/finanzas/reports?desde=${desde}&hasta=${hasta}`),
@@ -84,7 +96,7 @@ export default function FinanzasPage() {
     } finally {
       setLoading(false);
     }
-  }, [desde, hasta, filterTipo]);
+  }, [desde, hasta, filterTipo, filterMetodoPago]);
 
   useEffect(() => {
     loadData();
@@ -109,6 +121,7 @@ export default function FinanzasPage() {
         fecha: new Date().toISOString().split("T")[0],
         descripcion: "",
         categoriaId: "",
+        metodoPago: "transferencia",
       });
       loadData();
     }
@@ -122,6 +135,17 @@ export default function FinanzasPage() {
 
   const incomeCategories = categories.filter((c) => c.tipo === "income");
   const expenseCategories = categories.filter((c) => c.tipo === "expense");
+  const ingresosPorMetodoPago = PAYMENT_METHOD_OPTIONS.map((option) => {
+    const found = report?.ingresosPorMetodoPago.find(
+      (item) => item.metodo === option.value
+    );
+    return {
+      metodo: option.value,
+      label: option.label,
+      moneda: option.moneda,
+      total: found?.total ?? 0,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -185,14 +209,31 @@ export default function FinanzasPage() {
             <option value="expense">Gastos</option>
           </select>
         </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">Cobro</label>
+          <select
+            value={filterMetodoPago}
+            onChange={(e) =>
+              setFilterMetodoPago(e.target.value as "" | PaymentMethod)
+            }
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
+          >
+            <option value="">Todos</option>
+            {PAYMENT_METHOD_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Resumen */}
       {report && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
             <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-              Ingresos
+              Ingresos totales
             </p>
             <p className="text-2xl font-bold text-green-800 dark:text-green-300">
               ${report.resumen.ingresos.toFixed(2)}
@@ -202,6 +243,21 @@ export default function FinanzasPage() {
               {report.ingresosManuales.toFixed(2)}
             </p>
           </div>
+          {ingresosPorMetodoPago.map((item) => (
+            <div
+              key={item.metodo}
+              className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800"
+            >
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                {item.label}
+              </p>
+              <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">
+                {item.moneda === "CUP"
+                  ? `${item.total.toFixed(2)} CUP`
+                  : `$${item.total.toFixed(2)}`}
+              </p>
+            </div>
+          ))}
           <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
             <p className="text-sm text-red-700 dark:text-red-400 font-medium">
               Gastos
@@ -218,7 +274,7 @@ export default function FinanzasPage() {
             }`}
           >
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Balance
+              Balance (USD)
             </p>
             <p
               className={`text-2xl font-bold ${
@@ -233,9 +289,31 @@ export default function FinanzasPage() {
         </div>
       )}
 
-      {/* Reportes por categoría */}
+      {/* Reportes por categoría y forma de cobro */}
       {report && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+              Ingresos por forma de cobro
+            </h3>
+            <ul className="space-y-2">
+              {ingresosPorMetodoPago.map((item) => (
+                <li
+                  key={item.metodo}
+                  className="flex justify-between text-sm"
+                >
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {item.label}
+                  </span>
+                  <span className="font-medium text-green-600">
+                    {item.moneda === "CUP"
+                      ? `${item.total.toFixed(2)} CUP`
+                      : `$${item.total.toFixed(2)}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
               Ingresos por categoría
@@ -307,6 +385,7 @@ export default function FinanzasPage() {
                   <th className="px-4 py-3 text-left">Tipo</th>
                   <th className="px-4 py-3 text-left">Descripción</th>
                   <th className="px-4 py-3 text-left">Categoría</th>
+                  <th className="px-4 py-3 text-left">Cobro</th>
                   <th className="px-4 py-3 text-right">Monto</th>
                   <th className="px-4 py-3 text-right">Acciones</th>
                 </tr>
@@ -335,12 +414,22 @@ export default function FinanzasPage() {
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {tx.tipo === "income"
+                        ? getPaymentMethodMeta(tx.metodoPago).label
+                        : "—"}
+                    </td>
                     <td
                       className={`px-4 py-3 text-right font-medium ${
                         tx.tipo === "income" ? "text-green-600" : "text-red-600"
                       }`}
                     >
-                      {tx.tipo === "income" ? "+" : "-"}${tx.monto.toFixed(2)}
+                      {tx.tipo === "income" ? "+" : "-"}
+                      {formatTransactionAmount(
+                        tx.monto,
+                        tx.metodoPago,
+                        tx.moneda
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {tx.fuente === "manual" && (
@@ -405,8 +494,37 @@ export default function FinanzasPage() {
                   ))}
                 </select>
               </div>
+              {form.tipo === "income" && (
+                <div>
+                  <label className="text-sm font-medium block mb-1">
+                    Forma de cobro
+                  </label>
+                  <select
+                    value={form.metodoPago}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        metodoPago: e.target.value as PaymentMethod,
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  >
+                    {PAYMENT_METHOD_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label} ({option.moneda})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
-                <label className="text-sm font-medium block mb-1">Monto ($)</label>
+                <label className="text-sm font-medium block mb-1">
+                  Monto (
+                  {form.tipo === "income"
+                    ? getPaymentMethodMeta(form.metodoPago).moneda
+                    : "USD"}
+                  )
+                </label>
                 <input
                   type="number"
                   step="0.01"

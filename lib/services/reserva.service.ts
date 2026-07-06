@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/mongodb";
 import { Collections } from "@/lib/db/collections";
 import { AppError } from "@/lib/api/errors";
-import { Reserva, User } from "@/lib/types";
+import { Reserva, User, PaymentMethod } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
 import {
   validateReservaInput,
@@ -11,6 +11,7 @@ import {
   isMongoDuplicateKeyError,
 } from "@/lib/reservaValidation";
 import { createIncomeFromReserva } from "@/lib/finances";
+import { isPaymentMethod } from "@/lib/paymentMethods";
 import { reservaRepository, userRepository } from "@/lib/repositories/user.repository";
 import { DEFAULT_SALON_ID } from "@/lib/tenant";
 
@@ -148,6 +149,18 @@ export class ReservaService {
       }
     }
 
+    if (data.servicioIds !== undefined) {
+      const servicioIds = Array.isArray(data.servicioIds) ?
+        data.servicioIds.filter((id: unknown) => typeof id === "string" && id)
+      : [];
+      updateData.servicioIds = servicioIds;
+      updateData.servicioId = servicioIds[0] || undefined;
+    } else if (data.servicioId !== undefined) {
+      updateData.servicioId = data.servicioId || undefined;
+      updateData.servicioIds =
+        data.servicioId ? [data.servicioId as string] : [];
+    }
+
     const updated = await reservaRepository.update(effectiveSalonId, id, updateData);
     if (!updated) throw AppError.notFound("Reserva no encontrada");
 
@@ -155,16 +168,33 @@ export class ReservaService {
     const finalCosto =
       updateData.costo !== undefined ? updateData.costo : existing.costo;
     const finalFechaCita = updateData.fechaCita ?? existing.fechaCita;
+    const finalServicioIds =
+      updateData.servicioIds ??
+      existing.servicioIds ??
+      (existing.servicioId ? [existing.servicioId] : undefined);
     const finalServicioId =
-      updateData.servicioId !== undefined ?
-        updateData.servicioId
-      : existing.servicioId;
+      finalServicioIds && finalServicioIds.length > 0 ?
+        finalServicioIds[0]
+      : updateData.servicioId ?? existing.servicioId;
+    const finalMetodoPago: PaymentMethod | undefined =
+      updateData.metodoPago !== undefined ?
+        updateData.metodoPago
+      : isPaymentMethod(existing.metodoPago) ?
+        existing.metodoPago
+      : undefined;
 
     if (
       finalCosto !== undefined &&
       finalCosto >= 0 &&
       (finalEstado === "confirmada" || finalEstado === "completada")
     ) {
+      if (!finalMetodoPago) {
+        throw new AppError(
+          "Selecciona la forma de cobro (transferencia o efectivo CUP)",
+          400
+        );
+      }
+
       await createIncomeFromReserva(
         db,
         effectiveSalonId,
@@ -172,7 +202,8 @@ export class ReservaService {
         finalCosto,
         `Reserva ${existing.nombre} - ${finalFechaCita}`,
         finalFechaCita,
-        finalServicioId
+        finalServicioId,
+        finalMetodoPago
       );
     }
   }

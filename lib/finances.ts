@@ -1,11 +1,18 @@
-import { Db, AnyBulkWriteOperation, Document } from "mongodb";
+import { Db } from "mongodb";
 import {
   FinancialReport,
   FinancialTransaction,
+  PaymentMethod,
   TransactionType,
 } from "@/lib/types";
-import { tenantQuery } from "@/lib/tenant";
+import { tenantQuery, DEFAULT_SALON_ID } from "@/lib/tenant";
 import { Collections } from "@/lib/db/collections";
+import {
+  getMonedaForPaymentMethod,
+  getPaymentMethodMeta,
+  isPaymentMethod,
+  PAYMENT_METHOD_OPTIONS,
+} from "@/lib/paymentMethods";
 
 const INCOME_COLORS = [
   "#22c55e",
@@ -33,6 +40,135 @@ export const DEFAULT_FINANCIAL_CATEGORIES = [
 ];
 
 const syncInFlight = new Map<string, Promise<void>>();
+
+function getPrimaryServicioId(reserva: {
+  servicioIds?: string[];
+  servicioId?: string;
+}): string | undefined {
+  if (reserva.servicioIds && reserva.servicioIds.length > 0) {
+    return reserva.servicioIds[0];
+  }
+  return reserva.servicioId;
+}
+
+async function dedupeReservaIncomeTransactions(
+  db: Db,
+  salonId: string
+): Promise<number> {
+  const duplicateGroups = await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .aggregate<{ _id: string; ids: { toString(): string }[] }>([
+      {
+        $match: {
+          ...tenantQuery(salonId),
+          fuente: "reserva",
+          reservaId: { $exists: true, $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: "$reservaId",
+          count: { $sum: 1 },
+          ids: { $push: "$_id" },
+        },
+      },
+      { $match: { count: { $gt: 1 } } },
+    ])
+    .toArray();
+
+  let removed = 0;
+
+  for (const group of duplicateGroups) {
+    const txs = await db
+      .collection(Collections.FINANCIAL_TRANSACTIONS)
+      .find({
+        ...tenantQuery(salonId),
+        fuente: "reserva",
+        reservaId: group._id,
+      })
+      .sort({ fechaCreacion: -1 })
+      .toArray();
+
+    const [, ...toDelete] = txs;
+    if (toDelete.length === 0) continue;
+
+    await db.collection(Collections.FINANCIAL_TRANSACTIONS).deleteMany({
+      _id: { $in: toDelete.map((tx) => tx._id) },
+    });
+    removed += toDelete.length;
+  }
+
+  return removed;
+}
+
+export async function dedupeAllReservaIncomeTransactions(
+  db: Db
+): Promise<number> {
+  const rawIds = await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .distinct("salonId", {
+      fuente: "reserva",
+      reservaId: { $exists: true, $ne: null },
+    });
+
+  const salonIds = new Set<string>([DEFAULT_SALON_ID]);
+  for (const id of rawIds) {
+    if (id != null) salonIds.add(String(id));
+  }
+
+  let removed = 0;
+  for (const salonId of salonIds) {
+    removed += await dedupeReservaIncomeTransactions(db, salonId);
+  }
+
+  return removed;
+}
+
+async function upsertReservaIncomeTransaction(
+  db: Db,
+  salonId: string,
+  reservaId: string,
+  monto: number,
+  descripcion: string,
+  fecha: string,
+  servicioId?: string,
+  metodoPago?: PaymentMethod
+): Promise<void> {
+  const { categoriaId, categoriaNombre } = await resolveIncomeCategory(
+    db,
+    salonId,
+    servicioId
+  );
+  const resolvedMetodoPago = metodoPago ?? "transferencia";
+  const moneda = getMonedaForPaymentMethod(resolvedMetodoPago);
+
+  await db.collection(Collections.FINANCIAL_TRANSACTIONS).findOneAndUpdate(
+    {
+      ...tenantQuery(salonId),
+      reservaId,
+      fuente: "reserva",
+    },
+    {
+      $set: {
+        monto,
+        descripcion,
+        fecha,
+        tipo: "income",
+        metodoPago: resolvedMetodoPago,
+        moneda,
+        ...(categoriaId ? { categoriaId } : {}),
+        ...(categoriaNombre ? { categoriaNombre } : {}),
+      },
+      $setOnInsert: {
+        salonId,
+        fuente: "reserva",
+        reservaId,
+        fechaCreacion: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+}
 
 export async function ensureExpenseCategories(
   db: Db,
@@ -161,6 +297,8 @@ export async function syncIncomesFromReservas(
   db: Db,
   salonId: string
 ): Promise<void> {
+  await dedupeReservaIncomeTransactions(db, salonId);
+
   const reservas = await db
     .collection(Collections.RESERVAS)
     .find({
@@ -172,104 +310,32 @@ export async function syncIncomesFromReservas(
 
   if (reservas.length === 0) return;
 
-  const reservaIds = reservas.map((r) => r._id.toString());
-  const existingTxs = await db
-    .collection(Collections.FINANCIAL_TRANSACTIONS)
-    .find({
-      ...tenantQuery(salonId),
-      fuente: "reserva",
-      reservaId: { $in: reservaIds },
-    })
-    .toArray();
-
-  const existingByReservaId = new Map(
-    existingTxs.map((tx) => [String(tx.reservaId), tx])
-  );
-
-  const incomeCategories = await db
-    .collection(Collections.FINANCIAL_CATEGORIES)
-    .find({
-      ...tenantQuery(salonId),
-      tipo: "income",
-      activo: true,
-      servicioId: { $exists: true },
-    })
-    .toArray();
-
-  const categoryByServicioId = new Map(
-    incomeCategories.map((cat) => [
-      String(cat.servicioId),
-      {
-        categoriaId: cat._id?.toString(),
-        categoriaNombre: cat.nombre as string,
-      },
-    ])
-  );
-
-  const fallbackCategory =
-    incomeCategories.length > 0 ?
-      {
-        categoriaId: incomeCategories[0]._id?.toString(),
-        categoriaNombre: incomeCategories[0].nombre as string,
-      }
-    : {};
-
-  const bulkOps: AnyBulkWriteOperation<Document>[] = [];
-
   for (const reserva of reservas) {
     const costo = Number(reserva.costo);
     if (isNaN(costo) || costo < 0) continue;
 
     const reservaId = reserva._id.toString();
-    const servicioId = reserva.servicioId as string | undefined;
-    const category =
-      (servicioId && categoryByServicioId.get(servicioId)) || fallbackCategory;
+    const servicioId = getPrimaryServicioId({
+      servicioIds: reserva.servicioIds as string[] | undefined,
+      servicioId: reserva.servicioId as string | undefined,
+    });
     const descripcion = `Reserva ${reserva.nombre} - ${reserva.fechaCita}`;
     const fecha = reserva.fechaCita as string;
-    const existing = existingByReservaId.get(reservaId);
 
-    if (existing) {
-      bulkOps.push({
-        updateOne: {
-          filter: { _id: existing._id },
-          update: {
-            $set: {
-              monto: costo,
-              descripcion,
-              fecha,
-              ...(category.categoriaId ? { categoriaId: category.categoriaId } : {}),
-              ...(category.categoriaNombre ?
-                { categoriaNombre: category.categoriaNombre }
-              : {}),
-            },
-          },
-        },
-      });
-    } else {
-      bulkOps.push({
-        insertOne: {
-          document: {
-            salonId,
-            tipo: "income",
-            categoriaId: category.categoriaId,
-            categoriaNombre: category.categoriaNombre,
-            monto: costo,
-            moneda: "USD",
-            fecha,
-            descripcion,
-            fuente: "reserva",
-            reservaId,
-            fechaCreacion: new Date(),
-          },
-        },
-      });
-    }
-  }
+    const metodoPago = isPaymentMethod(reserva.metodoPago) ?
+      reserva.metodoPago
+    : undefined;
 
-  if (bulkOps.length > 0) {
-    await db
-      .collection(Collections.FINANCIAL_TRANSACTIONS)
-      .bulkWrite(bulkOps, { ordered: false });
+    await upsertReservaIncomeTransaction(
+      db,
+      salonId,
+      reservaId,
+      costo,
+      descripcion,
+      fecha,
+      servicioId,
+      metodoPago
+    );
   }
 }
 
@@ -301,52 +367,23 @@ export async function createIncomeFromReserva(
   monto: number,
   descripcion: string,
   fecha?: string,
-  servicioId?: string
+  servicioId?: string,
+  metodoPago?: PaymentMethod
 ): Promise<void> {
   const fechaTransaccion = fecha ?? new Date().toISOString().split("T")[0];
-  const { categoriaId, categoriaNombre } = await resolveIncomeCategory(
+  const inFlight = syncInFlight.get(salonId);
+  if (inFlight) await inFlight;
+
+  await upsertReservaIncomeTransaction(
     db,
     salonId,
-    servicioId
-  );
-
-  const existing = await db.collection(Collections.FINANCIAL_TRANSACTIONS).findOne({
-    ...tenantQuery(salonId),
     reservaId,
-    fuente: "reserva",
-  });
-
-  if (existing) {
-    await db.collection(Collections.FINANCIAL_TRANSACTIONS).updateOne(
-      { _id: existing._id },
-      {
-        $set: {
-          monto,
-          descripcion,
-          fecha: fechaTransaccion,
-          ...(categoriaId ? { categoriaId } : {}),
-          ...(categoriaNombre ? { categoriaNombre } : {}),
-        },
-      }
-    );
-    return;
-  }
-
-  const transaction: Omit<FinancialTransaction, "_id"> = {
-    salonId,
-    tipo: "income",
-    categoriaId,
-    categoriaNombre,
     monto,
-    moneda: "USD",
-    fecha: fechaTransaccion,
     descripcion,
-    fuente: "reserva",
-    reservaId,
-    fechaCreacion: new Date(),
-  };
-
-  await db.collection(Collections.FINANCIAL_TRANSACTIONS).insertOne(transaction);
+    fechaTransaccion,
+    servicioId,
+    metodoPago
+  );
 }
 
 export async function generateFinancialReport(
@@ -371,6 +408,7 @@ export async function generateFinancialReport(
   const gastosPorCategoriaMap = new Map<string, number>();
   const ingresosPorMesMap = new Map<string, number>();
   const gastosPorMesMap = new Map<string, number>();
+  const ingresosPorMetodoPagoMap = new Map<PaymentMethod, number>();
   let ingresosPorReservas = 0;
   let ingresosManuales = 0;
 
@@ -387,6 +425,13 @@ export async function generateFinancialReport(
       ingresosPorMesMap.set(
         mes,
         (ingresosPorMesMap.get(mes) ?? 0) + tx.monto
+      );
+      const metodo: PaymentMethod =
+        tx.metodoPago ??
+        (tx.moneda === "CUP" ? "efectivo_cup" : "transferencia");
+      ingresosPorMetodoPagoMap.set(
+        metodo,
+        (ingresosPorMetodoPagoMap.get(metodo) ?? 0) + tx.monto
       );
       if (tx.fuente === "reserva") {
         ingresosPorReservas += tx.monto;
@@ -426,5 +471,13 @@ export async function generateFinancialReport(
     gastosPorMes: toMonthArray(gastosPorMesMap),
     ingresosPorReservas: Math.round(ingresosPorReservas * 100) / 100,
     ingresosManuales: Math.round(ingresosManuales * 100) / 100,
+    ingresosPorMetodoPago: PAYMENT_METHOD_OPTIONS.map((option) => ({
+      metodo: option.value,
+      label: option.label,
+      moneda: option.moneda,
+      total:
+        Math.round((ingresosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
+        100,
+    })).filter((item) => item.total > 0),
   };
 }
