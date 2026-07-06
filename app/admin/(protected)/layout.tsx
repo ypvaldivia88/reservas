@@ -6,27 +6,23 @@ import AdminRoleGuard from "@/components/AdminRoleGuard";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import {
-  SaveIcon,
-  CloseIcon,
   HomeIcon,
-  KeyIcon,
   LogoutIcon,
   MenuIcon,
+  CloseIcon,
 } from "@/components/ui/Icons";
+import Link from "next/link";
 
 export default function AdminProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [passwordMessage, setPasswordMessage] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const isPlatformRoute = pathname.startsWith("/admin/platform");
+  const profileHref = isPlatformRoute ? "/admin/platform/perfil" : "/admin/perfil";
 
   const handleLogout = async () => {
     try {
@@ -34,33 +30,6 @@ export default function AdminProtectedLayout({
       router.push("/admin");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordMessage("");
-
-    try {
-      const res = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setPasswordMessage("Contraseña actualizada exitosamente");
-        setCurrentPassword("");
-        setNewPassword("");
-        setTimeout(() => setShowChangePassword(false), 2000);
-      } else {
-        setPasswordMessage(data.error || "Error al cambiar contraseña");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setPasswordMessage("Error de conexión");
     }
   };
 
@@ -110,14 +79,11 @@ export default function AdminProtectedLayout({
                 className="rounded-full p-2"
               />
 
-              <Button
-                onClick={() => setShowChangePassword(!showChangePassword)}
-                variant="primary"
-                size="sm"
-                icon={<KeyIcon />}
-              >
-                Cambiar Contraseña
-              </Button>
+              <Link href={profileHref}>
+                <Button variant="primary" size="sm">
+                  Mi Perfil
+                </Button>
+              </Link>
               <Button
                 onClick={handleLogout}
                 variant="outlined-secondary"
@@ -152,18 +118,16 @@ export default function AdminProtectedLayout({
           {/* Mobile Menu Dropdown */}
           {isMobileMenuOpen && (
             <div className="md:hidden mt-4 space-y-2 pb-2">
-              <Button
-                onClick={() => {
-                  setShowChangePassword(!showChangePassword);
-                  setIsMobileMenuOpen(false);
-                }}
-                variant="primary"
-                size="sm"
-                icon={<KeyIcon />}
-                fullWidth
-              >
-                Cambiar Contraseña
-              </Button>
+              <Link href={profileHref} className="w-full">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  fullWidth
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Mi Perfil
+                </Button>
+              </Link>
               <Button
                 onClick={() => {
                   handleLogout();
@@ -183,116 +147,6 @@ export default function AdminProtectedLayout({
 
       {/* Navegación común (solo salones, no plataforma) */}
       {!isPlatformRoute && <AdminNav />}
-
-      {/* Modal de cambio de contraseña */}
-      {showChangePassword && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-200 dark:border-white/20 animate-fadeInUp">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-              <svg
-                className="w-7 h-7 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              <span>Cambiar Contraseña</span>
-            </h2>
-            <form onSubmit={handleChangePassword} className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Contraseña Actual
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
-                  placeholder="Ingresa tu contraseña actual"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Nueva Contraseña
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
-                  placeholder="Mínimo 8 caracteres"
-                  minLength={8}
-                  required
-                />
-              </div>
-              {passwordMessage && (
-                <div
-                  className={`p-3 rounded-lg flex items-center gap-2 ${
-                    passwordMessage.includes("exitosamente") ?
-                      "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                    : "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                  }`}
-                >
-                  {passwordMessage.includes("exitosamente") ?
-                    <svg
-                      className="w-5 h-5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  : <svg
-                      className="w-5 h-5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  }
-                  <p className="text-sm font-medium">{passwordMessage}</p>
-                </div>
-              )}
-              <div className="flex gap-3 justify-end pt-4">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setShowChangePassword(false);
-                    setCurrentPassword("");
-                    setNewPassword("");
-                    setPasswordMessage("");
-                  }}
-                  variant="outlined-secondary"
-                  icon={<CloseIcon />}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" variant="primary" icon={<SaveIcon />}>
-                  Actualizar
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Contenido de cada página */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8">

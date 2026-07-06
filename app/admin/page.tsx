@@ -120,11 +120,6 @@ export default function AdminLogin() {
               Regístrate gratis
             </a>
           </p>
-          <p className="text-xs">
-            Salón existente: <strong>admin</strong> / <strong>admin</strong>
-            <br />
-            Plataforma: <strong>platform</strong> / <strong>platform123</strong>
-          </p>
         </div>
       </div>
     </div>

@@ -35,8 +35,11 @@ export default function AdminRoleGuard({
 
     const isPlatform = session.role === "platform_admin";
     const isPlatformRoute = pathname.startsWith("/admin/platform");
+    const isSharedRoute =
+      pathname.startsWith("/admin/perfil") ||
+      pathname.startsWith("/admin/platform/perfil");
 
-    if (isPlatform && !isPlatformRoute) {
+    if (isPlatform && !isPlatformRoute && !isSharedRoute) {
       router.replace("/admin/platform");
     } else if (!isPlatform && isPlatformRoute) {
       router.replace("/admin/dashboard");

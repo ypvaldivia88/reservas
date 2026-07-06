@@ -5,6 +5,7 @@ import {
   buildSalonAdminContext,
   buildPlatformContext,
   buildPublicContext,
+  buildAnyAdminContext,
   RequestContext,
 } from "@/lib/services/tenant-context.service";
 
@@ -54,6 +55,11 @@ export function salonAdminHandler(handler: HandlerFn) {
 /** @deprecated Usar salonAdminHandler */
 export function adminHandler(handler: HandlerFn) {
   return salonAdminHandler(handler);
+}
+
+/** Handler para cualquier administrador autenticado */
+export function anyAdminHandler(handler: HandlerFn) {
+  return wrapHandler(handler, buildAnyAdminContext);
 }
 
 /** Handler para administradores de plataforma */

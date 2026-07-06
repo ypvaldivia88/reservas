@@ -6,7 +6,9 @@ import { AppError } from "@/lib/api/errors";
 import {
   ChangePasswordRequest,
   LoginCredentials,
+  UpdateProfileRequest,
   User,
+  UserProfile,
 } from "@/lib/types";
 import { userRepository } from "@/lib/repositories/user.repository";
 
@@ -82,6 +84,91 @@ export class AuthService {
     await db
       .collection(Collections.USERS)
       .updateOne({ _id: userId } as never, { $set: { password: hashedPassword } });
+  }
+
+  async adminResetPassword(userId: unknown, newPassword: string) {
+    if (!newPassword || newPassword.length < 8) {
+      throw new AppError("La nueva contraseña debe tener al menos 8 caracteres", 400);
+    }
+
+    const db = await getDb();
+    const user = (await db
+      .collection<User>(Collections.USERS)
+      .findOne({ _id: userId } as never)) as User | null;
+
+    if (!user?.password) {
+      throw AppError.notFound("Usuario no encontrado");
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    await db
+      .collection(Collections.USERS)
+      .updateOne({ _id: userId } as never, { $set: { password: hashedPassword } });
+  }
+
+  async getProfile(userId: unknown): Promise<UserProfile> {
+    const db = await getDb();
+    const user = (await db
+      .collection<User>(Collections.USERS)
+      .findOne({ _id: userId } as never)) as User | null;
+
+    if (!user) throw AppError.notFound("Usuario no encontrado");
+
+    return {
+      _id: String(user._id),
+      nombre: user.nombre,
+      username: user.username,
+      role: user.role,
+      salonId: user.salonId,
+    };
+  }
+
+  async updateProfile(userId: unknown, data: UpdateProfileRequest) {
+    const updateData: Partial<User> = {};
+
+    if (data.nombre !== undefined) {
+      const nombre = data.nombre.trim();
+      if (nombre.length < 2) {
+        throw new AppError("El nombre debe tener al menos 2 caracteres", 400);
+      }
+      updateData.nombre = nombre;
+    }
+
+    if (data.username !== undefined) {
+      const username = data.username.trim();
+      if (!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)) {
+        throw new AppError(
+          "El usuario debe tener entre 3 y 30 caracteres (letras, números, . _ -)",
+          400
+        );
+      }
+
+      const existing = await userRepository.findAdminByUsername(username);
+      const currentUser = await userRepository.findById(String(userId));
+      if (existing && String(existing._id) !== String(currentUser?._id)) {
+        throw new AppError("El nombre de usuario ya está en uso", 400);
+      }
+      updateData.username = username;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new AppError("No se proporcionaron campos para actualizar", 400);
+    }
+
+    const db = await getDb();
+    const result = await db
+      .collection(Collections.USERS)
+      .updateOne({ _id: userId } as never, { $set: updateData });
+
+    if (result.matchedCount === 0) {
+      throw AppError.notFound("Usuario no encontrado");
+    }
+
+    if (updateData.username) {
+      await db
+        .collection(Collections.SESSIONS)
+        .updateMany({ userId }, { $set: { username: updateData.username } });
+    }
   }
 
   async initDefaultAdmin() {

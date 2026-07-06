@@ -26,6 +26,43 @@ class UserRepository extends BaseRepository {
     }) as Promise<User | null>;
   }
 
+  async findById(id: string): Promise<User | null> {
+    const col = await this.collection();
+    if (!ObjectId.isValid(id)) return null;
+    return col.findOne({ _id: new ObjectId(id) }) as Promise<User | null>;
+  }
+
+  async findSalonAdmins(salonId?: string): Promise<User[]> {
+    const col = await this.collection();
+    const filter: Record<string, unknown> = {
+      role: { $in: ["admin", "salon_admin"] },
+    };
+    if (salonId) filter.salonId = salonId;
+    const users = await col
+      .find(filter)
+      .sort({ fechaCreacion: -1 })
+      .toArray();
+    return users.map((u) => ({
+      ...u,
+      _id: u._id.toString(),
+      password: undefined,
+    })) as User[];
+  }
+
+  async findAllClientes(salonId?: string): Promise<User[]> {
+    const col = await this.collection();
+    const filter: Record<string, unknown> = { role: "cliente" };
+    if (salonId) filter.salonId = salonId;
+    const users = await col
+      .find(filter)
+      .sort({ fechaCreacion: -1 })
+      .toArray();
+    return users.map((u) => ({
+      ...u,
+      _id: u._id.toString(),
+    })) as User[];
+  }
+
   async findClientes(salonId: string): Promise<User[]> {
     return (await this.findByTenant(
       salonId,

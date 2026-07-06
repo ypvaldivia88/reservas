@@ -2,8 +2,9 @@
  * Migración SEGURA para producción.
  * Solo AÑADE campos faltantes — nunca borra ni modifica datos existentes.
  *
- * Uso: npx tsx scripts/migrate-multi-tenant.ts
+ * Uso: npm run migrate:multi-tenant
  */
+import "./load-env";
 import clientPromise from "../lib/mongodb";
 import { DEFAULT_SALON_ID } from "../lib/tenant";
 import { DEFAULT_PLANS } from "../lib/subscription";

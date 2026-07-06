@@ -205,6 +205,25 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  nombre?: string;
+  username?: string;
+}
+
+export interface AdminUserUpdateRequest {
+  nombre?: string;
+  username?: string;
+  newPassword?: string;
+}
+
+export interface UserProfile {
+  _id: string;
+  nombre: string;
+  username?: string;
+  role: UserRole;
+  salonId?: string;
+}
+
 // Tipos para imágenes y galerías
 export interface ImageData {
   _id?: string;
