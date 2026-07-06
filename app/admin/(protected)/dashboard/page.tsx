@@ -89,11 +89,27 @@ function DashboardContent() {
   };
 
   const buildReservaForSave = (reserva: Reserva): Reserva => {
-    const efectivo = Number(reserva.cobroEfectivo) || 0;
-    const transferencia = Number(reserva.cobroTransferencia) || 0;
-    const total = efectivo + transferencia;
+    const isCobroState =
+      reserva.estado === "confirmada" || reserva.estado === "completada";
+    const efectivo =
+      reserva.cobroEfectivo != null ? Number(reserva.cobroEfectivo) : 0;
+    const transferencia =
+      reserva.cobroTransferencia != null ? Number(reserva.cobroTransferencia) : 0;
+    const safeEfectivo = isNaN(efectivo) ? 0 : Math.max(0, efectivo);
+    const safeTransferencia = isNaN(transferencia) ? 0 : Math.max(0, transferencia);
+    const total = safeEfectivo + safeTransferencia;
+
+    if (!isCobroState) {
+      return {
+        ...reserva,
+        costo: total > 0 ? total : reserva.costo,
+      };
+    }
+
     return {
       ...reserva,
+      cobroEfectivo: safeEfectivo,
+      cobroTransferencia: safeTransferencia,
       costo: total > 0 ? total : reserva.costo,
     };
   };

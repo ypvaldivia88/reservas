@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { Collections } from "@/lib/db/collections";
 import { AppError } from "@/lib/api/errors";
 import { Reserva, User, PaymentMethod } from "@/lib/types";
@@ -13,7 +14,7 @@ import {
 import { createIncomeFromReserva } from "@/lib/finances";
 import { isPaymentMethod } from "@/lib/paymentMethods";
 import { reservaRepository, userRepository } from "@/lib/repositories/user.repository";
-import { DEFAULT_SALON_ID } from "@/lib/tenant";
+import { DEFAULT_SALON_ID, tenantQuery } from "@/lib/tenant";
 
 export class ReservaService {
   async list(salonId: string): Promise<Reserva[]> {
@@ -162,25 +163,34 @@ export class ReservaService {
     }
 
     if (data.cobroEfectivo !== undefined || data.cobroTransferencia !== undefined) {
-      const cobroEfectivo = Number(
-        data.cobroEfectivo !== undefined
-          ? data.cobroEfectivo
-          : existing.cobroEfectivo
-      );
-      const cobroTransferencia = Number(
-        data.cobroTransferencia !== undefined
-          ? data.cobroTransferencia
-          : existing.cobroTransferencia
-      );
-      const cobroTotal =
-        (isNaN(cobroEfectivo) ? 0 : cobroEfectivo) +
-        (isNaN(cobroTransferencia) ? 0 : cobroTransferencia);
+      const cobroEfectivo = Number(data.cobroEfectivo ?? 0);
+      const cobroTransferencia = Number(data.cobroTransferencia ?? 0);
+      updateData.cobroEfectivo =
+        isNaN(cobroEfectivo) || cobroEfectivo < 0 ? 0 : cobroEfectivo;
+      updateData.cobroTransferencia =
+        isNaN(cobroTransferencia) || cobroTransferencia < 0 ? 0 : cobroTransferencia;
+      const cobroTotal = updateData.cobroEfectivo + updateData.cobroTransferencia;
       if (cobroTotal > 0) {
         updateData.costo = cobroTotal;
       }
     }
 
-    const updated = await reservaRepository.update(effectiveSalonId, id, updateData);
+    const unsetFields: Record<string, ""> = {};
+    if (data.cobroEfectivo !== undefined || data.cobroTransferencia !== undefined) {
+      unsetFields.metodoPago = "";
+    }
+
+    let updated: boolean;
+    if (Object.keys(unsetFields).length > 0) {
+      const result = await db.collection(Collections.RESERVAS).updateOne(
+        { ...tenantQuery(effectiveSalonId), _id: new ObjectId(id) },
+        { $set: updateData, $unset: unsetFields }
+      );
+      updated = result.matchedCount > 0;
+    } else {
+      updated = await reservaRepository.update(effectiveSalonId, id, updateData);
+    }
+
     if (!updated) throw AppError.notFound("Reserva no encontrada");
 
     const finalEstado = updateData.estado ?? existing.estado;
@@ -203,12 +213,16 @@ export class ReservaService {
       updateData.cobroTransferencia !== undefined
         ? updateData.cobroTransferencia
         : existing.cobroTransferencia;
+    const usesCobroSplit =
+      finalCobroEfectivo !== undefined || finalCobroTransferencia !== undefined;
     const finalMetodoPago: PaymentMethod | undefined =
       updateData.metodoPago !== undefined
         ? updateData.metodoPago
-        : isPaymentMethod(existing.metodoPago)
-          ? existing.metodoPago
-          : undefined;
+        : usesCobroSplit
+          ? undefined
+          : isPaymentMethod(existing.metodoPago)
+            ? existing.metodoPago
+            : undefined;
 
     if (
       finalCosto !== undefined &&
@@ -225,7 +239,7 @@ export class ReservaService {
         finalServicioId,
         finalCobroEfectivo,
         finalCobroTransferencia,
-        finalMetodoPago
+        usesCobroSplit ? undefined : finalMetodoPago
       );
     }
   }
