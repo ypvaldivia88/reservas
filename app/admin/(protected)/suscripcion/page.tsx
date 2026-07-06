@@ -11,7 +11,12 @@ import {
   openSubscriptionPaymentWhatsApp,
   SubscriptionPaymentDetails,
 } from "@/lib/whatsapp";
-import { calculatePlanPrice } from "@/lib/subscription";
+import {
+  calculatePlanPrice,
+  formatSubscriptionAmount,
+  getBillingCycleLabel,
+  getBillingCyclePeriodSuffix,
+} from "@/lib/subscription";
 
 interface SubscriptionData {
   subscription: TenantSubscription | null;
@@ -25,12 +30,13 @@ interface SubscriptionData {
   } | null;
 }
 
+const BILLING_CYCLES: BillingCycle[] = ["monthly", "semiannual", "yearly"];
+
 export default function SuscripcionPage() {
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [subData, setSubData] = useState<SubscriptionData | null>(null);
   const [salonNombre, setSalonNombre] = useState("Mi Salón");
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [ciclo, setCiclo] = useState<BillingCycle>("monthly");
   const [processing, setProcessing] = useState(false);
 
@@ -47,11 +53,8 @@ export default function SuscripcionPage() {
           subRes.json(),
           salonRes.json(),
         ]);
-        if (plansData.success) {
-          setPlans(plansData.data);
-          if (plansData.data.length > 0) {
-            setSelectedPlan(plansData.data[0]._id!);
-          }
+        if (plansData.success && plansData.data.length > 0) {
+          setPlan(plansData.data[0]);
         }
         if (subDataRes.success) setSubData(subDataRes.data);
         if (salonData.success) setSalonNombre(salonData.data.nombre);
@@ -65,13 +68,13 @@ export default function SuscripcionPage() {
   }, []);
 
   const handleSubscribe = async () => {
-    if (!selectedPlan) return;
+    if (!plan?._id) return;
     setProcessing(true);
     try {
       const res = await fetch("/api/subscriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: selectedPlan, ciclo }),
+        body: JSON.stringify({ planId: plan._id, ciclo }),
       });
       const data = await res.json();
       if (data.success) {
@@ -86,7 +89,6 @@ export default function SuscripcionPage() {
           codigoReferencia: paymentRequest.codigoReferencia,
         };
         openSubscriptionPaymentWhatsApp(details);
-        // Recargar estado
         const subRes = await fetch("/api/subscriptions");
         const subDataRes = await subRes.json();
         if (subDataRes.success) setSubData(subDataRes.data);
@@ -98,13 +100,14 @@ export default function SuscripcionPage() {
     }
   };
 
-  const selectedPlanData = plans.find((p) => p._id === selectedPlan);
-  const preview = selectedPlanData
-    ? calculatePlanPrice(selectedPlanData, ciclo)
-    : null;
+  const preview = plan ? calculatePlanPrice(plan, ciclo) : null;
 
   if (loading) {
-    return <p className="text-gray-500">Cargando planes...</p>;
+    return <p className="text-gray-500">Cargando...</p>;
+  }
+
+  if (!plan) {
+    return <p className="text-gray-500">No hay plan disponible.</p>;
   }
 
   return (
@@ -114,11 +117,10 @@ export default function SuscripcionPage() {
           Suscripción
         </h2>
         <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-          Elige un plan y paga manualmente por WhatsApp
+          Un solo plan con todo incluido · Pago manual por WhatsApp
         </p>
       </div>
 
-      {/* Estado actual */}
       {subData?.subscription && (
         <div
           className={`rounded-xl p-5 border ${
@@ -130,12 +132,14 @@ export default function SuscripcionPage() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">
-                Plan actual: {subData.plan?.nombre ?? "—"}
+                Plan actual: {subData.plan?.nombre ?? plan.nombre}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Estado:{" "}
                 <span className="font-medium">
-                  {subData.isActive ? "✅ Activo" : "⚠️ " + subData.subscription.status}
+                  {subData.isActive
+                    ? "✅ Activo"
+                    : "⚠️ " + subData.subscription.status}
                 </span>
                 {subData.subscription.periodoFin && (
                   <>
@@ -157,112 +161,112 @@ export default function SuscripcionPage() {
         </div>
       )}
 
-      {/* Selector de ciclo */}
-      <div className="flex gap-2">
-        {(["monthly", "yearly"] as BillingCycle[]).map((c) => (
-          <button
-            key={c}
-            onClick={() => setCiclo(c)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              ciclo === c
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            {c === "monthly" ? "Mensual" : "Anual (más descuento)"}
-          </button>
-        ))}
-      </div>
-
-      {/* Planes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {plans.map((plan) => {
-          const pricing = calculatePlanPrice(plan, ciclo);
-          const isSelected = selectedPlan === plan._id;
-
+      <div className="flex flex-wrap gap-2">
+        {BILLING_CYCLES.map((c) => {
+          const pricing = calculatePlanPrice(plan, c);
           return (
             <button
-              key={plan._id}
-              onClick={() => setSelectedPlan(plan._id!)}
-              className={`text-left rounded-xl p-5 border-2 transition-all ${
-                isSelected
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg"
-                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300"
+              key={c}
+              onClick={() => setCiclo(c)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                ciclo === c
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               }`}
             >
-              <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                {plan.nombre}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {plan.descripcion}
-              </p>
-              <div className="mt-4">
-                {pricing.descuentoTotal > 0 && (
-                  <p className="text-sm text-gray-400 line-through">
-                    {pricing.montoOriginal.toFixed(2)} CUP
-                  </p>
-                )}
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {pricing.montoFinal.toFixed(2)} CUP
-                  <span className="text-sm font-normal text-gray-500">
-                    /{ciclo === "monthly" ? "mes" : "año"}
-                  </span>
-                </p>
-                {pricing.descuentoTotal > 0 && (
-                  <span className="inline-block mt-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-                    {pricing.descuentoTotal}% de descuento
-                  </span>
-                )}
-              </div>
-              <ul className="mt-4 space-y-1">
-                {plan.caracteristicas.map((f) => (
-                  <li
-                    key={f}
-                    className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1"
-                  >
-                    <span className="text-green-500 mt-0.5">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
+              {getBillingCycleLabel(c)}
+              {pricing.descuentoTotal > 0 && (
+                <span className="ml-1 opacity-80">
+                  (-{pricing.descuentoTotal}%)
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Resumen y pago */}
-      {preview && selectedPlanData && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-blue-500 shadow-lg max-w-xl">
+        <h3 className="font-bold text-xl text-gray-900 dark:text-white">
+          {plan.nombre}
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          {plan.descripcion}
+        </p>
+
+        {preview && (
+          <div className="mt-4">
+            {preview.descuentoTotal > 0 && (
+              <p className="text-sm text-gray-400 line-through">
+                {formatSubscriptionAmount(preview.montoOriginal)}
+              </p>
+            )}
+            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+              {formatSubscriptionAmount(preview.montoFinal)}
+              <span className="text-sm font-normal text-gray-500">
+                /{getBillingCyclePeriodSuffix(ciclo)}
+              </span>
+            </p>
+            {ciclo !== "monthly" && (
+              <p className="text-sm text-gray-500 mt-1">
+                Equivale a{" "}
+                {formatSubscriptionAmount(preview.precioMensualEquivalente)}/mes
+              </p>
+            )}
+            {preview.descuentoTotal > 0 && (
+              <span className="inline-block mt-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+                {preview.descuentoTotal}% de descuento
+              </span>
+            )}
+          </div>
+        )}
+
+        <ul className="mt-5 space-y-2">
+          {plan.caracteristicas.map((f) => (
+            <li
+              key={f}
+              className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2"
+            >
+              <span className="text-green-500 mt-0.5">✓</span> {f}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {preview && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 max-w-xl">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
             Resumen de pago
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Plan</span>
-              <span>{selectedPlanData.nombre}</span>
+              <span>{plan.nombre}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Ciclo</span>
-              <span>{ciclo === "monthly" ? "Mensual" : "Anual"}</span>
+              <span>{getBillingCycleLabel(ciclo)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">
                 Precio original
               </span>
-              <span>{preview.montoOriginal.toFixed(2)} CUP</span>
+              <span>{formatSubscriptionAmount(preview.montoOriginal)}</span>
             </div>
             {preview.descuentoTotal > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>Descuento ({preview.descuentoTotal}%)</span>
                 <span>
                   -
-                  {(preview.montoOriginal - preview.montoFinal).toFixed(2)} CUP
+                  {formatSubscriptionAmount(
+                    preview.montoOriginal - preview.montoFinal
+                  )}
                 </span>
               </div>
             )}
             <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200 dark:border-gray-700">
               <span>Total</span>
               <span className="text-blue-600">
-                {preview.montoFinal.toFixed(2)} CUP
+                {formatSubscriptionAmount(preview.montoFinal)}
               </span>
             </div>
           </div>

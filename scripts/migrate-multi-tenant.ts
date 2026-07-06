@@ -65,32 +65,46 @@ async function migrate() {
     }
   }
 
-  // 3. Crear planes de suscripción si la colección está vacía
-  const planCount = await db.collection("subscription_plans").countDocuments();
-  if (planCount === 0) {
-    await db.collection("subscription_plans").insertMany(
-      DEFAULT_PLANS.map((p) => ({ ...p, fechaCreacion: new Date() }))
-    );
-    console.log(`✅ ${DEFAULT_PLANS.length} planes de suscripción creados`);
+  // 3. Sincronizar plan de suscripción único
+  const defaultPlan = DEFAULT_PLANS[0];
+  await db.collection("subscription_plans").updateMany(
+    { nombre: { $ne: defaultPlan.nombre } },
+    { $set: { activo: false } }
+  );
+  const planResult = await db.collection("subscription_plans").updateOne(
+    { nombre: defaultPlan.nombre },
+    {
+      $set: { ...defaultPlan, activo: true },
+      $setOnInsert: { fechaCreacion: new Date() },
+    },
+    { upsert: true }
+  );
+  if (planResult.upsertedCount > 0) {
+    console.log("✅ Plan de suscripción único creado");
+  } else if (planResult.modifiedCount > 0) {
+    console.log("✅ Plan de suscripción único actualizado");
   } else {
-    console.log(`ℹ️  Planes de suscripción ya existen (${planCount})`);
+    console.log("ℹ️  Plan de suscripción único ya estaba actualizado");
   }
+
+  const planCount = await db.collection("subscription_plans").countDocuments({ activo: true });
+  console.log(`ℹ️  Planes activos: ${planCount}`);
 
   // 4. Crear suscripción activa para el salón default si no existe
   const subExists = await db
     .collection("tenant_subscriptions")
     .findOne({ salonId: DEFAULT_SALON_ID });
   if (!subExists) {
-    const proPlan = await db
+    const activePlan = await db
       .collection("subscription_plans")
-      .findOne({ nombre: "Profesional" });
-    if (proPlan) {
+      .findOne({ activo: true }, { sort: { orden: 1 } });
+    if (activePlan) {
       const now = new Date();
       const periodoFin = new Date(now);
       periodoFin.setFullYear(periodoFin.getFullYear() + 1);
       await db.collection("tenant_subscriptions").insertOne({
         salonId: DEFAULT_SALON_ID,
-        planId: proPlan._id!.toString(),
+        planId: activePlan._id!.toString(),
         ciclo: "yearly",
         status: "active",
         descuentoAplicado: 0,

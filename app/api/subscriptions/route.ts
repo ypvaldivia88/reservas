@@ -50,7 +50,7 @@ export const GET = adminHandler(async ({ salonId }) => {
 
 export const POST = adminHandler(async ({ salonId, request }) => {
   const { planId, ciclo } = await request.json();
-  if (!planId || !["monthly", "yearly"].includes(ciclo)) {
+  if (!planId || !["monthly", "semiannual", "yearly"].includes(ciclo)) {
     throw new AppError("planId y ciclo son requeridos", 400);
   }
 

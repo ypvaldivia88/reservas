@@ -135,7 +135,7 @@ export interface SalonRegistrationResult {
 
 // ─── Suscripciones ──────────────────────────────────────────────────────────
 
-export type BillingCycle = 'monthly' | 'yearly';
+export type BillingCycle = 'monthly' | 'semiannual' | 'yearly';
 export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'cancelled' | 'pending_payment';
 export type PaymentRequestStatus = 'pending' | 'approved' | 'rejected';
 
@@ -143,11 +143,11 @@ export interface SubscriptionPlan {
   _id?: string;
   nombre: string;
   descripcion: string;
+  /** Precio base mensual en USD */
   precioMensual: number;
-  precioAnual: number;
-  /** Descuento porcentual incluido en el plan (ej. 20 = 20% off) */
-  descuentoPorcentaje: number;
-  /** Descuento adicional al pagar anual (ej. 15 = 15% extra) */
+  /** Descuento % al pagar 6 meses */
+  descuentoSemestralPorcentaje: number;
+  /** Descuento % al pagar anual */
   descuentoAnualPorcentaje: number;
   caracteristicas: string[];
   activo: boolean;
