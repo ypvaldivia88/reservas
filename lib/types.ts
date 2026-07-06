@@ -232,7 +232,6 @@ export interface FinancialReport {
   ingresosPorMetodoPago: {
     metodo: PaymentMethod;
     label: string;
-    moneda: string;
     total: number;
   }[];
 }
@@ -256,7 +255,10 @@ export interface Reserva {
   /** @deprecated Usar servicioIds. Se mantiene por compatibilidad con datos existentes. */
   servicioId?: string;
   servicioIds?: string[]; // Servicios consumidos al cerrar el turno
-  metodoPago?: PaymentMethod; // Forma de cobro al cerrar el turno
+  /** @deprecated Usar cobroEfectivo/cobroTransferencia */
+  metodoPago?: PaymentMethod;
+  cobroEfectivo?: number; // Monto cobrado en efectivo (opcional)
+  cobroTransferencia?: number; // Monto cobrado por transferencia (opcional)
 }
 
 export interface ApiResponse<T = unknown> {

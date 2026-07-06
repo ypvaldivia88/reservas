@@ -176,21 +176,31 @@ export class ReservaService {
       finalServicioIds && finalServicioIds.length > 0 ?
         finalServicioIds[0]
       : updateData.servicioId ?? existing.servicioId;
+    const finalCobroEfectivo =
+      updateData.cobroEfectivo !== undefined
+        ? updateData.cobroEfectivo
+        : existing.cobroEfectivo;
+    const finalCobroTransferencia =
+      updateData.cobroTransferencia !== undefined
+        ? updateData.cobroTransferencia
+        : existing.cobroTransferencia;
     const finalMetodoPago: PaymentMethod | undefined =
-      updateData.metodoPago !== undefined ?
-        updateData.metodoPago
-      : isPaymentMethod(existing.metodoPago) ?
-        existing.metodoPago
-      : undefined;
+      updateData.metodoPago !== undefined
+        ? updateData.metodoPago
+        : isPaymentMethod(existing.metodoPago)
+          ? existing.metodoPago
+          : undefined;
 
     if (
       finalCosto !== undefined &&
       finalCosto >= 0 &&
       (finalEstado === "confirmada" || finalEstado === "completada")
     ) {
-      if (!finalMetodoPago) {
+      const efectivo = Number(finalCobroEfectivo) || 0;
+      const transferencia = Number(finalCobroTransferencia) || 0;
+      if (efectivo + transferencia > finalCosto) {
         throw new AppError(
-          "Selecciona la forma de cobro (transferencia o efectivo CUP)",
+          "El desglose de cobro no puede superar el total del turno",
           400
         );
       }
@@ -203,6 +213,8 @@ export class ReservaService {
         `Reserva ${existing.nombre} - ${finalFechaCita}`,
         finalFechaCita,
         finalServicioId,
+        finalCobroEfectivo,
+        finalCobroTransferencia,
         finalMetodoPago
       );
     }

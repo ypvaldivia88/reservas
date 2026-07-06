@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Reserva, User, Servicio, PaymentMethod } from "@/lib/types";
+import { Reserva, User, Servicio } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
-import { PAYMENT_METHOD_OPTIONS, getPaymentMethodMeta } from "@/lib/paymentMethods";
 import { Button } from "@/components/ui/Button";
+import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import ReservasTable from "@/components/ReservasTable";
 import {
   EditIcon,
@@ -63,7 +63,6 @@ function DashboardContent() {
     ...reserva,
     servicioIds: getReservaServicioIds(reserva),
     servicioId: getReservaServicioIds(reserva)[0],
-    metodoPago: reserva.metodoPago ?? "transferencia",
   });
 
   const sumServiciosPrecio = (servicioIds: string[]): number =>
@@ -72,21 +71,15 @@ function DashboardContent() {
       return total + (servicio?.precio ?? 0);
     }, 0);
 
-  const toggleReservaServicio = (servicioId: string) => {
+  const handleReservaServiciosChange = (servicioIds: string[]) => {
     if (!editingReserva) return;
-
-    const currentIds = getReservaServicioIds(editingReserva);
-    const nextIds =
-      currentIds.includes(servicioId) ?
-        currentIds.filter((id) => id !== servicioId)
-      : [...currentIds, servicioId];
-    const nextCosto = sumServiciosPrecio(nextIds);
+    const nextCosto = sumServiciosPrecio(servicioIds);
 
     setEditingReserva({
       ...editingReserva,
-      servicioIds: nextIds,
-      servicioId: nextIds[0],
-      costo: nextIds.length > 0 ? nextCosto : editingReserva.costo,
+      servicioIds,
+      servicioId: servicioIds[0],
+      costo: servicioIds.length > 0 ? nextCosto : editingReserva.costo,
     });
   };
 
@@ -197,7 +190,8 @@ function DashboardContent() {
           costo: reserva.costo,
           servicioIds: getReservaServicioIds(reserva),
           servicioId: getReservaServicioIds(reserva)[0],
-          metodoPago: reserva.metodoPago,
+          cobroEfectivo: reserva.cobroEfectivo,
+          cobroTransferencia: reserva.cobroTransferencia,
         }),
       });
 
@@ -941,14 +935,15 @@ function DashboardContent() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  const efectivo = Number(editingReserva.cobroEfectivo) || 0;
+                  const transferencia =
+                    Number(editingReserva.cobroTransferencia) || 0;
                   if (
                     editingReserva.costo != null &&
-                    (editingReserva.estado === "confirmada" ||
-                      editingReserva.estado === "completada") &&
-                    !editingReserva.metodoPago
+                    efectivo + transferencia > editingReserva.costo
                   ) {
                     setActionMessage(
-                      "❌ Selecciona la forma de cobro (transferencia o efectivo CUP)"
+                      "❌ El desglose de cobro no puede superar el total"
                     );
                     setTimeout(() => setActionMessage(""), 3000);
                     return;
@@ -1116,33 +1111,21 @@ function DashboardContent() {
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                           Servicios consumidos
                         </label>
-                        <div className="flex flex-wrap gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 border-2 border-gray-300 dark:border-gray-600 rounded-xl">
-                          {servicios
+                        <MultiSelectDropdown
+                          options={servicios
                             .filter((s) => s.activo)
-                            .map((servicio) => (
-                              <label
-                                key={servicio._id}
-                                className="flex items-center gap-2 text-sm cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={getReservaServicioIds(
-                                    editingReserva
-                                  ).includes(servicio._id!)}
-                                  onChange={() =>
-                                    toggleReservaServicio(servicio._id!)
-                                  }
-                                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                />
-                                <span className="text-gray-700 dark:text-gray-300">
-                                  {servicio.nombre}
-                                  {servicio.precio ?
-                                    ` ($${servicio.precio.toFixed(2)})`
-                                  : ""}
-                                </span>
-                              </label>
-                            ))}
-                        </div>
+                            .map((servicio) => ({
+                              value: servicio._id!,
+                              label: `${servicio.nombre}${
+                                servicio.precio
+                                  ? ` (${servicio.precio.toFixed(2)} CUP)`
+                                  : ""
+                              }`,
+                            }))}
+                          selected={getReservaServicioIds(editingReserva)}
+                          onChange={handleReservaServiciosChange}
+                          placeholder="Seleccionar servicios..."
+                        />
                         <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                           Puedes seleccionar varios servicios. El ingreso se
                           registra una sola vez con el total del turno.
@@ -1150,51 +1133,10 @@ function DashboardContent() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Forma de cobro
-                        </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {PAYMENT_METHOD_OPTIONS.map((option) => (
-                            <label
-                              key={option.value}
-                              className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                                editingReserva.metodoPago === option.value ?
-                                  "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                                : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="metodoPago"
-                                value={option.value}
-                                checked={editingReserva.metodoPago === option.value}
-                                onChange={() =>
-                                  setEditingReserva({
-                                    ...editingReserva,
-                                    metodoPago: option.value as PaymentMethod,
-                                  })
-                                }
-                                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                              />
-                              <div>
-                                <span className="block text-sm font-medium text-gray-900 dark:text-white">
-                                  {option.label}
-                                </span>
-                                <span className="block text-xs text-gray-500 dark:text-gray-400">
-                                  Moneda: {option.moneda}
-                                </span>
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Ingreso / Costo (
-                          {getPaymentMethodMeta(editingReserva.metodoPago).moneda}
-                          ){" "}
-                          {editingReserva.estado === "completada" ?
-                            "(editable)"
-                          : "(opcional)"}
+                          Ingreso / Costo (CUP){" "}
+                          {editingReserva.estado === "completada"
+                            ? "(editable)"
+                            : "(opcional)"}
                         </label>
                         <input
                           type="number"
@@ -1205,9 +1147,9 @@ function DashboardContent() {
                             setEditingReserva({
                               ...editingReserva,
                               costo:
-                                e.target.value ?
-                                  parseFloat(e.target.value)
-                                : undefined,
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined,
                             })
                           }
                           className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
@@ -1215,6 +1157,59 @@ function DashboardContent() {
                         />
                         <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                           Se registra automáticamente en finanzas al guardar.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Cobro en efectivo (CUP){" "}
+                          <span className="font-normal text-gray-500">
+                            (opcional)
+                          </span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={editingReserva.cobroEfectivo ?? ""}
+                          onChange={(e) =>
+                            setEditingReserva({
+                              ...editingReserva,
+                              cobroEfectivo:
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Cobro por transferencia (CUP){" "}
+                          <span className="font-normal text-gray-500">
+                            (opcional)
+                          </span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={editingReserva.cobroTransferencia ?? ""}
+                          onChange={(e) =>
+                            setEditingReserva({
+                              ...editingReserva,
+                              cobroTransferencia:
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                          placeholder="0.00"
+                        />
+                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                          Puedes dividir el pago entre efectivo y transferencia.
                         </p>
                       </div>
                     </>
@@ -1282,9 +1277,13 @@ function DashboardContent() {
                             setTimeout(() => setActionMessage(""), 3000);
                             return;
                           }
-                          if (!editingReserva.metodoPago) {
+                          const efectivo =
+                            Number(editingReserva.cobroEfectivo) || 0;
+                          const transferencia =
+                            Number(editingReserva.cobroTransferencia) || 0;
+                          if (efectivo + transferencia > editingReserva.costo) {
                             setActionMessage(
-                              "❌ Selecciona la forma de cobro (transferencia o efectivo CUP)"
+                              "❌ El desglose de cobro no puede superar el total"
                             );
                             setTimeout(() => setActionMessage(""), 3000);
                             return;

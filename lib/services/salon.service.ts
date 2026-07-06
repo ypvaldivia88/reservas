@@ -94,7 +94,7 @@ export class SalonService {
       nombre,
       whatsappNumber: data.whatsappNumber?.trim(),
       timezone: "America/Havana",
-      currency: "USD",
+      currency: "CUP",
       status: "active",
       businessTemplate,
       branding: templateConfig.branding,

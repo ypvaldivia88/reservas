@@ -142,7 +142,6 @@ export default function FinanzasPage() {
     return {
       metodo: option.value,
       label: option.label,
-      moneda: option.moneda,
       total: found?.total ?? 0,
     };
   });
@@ -236,11 +235,11 @@ export default function FinanzasPage() {
               Ingresos totales
             </p>
             <p className="text-2xl font-bold text-green-800 dark:text-green-300">
-              ${report.resumen.ingresos.toFixed(2)}
+              {formatTransactionAmount(report.resumen.ingresos)}
             </p>
             <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-              Reservas: ${report.ingresosPorReservas.toFixed(2)} · Manual: $
-              {report.ingresosManuales.toFixed(2)}
+              Reservas: {formatTransactionAmount(report.ingresosPorReservas)} ·
+              Manual: {formatTransactionAmount(report.ingresosManuales)}
             </p>
           </div>
           {ingresosPorMetodoPago.map((item) => (
@@ -252,9 +251,7 @@ export default function FinanzasPage() {
                 {item.label}
               </p>
               <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">
-                {item.moneda === "CUP"
-                  ? `${item.total.toFixed(2)} CUP`
-                  : `$${item.total.toFixed(2)}`}
+                {formatTransactionAmount(item.total)}
               </p>
             </div>
           ))}
@@ -263,7 +260,7 @@ export default function FinanzasPage() {
               Gastos
             </p>
             <p className="text-2xl font-bold text-red-800 dark:text-red-300">
-              ${report.resumen.gastos.toFixed(2)}
+              {formatTransactionAmount(report.resumen.gastos)}
             </p>
           </div>
           <div
@@ -274,7 +271,7 @@ export default function FinanzasPage() {
             }`}
           >
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Balance (USD)
+              Balance (CUP)
             </p>
             <p
               className={`text-2xl font-bold ${
@@ -283,7 +280,7 @@ export default function FinanzasPage() {
                   : "text-orange-800 dark:text-orange-300"
               }`}
             >
-              ${report.resumen.balance.toFixed(2)}
+              {formatTransactionAmount(report.resumen.balance)}
             </p>
           </div>
         </div>
@@ -306,9 +303,7 @@ export default function FinanzasPage() {
                     {item.label}
                   </span>
                   <span className="font-medium text-green-600">
-                    {item.moneda === "CUP"
-                      ? `${item.total.toFixed(2)} CUP`
-                      : `$${item.total.toFixed(2)}`}
+                    {formatTransactionAmount(item.total)}
                   </span>
                 </li>
               ))}
@@ -331,7 +326,7 @@ export default function FinanzasPage() {
                       {item.categoria}
                     </span>
                     <span className="font-medium text-green-600">
-                      ${item.total.toFixed(2)}
+                      {formatTransactionAmount(item.total)}
                     </span>
                   </li>
                 ))}
@@ -355,7 +350,7 @@ export default function FinanzasPage() {
                       {item.categoria}
                     </span>
                     <span className="font-medium text-red-600">
-                      ${item.total.toFixed(2)}
+                      {formatTransactionAmount(item.total)}
                     </span>
                   </li>
                 ))}
@@ -511,7 +506,7 @@ export default function FinanzasPage() {
                   >
                     {PAYMENT_METHOD_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label} ({option.moneda})
+                        {option.label}
                       </option>
                     ))}
                   </select>
@@ -519,11 +514,7 @@ export default function FinanzasPage() {
               )}
               <div>
                 <label className="text-sm font-medium block mb-1">
-                  Monto (
-                  {form.tipo === "income"
-                    ? getPaymentMethodMeta(form.metodoPago).moneda
-                    : "USD"}
-                  )
+                  Monto (CUP)
                 </label>
                 <input
                   type="number"
