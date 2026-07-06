@@ -59,11 +59,44 @@ function DashboardContent() {
     return reserva.servicioId ? [reserva.servicioId] : [];
   };
 
-  const normalizeReservaForEdit = (reserva: Reserva): Reserva => ({
-    ...reserva,
-    servicioIds: getReservaServicioIds(reserva),
-    servicioId: getReservaServicioIds(reserva)[0],
-  });
+  const getCobroTotal = (reserva: Reserva): number => {
+    const efectivo = Number(reserva.cobroEfectivo) || 0;
+    const transferencia = Number(reserva.cobroTransferencia) || 0;
+    const fromCobro = efectivo + transferencia;
+    if (fromCobro > 0) return fromCobro;
+    return Number(reserva.costo) || 0;
+  };
+
+  const normalizeReservaForEdit = (reserva: Reserva): Reserva => {
+    const base: Reserva = {
+      ...reserva,
+      servicioIds: getReservaServicioIds(reserva),
+      servicioId: getReservaServicioIds(reserva)[0],
+    };
+
+    if (
+      reserva.costo != null &&
+      reserva.cobroEfectivo == null &&
+      reserva.cobroTransferencia == null
+    ) {
+      if (reserva.metodoPago === "transferencia") {
+        return { ...base, cobroTransferencia: reserva.costo };
+      }
+      return { ...base, cobroEfectivo: reserva.costo };
+    }
+
+    return base;
+  };
+
+  const buildReservaForSave = (reserva: Reserva): Reserva => {
+    const efectivo = Number(reserva.cobroEfectivo) || 0;
+    const transferencia = Number(reserva.cobroTransferencia) || 0;
+    const total = efectivo + transferencia;
+    return {
+      ...reserva,
+      costo: total > 0 ? total : reserva.costo,
+    };
+  };
 
   const sumServiciosPrecio = (servicioIds: string[]): number =>
     servicioIds.reduce((total, servicioId) => {
@@ -73,13 +106,18 @@ function DashboardContent() {
 
   const handleReservaServiciosChange = (servicioIds: string[]) => {
     if (!editingReserva) return;
-    const nextCosto = sumServiciosPrecio(servicioIds);
+    const suggestedTotal = sumServiciosPrecio(servicioIds);
+    const hasCobro =
+      editingReserva.cobroEfectivo != null ||
+      editingReserva.cobroTransferencia != null;
 
     setEditingReserva({
       ...editingReserva,
       servicioIds,
       servicioId: servicioIds[0],
-      costo: servicioIds.length > 0 ? nextCosto : editingReserva.costo,
+      ...(suggestedTotal > 0 && !hasCobro
+        ? { cobroEfectivo: suggestedTotal }
+        : {}),
     });
   };
 
@@ -174,24 +212,25 @@ function DashboardContent() {
     openWhatsApp: boolean = false
   ) => {
     setSaving(true);
+    const payload = buildReservaForSave(reserva);
     try {
-      const res = await fetch(`/api/reservas/${reserva._id}`, {
+      const res = await fetch(`/api/reservas/${payload._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre: reserva.nombre,
-          telefono: reserva.telefono,
-          forma: reserva.forma,
-          largo: reserva.largo,
-          decoracion: reserva.decoracion,
-          fechaCita: reserva.fechaCita,
-          horaCita: reserva.horaCita,
-          estado: reserva.estado,
-          costo: reserva.costo,
-          servicioIds: getReservaServicioIds(reserva),
-          servicioId: getReservaServicioIds(reserva)[0],
-          cobroEfectivo: reserva.cobroEfectivo,
-          cobroTransferencia: reserva.cobroTransferencia,
+          nombre: payload.nombre,
+          telefono: payload.telefono,
+          forma: payload.forma,
+          largo: payload.largo,
+          decoracion: payload.decoracion,
+          fechaCita: payload.fechaCita,
+          horaCita: payload.horaCita,
+          estado: payload.estado,
+          costo: payload.costo,
+          servicioIds: getReservaServicioIds(payload),
+          servicioId: getReservaServicioIds(payload)[0],
+          cobroEfectivo: payload.cobroEfectivo,
+          cobroTransferencia: payload.cobroTransferencia,
         }),
       });
 
@@ -935,19 +974,6 @@ function DashboardContent() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const efectivo = Number(editingReserva.cobroEfectivo) || 0;
-                  const transferencia =
-                    Number(editingReserva.cobroTransferencia) || 0;
-                  if (
-                    editingReserva.costo != null &&
-                    efectivo + transferencia > editingReserva.costo
-                  ) {
-                    setActionMessage(
-                      "❌ El desglose de cobro no puede superar el total"
-                    );
-                    setTimeout(() => setActionMessage(""), 3000);
-                    return;
-                  }
                   handleUpdateReserva(editingReserva);
                 }}
                 className="space-y-6"
@@ -1133,38 +1159,7 @@ function DashboardContent() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Ingreso / Costo (CUP){" "}
-                          {editingReserva.estado === "completada"
-                            ? "(editable)"
-                            : "(opcional)"}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={editingReserva.costo ?? ""}
-                          onChange={(e) =>
-                            setEditingReserva({
-                              ...editingReserva,
-                              costo:
-                                e.target.value
-                                  ? parseFloat(e.target.value)
-                                  : undefined,
-                            })
-                          }
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                          placeholder="0.00"
-                        />
-                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                          Se registra automáticamente en finanzas al guardar.
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Cobro en efectivo (CUP){" "}
-                          <span className="font-normal text-gray-500">
-                            (opcional)
-                          </span>
+                          Cobro en efectivo (CUP)
                         </label>
                         <input
                           type="number"
@@ -1186,10 +1181,7 @@ function DashboardContent() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Cobro por transferencia (CUP){" "}
-                          <span className="font-normal text-gray-500">
-                            (opcional)
-                          </span>
+                          Cobro por transferencia (CUP)
                         </label>
                         <input
                           type="number"
@@ -1208,10 +1200,22 @@ function DashboardContent() {
                           className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                           placeholder="0.00"
                         />
-                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                          Puedes dividir el pago entre efectivo y transferencia.
-                        </p>
                       </div>
+                      {getCobroTotal(editingReserva) > 0 && (
+                        <div className="md:col-span-2">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Total del turno:{" "}
+                            <span className="text-blue-600 dark:text-blue-400">
+                              {getCobroTotal(editingReserva).toFixed(2)} CUP
+                            </span>
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Se registra automáticamente en finanzas al guardar.
+                            Puedes dividir el pago entre efectivo y
+                            transferencia.
+                          </p>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -1270,20 +1274,9 @@ function DashboardContent() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (editingReserva.costo == null) {
+                          if (getCobroTotal(editingReserva) <= 0) {
                             setActionMessage(
-                              "❌ Por favor ingresa el costo antes de completar la reserva"
-                            );
-                            setTimeout(() => setActionMessage(""), 3000);
-                            return;
-                          }
-                          const efectivo =
-                            Number(editingReserva.cobroEfectivo) || 0;
-                          const transferencia =
-                            Number(editingReserva.cobroTransferencia) || 0;
-                          if (efectivo + transferencia > editingReserva.costo) {
-                            setActionMessage(
-                              "❌ El desglose de cobro no puede superar el total"
+                              "❌ Indica el cobro en efectivo y/o transferencia antes de completar"
                             );
                             setTimeout(() => setActionMessage(""), 3000);
                             return;

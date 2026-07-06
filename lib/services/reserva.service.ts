@@ -161,6 +161,25 @@ export class ReservaService {
         data.servicioId ? [data.servicioId as string] : [];
     }
 
+    if (data.cobroEfectivo !== undefined || data.cobroTransferencia !== undefined) {
+      const cobroEfectivo = Number(
+        data.cobroEfectivo !== undefined
+          ? data.cobroEfectivo
+          : existing.cobroEfectivo
+      );
+      const cobroTransferencia = Number(
+        data.cobroTransferencia !== undefined
+          ? data.cobroTransferencia
+          : existing.cobroTransferencia
+      );
+      const cobroTotal =
+        (isNaN(cobroEfectivo) ? 0 : cobroEfectivo) +
+        (isNaN(cobroTransferencia) ? 0 : cobroTransferencia);
+      if (cobroTotal > 0) {
+        updateData.costo = cobroTotal;
+      }
+    }
+
     const updated = await reservaRepository.update(effectiveSalonId, id, updateData);
     if (!updated) throw AppError.notFound("Reserva no encontrada");
 
@@ -196,15 +215,6 @@ export class ReservaService {
       finalCosto >= 0 &&
       (finalEstado === "confirmada" || finalEstado === "completada")
     ) {
-      const efectivo = Number(finalCobroEfectivo) || 0;
-      const transferencia = Number(finalCobroTransferencia) || 0;
-      if (efectivo + transferencia > finalCosto) {
-        throw new AppError(
-          "El desglose de cobro no puede superar el total del turno",
-          400
-        );
-      }
-
       await createIncomeFromReserva(
         db,
         effectiveSalonId,
