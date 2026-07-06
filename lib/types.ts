@@ -195,6 +195,7 @@ export interface FinancialCategory {
   tipo: TransactionType;
   color?: string;
   activo: boolean;
+  servicioId?: string;
   fechaCreacion?: Date;
 }
 
@@ -244,6 +245,7 @@ export interface Reserva {
   horaCita: string; // Formato HH:mm
   estado?: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
   costo?: number; // Costo de la reserva al completarla (para estadísticas futuras). Debe ser >= 0
+  servicioId?: string; // Servicio asociado para categorizar el ingreso en finanzas
 }
 
 export interface ApiResponse<T = unknown> {

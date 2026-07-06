@@ -1,7 +1,7 @@
 import { adminHandler } from "@/lib/api/handlers";
 import { ok } from "@/lib/api/responses";
 import { getDb } from "@/lib/mongodb";
-import { generateFinancialReport } from "@/lib/finances";
+import { generateFinancialReport, prepareFinancesForSalon } from "@/lib/finances";
 import { FinancialReport } from "@/lib/types";
 
 export const GET = adminHandler(async ({ salonId, request }) => {
@@ -15,6 +15,7 @@ export const GET = adminHandler(async ({ salonId, request }) => {
     new Date().toISOString().split("T")[0];
 
   const db = await getDb();
+  await prepareFinancesForSalon(db, salonId);
   const report: FinancialReport = await generateFinancialReport(
     db,
     salonId,

@@ -103,7 +103,7 @@ export default function FinanzasPage() {
             Finanzas
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-            Gestiona ingresos, gastos y reportes de tu salón
+            Ingresos por servicio del salón, gastos y reportes
           </p>
         </div>
         <Button variant="primary" onClick={() => setShowForm(true)}>

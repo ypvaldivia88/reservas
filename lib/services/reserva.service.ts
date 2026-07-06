@@ -155,6 +155,10 @@ export class ReservaService {
     const finalCosto =
       updateData.costo !== undefined ? updateData.costo : existing.costo;
     const finalFechaCita = updateData.fechaCita ?? existing.fechaCita;
+    const finalServicioId =
+      updateData.servicioId !== undefined ?
+        updateData.servicioId
+      : existing.servicioId;
 
     if (
       finalCosto !== undefined &&
@@ -167,7 +171,8 @@ export class ReservaService {
         id,
         finalCosto,
         `Reserva ${existing.nombre} - ${finalFechaCita}`,
-        finalFechaCita
+        finalFechaCita,
+        finalServicioId
       );
     }
   }

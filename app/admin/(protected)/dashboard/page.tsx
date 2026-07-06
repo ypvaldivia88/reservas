@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Reserva, User } from "@/lib/types";
+import { Reserva, User, Servicio } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/Button";
 import ReservasTable from "@/components/ReservasTable";
@@ -18,6 +18,7 @@ import {
 function DashboardContent() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [clientes, setClientes] = useState<User[]>([]);
+  const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -119,6 +120,15 @@ function DashboardContent() {
           setClientes(dataClientes.data);
         }
       }
+
+      // Cargar servicios (categorías de ingreso)
+      const resServicios = await fetch("/api/servicios");
+      if (resServicios.ok) {
+        const dataServicios = await resServicios.json();
+        if (dataServicios.success) {
+          setServicios(dataServicios.data);
+        }
+      }
     } catch (error) {
       console.error("Error cargando datos:", error);
     } finally {
@@ -146,6 +156,7 @@ function DashboardContent() {
           horaCita: reserva.horaCita,
           estado: reserva.estado,
           costo: reserva.costo,
+          servicioId: reserva.servicioId,
         }),
       });
 
@@ -1047,34 +1058,63 @@ function DashboardContent() {
                   </div>
                   {(editingReserva.estado === "completada" ||
                     editingReserva.estado === "confirmada") && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Ingreso / Costo{" "}
-                        {editingReserva.estado === "completada" ?
-                          "(editable)"
-                        : "(opcional)"}
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={editingReserva.costo ?? ""}
-                        onChange={(e) =>
-                          setEditingReserva({
-                            ...editingReserva,
-                            costo:
-                              e.target.value ?
-                                parseFloat(e.target.value)
-                              : undefined,
-                          })
-                        }
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                        placeholder="0.00"
-                      />
-                      <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                        Se registra automáticamente en finanzas al guardar.
-                      </p>
-                    </div>
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Servicio
+                        </label>
+                        <select
+                          value={editingReserva.servicioId || ""}
+                          onChange={(e) =>
+                            setEditingReserva({
+                              ...editingReserva,
+                              servicioId: e.target.value || undefined,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
+                        >
+                          <option value="">Seleccionar servicio</option>
+                          {servicios
+                            .filter((s) => s.activo)
+                            .map((servicio) => (
+                              <option key={servicio._id} value={servicio._id}>
+                                {servicio.nombre}
+                              </option>
+                            ))}
+                        </select>
+                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                          Categoría del ingreso en finanzas.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Ingreso / Costo{" "}
+                          {editingReserva.estado === "completada" ?
+                            "(editable)"
+                          : "(opcional)"}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={editingReserva.costo ?? ""}
+                          onChange={(e) =>
+                            setEditingReserva({
+                              ...editingReserva,
+                              costo:
+                                e.target.value ?
+                                  parseFloat(e.target.value)
+                                : undefined,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                          placeholder="0.00"
+                        />
+                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                          Se registra automáticamente en finanzas al guardar.
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
 

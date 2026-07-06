@@ -5,9 +5,12 @@ import { Collections } from "@/lib/db/collections";
 import { tenantQuery } from "@/lib/tenant";
 import { FinancialCategory } from "@/lib/types";
 import { AppError } from "@/lib/api/errors";
+import { prepareFinancesForSalon } from "@/lib/finances";
 
 export const GET = adminHandler(async ({ salonId }) => {
   const db = await getDb();
+  await prepareFinancesForSalon(db, salonId);
+
   const categories = await db
     .collection<FinancialCategory>(Collections.FINANCIAL_CATEGORIES)
     .find({ ...tenantQuery(salonId), activo: true })
