@@ -5,13 +5,16 @@
  * Ejecutar con: npx tsx scripts/create-indexes.ts
  */
 
+import "./load-env";
 import clientPromise from "@/lib/mongodb";
+import { DB_NAME } from "@/lib/db/collections";
+import { dedupeAllReservaIncomeTransactions } from "@/lib/finances";
 
 async function createIndexes() {
   try {
     console.log("🔧 Conectando a MongoDB...");
     const client = await clientPromise;
-    const db = client.db("nailsalon");
+    const db = client.db(DB_NAME);
 
     console.log("📊 Creando índices...\n");
 
@@ -75,6 +78,14 @@ async function createIndexes() {
       { name: "idx_categoria_activo" }
     );
     console.log("✅ Índice creado: imagenes.categoriaId + activo");
+
+    console.log("\n🧹 Eliminando ingresos duplicados por reserva...");
+    const removed = await dedupeAllReservaIncomeTransactions(db);
+    if (removed > 0) {
+      console.log(`✅ ${removed} transacción(es) duplicada(s) eliminada(s)`);
+    } else {
+      console.log("ℹ️  No se encontraron duplicados");
+    }
 
     await db.collection("financial_transactions").createIndex(
       { salonId: 1, reservaId: 1 },

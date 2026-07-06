@@ -5,7 +5,7 @@ import {
   PaymentMethod,
   TransactionType,
 } from "@/lib/types";
-import { tenantQuery } from "@/lib/tenant";
+import { tenantQuery, DEFAULT_SALON_ID } from "@/lib/tenant";
 import { Collections } from "@/lib/db/collections";
 import {
   getMonedaForPaymentMethod,
@@ -54,7 +54,7 @@ function getPrimaryServicioId(reserva: {
 async function dedupeReservaIncomeTransactions(
   db: Db,
   salonId: string
-): Promise<void> {
+): Promise<number> {
   const duplicateGroups = await db
     .collection(Collections.FINANCIAL_TRANSACTIONS)
     .aggregate<{ _id: string; ids: { toString(): string }[] }>([
@@ -76,6 +76,8 @@ async function dedupeReservaIncomeTransactions(
     ])
     .toArray();
 
+  let removed = 0;
+
   for (const group of duplicateGroups) {
     const txs = await db
       .collection(Collections.FINANCIAL_TRANSACTIONS)
@@ -93,7 +95,33 @@ async function dedupeReservaIncomeTransactions(
     await db.collection(Collections.FINANCIAL_TRANSACTIONS).deleteMany({
       _id: { $in: toDelete.map((tx) => tx._id) },
     });
+    removed += toDelete.length;
   }
+
+  return removed;
+}
+
+export async function dedupeAllReservaIncomeTransactions(
+  db: Db
+): Promise<number> {
+  const rawIds = await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .distinct("salonId", {
+      fuente: "reserva",
+      reservaId: { $exists: true, $ne: null },
+    });
+
+  const salonIds = new Set<string>([DEFAULT_SALON_ID]);
+  for (const id of rawIds) {
+    if (id != null) salonIds.add(String(id));
+  }
+
+  let removed = 0;
+  for (const salonId of salonIds) {
+    removed += await dedupeReservaIncomeTransactions(db, salonId);
+  }
+
+  return removed;
 }
 
 async function upsertReservaIncomeTransaction(
