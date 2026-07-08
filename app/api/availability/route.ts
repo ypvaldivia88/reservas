@@ -3,8 +3,9 @@ import clientPromise from "@/lib/mongodb";
 import { AvailabilityOverride, Schedule, Reserva, ApiResponse, DayOfWeek } from "@/lib/types";
 import { dateUtils, scheduleUtils, phoneUtils } from "@/lib/utils";
 import { ACTIVE_RESERVATION_STATES } from "@/lib/reservaValidation";
-import { tenantQuery } from "@/lib/tenant";
+import { tenantQuery, withTenantScope } from "@/lib/tenant";
 import { resolvePublicTenant } from "@/lib/services/tenant-context.service";
+import { Collections } from "@/lib/db/collections";
 import { adminHandler } from "@/lib/api/handlers";
 import { ok, created } from "@/lib/api/responses";
 import { AppError } from "@/lib/api/errors";
@@ -27,7 +28,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     const telefonoParam = searchParams.get("telefono");
 
     const { salonId } = await resolvePublicTenant(request);
-    const tenantFilter = tenantQuery(salonId);
 
     const client = await clientPromise;
     const db = client.db("nailsalon");
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     // Obtener el horario por defecto
     let schedule = await db
       .collection<Schedule>("schedules")
-      .findOne({ name: "default", ...tenantFilter });
+      .findOne(withTenantScope({ name: "default" }, salonId));
 
     if (!schedule) {
       // Crear horario por defecto si no existe
@@ -66,24 +66,31 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const startDate = startDateParam ? new Date(startDateParam) : today;
+    const startDate = startDateParam ? dateUtils.parseDate(startDateParam) : today;
     const days = parseInt(daysParam);
     const endDate =
       endDateParam ?
-        new Date(endDateParam)
-      : new Date(startDate.getTime() + days * 24 * 60 * 60 * 1000);
+        dateUtils.parseDate(endDateParam)
+      : new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          startDate.getDate() + days
+        );
 
-    // OPTIMIZACIÓN: Obtener todos los overrides y reservas del rango en UNA SOLA consulta cada uno
-    const startDateStr = startDate.toISOString().split("T")[0];
-    const endDateStr = endDate.toISOString().split("T")[0];
+    const startDateStr = dateUtils.formatToYYYYMMDD(startDate);
+    const endDateStr = dateUtils.formatToYYYYMMDD(endDate);
 
     // Consulta 1: Todos los overrides del rango
     const overrides = (await db
       .collection("availability_overrides")
-      .find({
-        date: { $gte: startDateStr, $lte: endDateStr },
-        ...tenantFilter,
-      })
+      .find(
+        withTenantScope(
+          {
+            date: { $gte: startDateStr, $lte: endDateStr },
+          },
+          salonId
+        )
+      )
       .toArray()) as unknown as AvailabilityOverride[];
 
     // Crear un mapa para acceso rápido
@@ -95,11 +102,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     // Consulta 2: Todas las reservas del rango
     const reservas = (await db
       .collection("reservas")
-      .find({
-        fechaCita: { $gte: startDateStr, $lte: endDateStr },
-        estado: { $in: ACTIVE_RESERVATION_STATES },
-        ...tenantFilter,
-      })
+      .find(
+        withTenantScope(
+          {
+            fechaCita: { $gte: startDateStr, $lte: endDateStr },
+            estado: { $in: ACTIVE_RESERVATION_STATES },
+          },
+          salonId
+        )
+      )
       .toArray()) as unknown as Reserva[];
 
     // Crear un mapa de reservas por fecha y hora para acceso rápido
@@ -116,9 +127,33 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     if (telefonoParam) {
       try {
         const telefonoNormalizado = phoneUtils.normalize(telefonoParam);
-        reservas
-          .filter((r) => r.telefono === telefonoNormalizado)
-          .forEach((r) => clientBookedDates.add(r.fechaCita));
+        const cliente = await db.collection(Collections.USERS).findOne(
+          withTenantScope(
+            { telefono: telefonoNormalizado, role: "cliente" },
+            salonId
+          )
+        );
+
+        const clientReservaFilter = withTenantScope(
+          {
+            fechaCita: { $gte: startDateStr, $lte: endDateStr },
+            estado: { $in: ACTIVE_RESERVATION_STATES },
+            ...(cliente ?
+              { clienteId: cliente._id.toString() }
+            : { telefono: telefonoNormalizado }),
+          },
+          salonId
+        );
+
+        const clientReservas = await db
+          .collection("reservas")
+          .find(clientReservaFilter)
+          .project({ fechaCita: 1 })
+          .toArray();
+
+        clientReservas.forEach((reserva) => {
+          clientBookedDates.add(reserva.fechaCita as string);
+        });
       } catch {
         // Teléfono inválido: ignorar filtro de cliente
       }
@@ -129,7 +164,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const dateString = currentDate.toISOString().split("T")[0];
+      const dateString = dateUtils.formatToYYYYMMDD(currentDate);
 
       // Verificar si hay override
       const override = overridesMap.get(dateString);

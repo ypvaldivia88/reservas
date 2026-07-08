@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User, Reserva, ApiResponse } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
-import { tenantQuery } from "@/lib/tenant";
+import { withTenantScope } from "@/lib/tenant";
 import { resolvePublicTenant } from "@/lib/services/tenant-context.service";
 import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
 import { getDb } from "@/lib/mongodb";
@@ -48,11 +48,12 @@ export async function GET(
     const db = await getDb();
     await ensureMultiTenantIndexes(db);
 
-    const cliente = await db.collection<User>(Collections.USERS).findOne({
-      telefono: telefonoNormalizado,
-      role: "cliente",
-      ...tenantQuery(salonId),
-    });
+    const cliente = await db.collection<User>(Collections.USERS).findOne(
+      withTenantScope(
+        { telefono: telefonoNormalizado, role: "cliente" },
+        salonId
+      )
+    );
 
     if (!cliente) {
       return NextResponse.json({
@@ -66,11 +67,15 @@ export async function GET(
 
     const reservasActivas = await db
       .collection<Reserva>(Collections.RESERVAS)
-      .find({
-        clienteId: cliente._id?.toString(),
-        estado: { $in: ["pendiente", "confirmada"] },
-        ...tenantQuery(salonId),
-      })
+      .find(
+        withTenantScope(
+          {
+            clienteId: cliente._id?.toString(),
+            estado: { $in: ["pendiente", "confirmada"] },
+          },
+          salonId
+        )
+      )
       .sort({ fechaCita: 1 })
       .toArray();
 

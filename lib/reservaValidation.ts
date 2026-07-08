@@ -1,7 +1,7 @@
 import { Db, ObjectId } from "mongodb";
 import { Reserva, FORMAS_UNAS } from "@/lib/types";
 import { dateUtils, phoneUtils } from "@/lib/utils";
-import { tenantQuery } from "@/lib/tenant";
+import { withTenantScope } from "@/lib/tenant";
 
 export const ACTIVE_RESERVATION_STATES = ["pendiente", "confirmada"] as const;
 
@@ -75,6 +75,23 @@ function buildExcludeIdFilter(excludeId?: string): Record<string, unknown> {
   return { _id: { $ne: new ObjectId(excludeId) } };
 }
 
+function buildClientMatchFilter(options: {
+  clienteId?: string;
+  telefono?: string;
+}): Record<string, unknown> {
+  const { clienteId, telefono } = options;
+
+  if (clienteId) {
+    return { clienteId };
+  }
+
+  if (telefono) {
+    return { telefono };
+  }
+
+  return {};
+}
+
 /** Evita dos reservas activas en el mismo horario. */
 export async function findActiveSlotConflict(
   db: Db,
@@ -83,13 +100,17 @@ export async function findActiveSlotConflict(
   excludeId?: string,
   salonId?: string
 ): Promise<Reserva | null> {
-  const filter: Record<string, unknown> = {
+  const baseFilter: Record<string, unknown> = {
     fechaCita,
     horaCita,
     estado: { $in: ACTIVE_RESERVATION_STATES },
     ...buildExcludeIdFilter(excludeId),
   };
-  if (salonId) Object.assign(filter, tenantQuery(salonId));
+
+  const filter =
+    salonId ?
+      withTenantScope(baseFilter, salonId)
+    : baseFilter;
 
   return (await db.collection("reservas").findOne(filter)) as Reserva | null;
 }
@@ -106,20 +127,21 @@ export async function findClientDayConflict(
   }
 ): Promise<Reserva | null> {
   const { clienteId, telefono, excludeId, salonId } = options;
+  const clientMatch = buildClientMatchFilter({ clienteId, telefono });
 
-  const clientFilters: Record<string, unknown>[] = [];
-  if (clienteId) clientFilters.push({ clienteId });
-  if (telefono) clientFilters.push({ telefono });
+  if (Object.keys(clientMatch).length === 0) return null;
 
-  if (clientFilters.length === 0) return null;
-
-  const filter: Record<string, unknown> = {
+  const baseFilter: Record<string, unknown> = {
     fechaCita,
     estado: { $in: ACTIVE_RESERVATION_STATES },
-    $or: clientFilters,
+    ...clientMatch,
     ...buildExcludeIdFilter(excludeId),
   };
-  if (salonId) Object.assign(filter, tenantQuery(salonId));
+
+  const filter =
+    salonId ?
+      withTenantScope(baseFilter, salonId)
+    : baseFilter;
 
   return (await db.collection("reservas").findOne(filter)) as Reserva | null;
 }

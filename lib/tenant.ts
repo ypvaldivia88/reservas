@@ -30,6 +30,37 @@ export function tenantQuery(salonId: string): Record<string, unknown> {
   return { salonId };
 }
 
+/** Combina un filtro con el alcance del tenant sin sobrescribir $or. */
+export function withTenantScope(
+  filter: Record<string, unknown>,
+  salonId: string
+): Record<string, unknown> {
+  const tenant = tenantQuery(salonId);
+  const hasFilterOr = Object.prototype.hasOwnProperty.call(filter, "$or");
+  const hasTenantOr = Object.prototype.hasOwnProperty.call(tenant, "$or");
+
+  if (!hasFilterOr && !hasTenantOr) {
+    return { ...filter, ...tenant };
+  }
+
+  const and: Record<string, unknown>[] = [];
+  const { $or: filterOr, ...filterRest } = filter;
+
+  if (Object.keys(filterRest).length > 0) {
+    and.push(filterRest);
+  }
+  if (hasFilterOr) {
+    and.push({ $or: filterOr });
+  }
+  if (hasTenantOr) {
+    and.push({ $or: tenant.$or });
+  } else {
+    and.push(tenant);
+  }
+
+  return { $and: and };
+}
+
 /** @deprecated Usar tenantQuery */
 export function tenantFilter(salonId: string): Record<string, unknown> {
   return tenantQuery(salonId);
