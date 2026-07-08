@@ -3,7 +3,7 @@ import { ok } from "@/lib/api/responses";
 import { getDb } from "@/lib/mongodb";
 import { Collections } from "@/lib/db/collections";
 import { tenantQuery } from "@/lib/tenant";
-import { generateFinancialReport } from "@/lib/finances";
+import { generateFinancialReport, ensureExpenseCategories } from "@/lib/finances";
 import {
   FinancialCategory,
   FinancialTransaction,
@@ -33,6 +33,7 @@ export const GET = adminHandler(async ({ salonId, request }) => {
   filter.fecha = { $gte: desde, $lte: hasta };
 
   const db = await getDb();
+  await ensureExpenseCategories(db, salonId);
 
   const [transactions, categories, report] = await Promise.all([
     db

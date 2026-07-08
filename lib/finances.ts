@@ -582,6 +582,7 @@ export async function generateFinancialReport(
   const ingresosPorMesMap = new Map<string, number>();
   const gastosPorMesMap = new Map<string, number>();
   const ingresosPorMetodoPagoMap = new Map<PaymentMethod, number>();
+  const gastosPorMetodoPagoMap = new Map<PaymentMethod, number>();
   let ingresosPorReservas = 0;
   let ingresosManuales = 0;
 
@@ -618,6 +619,13 @@ export async function generateFinancialReport(
         (gastosPorCategoriaMap.get(cat) ?? 0) + tx.monto
       );
       gastosPorMesMap.set(mes, (gastosPorMesMap.get(mes) ?? 0) + tx.monto);
+      const metodo: PaymentMethod =
+        tx.metodoPago ??
+        (tx.moneda === "CUP" ? "efectivo_cup" : "transferencia");
+      gastosPorMetodoPagoMap.set(
+        metodo,
+        (gastosPorMetodoPagoMap.get(metodo) ?? 0) + tx.monto
+      );
     }
   }
 
@@ -649,6 +657,13 @@ export async function generateFinancialReport(
       label: option.label,
       total:
         Math.round((ingresosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
+        100,
+    })).filter((item) => item.total > 0),
+    gastosPorMetodoPago: PAYMENT_METHOD_OPTIONS.map((option) => ({
+      metodo: option.value,
+      label: option.label,
+      total:
+        Math.round((gastosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
         100,
     })).filter((item) => item.total > 0),
   };

@@ -55,13 +55,11 @@ export const POST = adminHandler(async ({ salonId, request }) => {
   if (!fecha || !descripcion) {
     throw new AppError("fecha y descripcion son requeridos", 400);
   }
-  if (tipo === "income") {
-    if (!metodoPago || !isPaymentMethod(metodoPago)) {
-      throw new AppError(
-        "metodoPago debe ser transferencia o efectivo para ingresos",
-        400
-      );
-    }
+  if (!metodoPago || !isPaymentMethod(metodoPago)) {
+    throw new AppError(
+      "metodoPago debe ser transferencia o efectivo",
+      400
+    );
   }
 
   const db = await getDb();
@@ -73,8 +71,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     categoriaNombre = cat?.nombre;
   }
 
-  const resolvedMetodoPago: PaymentMethod | undefined =
-    tipo === "income" ? (metodoPago as PaymentMethod) : undefined;
+  const resolvedMetodoPago = metodoPago as PaymentMethod;
 
   const transaction: Omit<FinancialTransaction, "_id"> = {
     salonId,

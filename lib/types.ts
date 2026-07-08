@@ -245,6 +245,11 @@ export interface FinancialReport {
     label: string;
     total: number;
   }[];
+  gastosPorMetodoPago: {
+    metodo: PaymentMethod;
+    label: string;
+    total: number;
+  }[];
 }
 
 // ─── Reservas ───────────────────────────────────────────────────────────────

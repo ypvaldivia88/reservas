@@ -188,6 +188,7 @@ export default function FinanzasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     const res = await fetch("/api/finanzas/transactions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -208,6 +209,8 @@ export default function FinanzasPage() {
         metodoPago: "transferencia",
       });
       loadData();
+    } else {
+      setError(data.error || "No se pudo registrar la transacción");
     }
   };
 
@@ -225,6 +228,16 @@ export default function FinanzasPage() {
   const expenseCategories = categories.filter((c) => c.tipo === "expense");
   const ingresosPorMetodoPago = PAYMENT_METHOD_OPTIONS.map((option) => {
     const found = report?.ingresosPorMetodoPago.find(
+      (item) => item.metodo === option.value
+    );
+    return {
+      metodo: option.value,
+      label: option.label,
+      total: found?.total ?? 0,
+    };
+  });
+  const gastosPorMetodoPago = PAYMENT_METHOD_OPTIONS.map((option) => {
+    const found = report?.gastosPorMetodoPago?.find(
       (item) => item.metodo === option.value
     );
     return {
@@ -333,7 +346,7 @@ export default function FinanzasPage() {
           </select>
         </div>
         <div>
-          <label className="text-xs text-gray-500 block mb-1">Cobro</label>
+          <label className="text-xs text-gray-500 block mb-1">Método de pago</label>
           <select
             value={filterMetodoPago}
             onChange={(e) =>
@@ -417,7 +430,7 @@ export default function FinanzasPage() {
 
       {/* Reportes por categoría y forma de cobro */}
       {report && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
               Ingresos por forma de cobro
@@ -432,6 +445,26 @@ export default function FinanzasPage() {
                     {item.label}
                   </span>
                   <span className="font-medium text-green-600">
+                    {formatTransactionAmount(item.total)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+              Gastos por método de pago
+            </h3>
+            <ul className="space-y-2">
+              {gastosPorMetodoPago.map((item) => (
+                <li
+                  key={item.metodo}
+                  className="flex justify-between text-sm"
+                >
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {item.label}
+                  </span>
+                  <span className="font-medium text-red-600">
                     {formatTransactionAmount(item.total)}
                   </span>
                 </li>
@@ -507,7 +540,7 @@ export default function FinanzasPage() {
                   <th className="px-4 py-3 text-left">Tipo</th>
                   <th className="px-4 py-3 text-left">Descripción</th>
                   <th className="px-4 py-3 text-left">Categoría</th>
-                  <th className="px-4 py-3 text-left">Cobro</th>
+                  <th className="px-4 py-3 text-left">Método de pago</th>
                   <th className="px-4 py-3 text-right">Monto</th>
                   <th className="px-4 py-3 text-right">Acciones</th>
                 </tr>
@@ -537,9 +570,7 @@ export default function FinanzasPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-500">
-                      {tx.tipo === "income"
-                        ? getPaymentMethodMeta(tx.metodoPago).label
-                        : "—"}
+                      {getPaymentMethodMeta(tx.metodoPago).label}
                     </td>
                     <td
                       className={`px-4 py-3 text-right font-medium ${
@@ -618,29 +649,27 @@ export default function FinanzasPage() {
                   ))}
                 </select>
               </div>
-              {form.tipo === "income" && (
-                <div>
-                  <label className="text-sm font-medium block mb-1">
-                    Forma de cobro
-                  </label>
-                  <select
-                    value={form.metodoPago}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        metodoPago: e.target.value as PaymentMethod,
-                      })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
-                  >
-                    {PAYMENT_METHOD_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="text-sm font-medium block mb-1">
+                  Método de pago
+                </label>
+                <select
+                  value={form.metodoPago}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      metodoPago: e.target.value as PaymentMethod,
+                    })
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                >
+                  {PAYMENT_METHOD_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="text-sm font-medium block mb-1">
                   Monto (CUP)
