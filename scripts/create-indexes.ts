@@ -8,7 +8,7 @@
 import "./load-env";
 import clientPromise from "@/lib/mongodb";
 import { DB_NAME } from "@/lib/db/collections";
-import { dedupeAllReservaIncomeTransactions, ensureReservaIncomeIndexes } from "@/lib/finances";
+import { dedupeAllReservaIncomeTransactions, ensureFinancialQueryIndexes } from "@/lib/finances";
 
 async function createIndexes() {
   try {
@@ -87,9 +87,9 @@ async function createIndexes() {
       console.log("ℹ️  No se encontraron duplicados");
     }
 
-    await ensureReservaIncomeIndexes(db);
+    await ensureFinancialQueryIndexes(db);
     console.log(
-      "✅ Índice creado: financial_transactions.salonId + reservaId + metodoPago (único por método de cobro)"
+      "✅ Índices de finanzas creados: uniq_reserva_income_by_method, idx_salon_fecha, idx_salon_categories"
     );
 
     console.log("\n✨ Todos los índices creados exitosamente!");

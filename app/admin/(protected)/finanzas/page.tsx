@@ -17,7 +17,6 @@ import {
 } from "@/lib/paymentMethods";
 
 const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
-const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 type DatePreset =
   | "today"
@@ -82,7 +81,6 @@ export default function FinanzasPage() {
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const syncInFlightRef = useRef(false);
-  const isInitialLoadRef = useRef(true);
   const [showForm, setShowForm] = useState(false);
   const [filterTipo, setFilterTipo] = useState<"" | TransactionType>("");
   const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
@@ -157,18 +155,8 @@ export default function FinanzasPage() {
   );
 
   const runSync = useCallback(
-    async (force = false) => {
+    async () => {
       if (syncInFlightRef.current) return;
-
-      const lastSync = sessionStorage.getItem(SYNC_STORAGE_KEY);
-      const now = Date.now();
-      if (
-        !force &&
-        lastSync &&
-        now - Number(lastSync) < SYNC_INTERVAL_MS
-      ) {
-        return;
-      }
 
       syncInFlightRef.current = true;
       setSyncing(true);
@@ -186,15 +174,9 @@ export default function FinanzasPage() {
     [fetchDashboard]
   );
 
-  const loadData = useCallback(async () => {
-    await fetchDashboard({ showLoading: true });
-    void runSync();
-  }, [fetchDashboard, runSync]);
-
   useEffect(() => {
     void fetchDashboard({ showLoading: true });
-    void runSync();
-  }, [fetchDashboard, runSync]);
+  }, [fetchDashboard]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,7 +222,7 @@ export default function FinanzasPage() {
         descripcion: "",
         categoriaId: "",
       });
-      loadData();
+      await fetchDashboard();
     } else {
       setFormError(data.error || "No se pudo registrar la transacción");
     }
@@ -253,7 +235,7 @@ export default function FinanzasPage() {
   };
 
   const handleManualSync = async () => {
-    await runSync(true);
+    await runSync();
   };
 
   const incomeCategories = categories.filter((c) => c.tipo === "income");
@@ -306,7 +288,7 @@ export default function FinanzasPage() {
 
       {syncing && !loading && (
         <p className="text-sm text-blue-600 dark:text-blue-400">
-          Sincronizando ingresos de reservas en segundo plano...
+          Sincronizando ingresos de reservas...
         </p>
       )}
 

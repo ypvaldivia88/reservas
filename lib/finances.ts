@@ -3,6 +3,7 @@ import {
   FinancialReport,
   FinancialTransaction,
   PaymentMethod,
+  TransactionSource,
   TransactionType,
 } from "@/lib/types";
 import { tenantQuery, DEFAULT_SALON_ID } from "@/lib/tenant";
@@ -39,10 +40,30 @@ export const DEFAULT_FINANCIAL_CATEGORIES = [
 ];
 
 const syncInFlight = new Map<string, Promise<void>>();
-let reservaIncomeIndexesReady = false;
+let financialIndexesReady = false;
 
-export async function ensureReservaIncomeIndexes(db: Db): Promise<void> {
-  if (reservaIncomeIndexesReady) return;
+export interface FinancialReportFilters {
+  tipo?: TransactionType;
+  metodoPago?: PaymentMethod;
+}
+
+export function buildFinancialTransactionFilter(
+  salonId: string,
+  desde: string,
+  hasta: string,
+  filters?: FinancialReportFilters
+): Record<string, unknown> {
+  const match: Record<string, unknown> = {
+    ...tenantQuery(salonId),
+    fecha: { $gte: desde, $lte: hasta },
+  };
+  if (filters?.tipo) match.tipo = filters.tipo;
+  if (filters?.metodoPago) match.metodoPago = filters.metodoPago;
+  return match;
+}
+
+export async function ensureFinancialQueryIndexes(db: Db): Promise<void> {
+  if (financialIndexesReady) return;
 
   const col = db.collection(Collections.FINANCIAL_TRANSACTIONS);
   const indexes = await col.indexes();
@@ -64,7 +85,22 @@ export async function ensureReservaIncomeIndexes(db: Db): Promise<void> {
     }
   );
 
-  reservaIncomeIndexesReady = true;
+  await col.createIndex(
+    { salonId: 1, fecha: -1, fechaCreacion: -1 },
+    { name: "idx_salon_fecha" }
+  );
+
+  await db.collection(Collections.FINANCIAL_CATEGORIES).createIndex(
+    { salonId: 1, activo: 1, tipo: 1, nombre: 1 },
+    { name: "idx_salon_categories" }
+  );
+
+  financialIndexesReady = true;
+}
+
+/** @deprecated Usar ensureFinancialQueryIndexes */
+export async function ensureReservaIncomeIndexes(db: Db): Promise<void> {
+  await ensureFinancialQueryIndexes(db);
 }
 
 function getPrimaryServicioId(reserva: {
@@ -526,7 +562,7 @@ export async function prepareFinancesForSalon(
   if (inFlight) return inFlight;
 
   const work = (async () => {
-    await ensureReservaIncomeIndexes(db);
+    await ensureFinancialQueryIndexes(db);
     await ensureExpenseCategories(db, salonId);
     await syncIncomeCategoriesFromServicios(db, salonId);
     await syncIncomesFromReservas(db, salonId);
@@ -556,7 +592,7 @@ export async function createIncomeFromReserva(
   const inFlight = syncInFlight.get(salonId);
   if (inFlight) await inFlight;
 
-  await ensureReservaIncomeIndexes(db);
+  await ensureFinancialQueryIndexes(db);
 
   await syncReservaIncomeTransactions(
     db,
@@ -576,108 +612,150 @@ export async function generateFinancialReport(
   db: Db,
   salonId: string,
   desde: string,
-  hasta: string
+  hasta: string,
+  filters?: FinancialReportFilters
 ): Promise<FinancialReport> {
-  const filter = {
-    ...tenantQuery(salonId),
-    fecha: { $gte: desde, $lte: hasta },
-  };
+  const match = buildFinancialTransactionFilter(salonId, desde, hasta, filters);
 
-  const transactions = (await db
-    .collection<FinancialTransaction>(Collections.FINANCIAL_TRANSACTIONS)
-    .find(filter)
-    .toArray()) as FinancialTransaction[];
+  const [facet] = await db
+    .collection(Collections.FINANCIAL_TRANSACTIONS)
+    .aggregate<{
+      porTipo: { _id: TransactionType; total: number }[];
+      porCategoria: {
+        _id: { tipo: TransactionType; categoria: string };
+        total: number;
+      }[];
+      porMes: {
+        _id: { tipo: TransactionType; mes: string };
+        total: number;
+      }[];
+      porMetodo: {
+        _id: { tipo: TransactionType; metodo: PaymentMethod };
+        total: number;
+      }[];
+      ingresosFuente: { _id: TransactionSource; total: number }[];
+    }>([
+      { $match: match },
+      {
+        $facet: {
+          porTipo: [{ $group: { _id: "$tipo", total: { $sum: "$monto" } } }],
+          porCategoria: [
+            {
+              $group: {
+                _id: {
+                  tipo: "$tipo",
+                  categoria: { $ifNull: ["$categoriaNombre", "Sin categoría"] },
+                },
+                total: { $sum: "$monto" },
+              },
+            },
+          ],
+          porMes: [
+            {
+              $group: {
+                _id: {
+                  tipo: "$tipo",
+                  mes: { $substr: ["$fecha", 0, 7] },
+                },
+                total: { $sum: "$monto" },
+              },
+            },
+          ],
+          porMetodo: [
+            {
+              $addFields: {
+                resolvedMetodo: {
+                  $ifNull: [
+                    "$metodoPago",
+                    {
+                      $cond: [
+                        { $eq: ["$moneda", "CUP"] },
+                        "efectivo_cup",
+                        "transferencia",
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: { tipo: "$tipo", metodo: "$resolvedMetodo" },
+                total: { $sum: "$monto" },
+              },
+            },
+          ],
+          ingresosFuente: [
+            { $match: { tipo: "income" } },
+            { $group: { _id: "$fuente", total: { $sum: "$monto" } } },
+          ],
+        },
+      },
+    ])
+    .toArray();
+
+  const round = (n: number) => Math.round(n * 100) / 100;
 
   let ingresos = 0;
   let gastos = 0;
-  const ingresosPorCategoriaMap = new Map<string, number>();
-  const gastosPorCategoriaMap = new Map<string, number>();
-  const ingresosPorMesMap = new Map<string, number>();
-  const gastosPorMesMap = new Map<string, number>();
-  const ingresosPorMetodoPagoMap = new Map<PaymentMethod, number>();
-  const gastosPorMetodoPagoMap = new Map<PaymentMethod, number>();
-  let ingresosPorReservas = 0;
-  let ingresosManuales = 0;
-
-  for (const tx of transactions) {
-    const cat = tx.categoriaNombre ?? "Sin categoría";
-    const mes = tx.fecha.substring(0, 7);
-
-    if (tx.tipo === "income") {
-      ingresos += tx.monto;
-      ingresosPorCategoriaMap.set(
-        cat,
-        (ingresosPorCategoriaMap.get(cat) ?? 0) + tx.monto
-      );
-      ingresosPorMesMap.set(
-        mes,
-        (ingresosPorMesMap.get(mes) ?? 0) + tx.monto
-      );
-      const metodo: PaymentMethod =
-        tx.metodoPago ??
-        (tx.moneda === "CUP" ? "efectivo_cup" : "transferencia");
-      ingresosPorMetodoPagoMap.set(
-        metodo,
-        (ingresosPorMetodoPagoMap.get(metodo) ?? 0) + tx.monto
-      );
-      if (tx.fuente === "reserva") {
-        ingresosPorReservas += tx.monto;
-      } else {
-        ingresosManuales += tx.monto;
-      }
-    } else {
-      gastos += tx.monto;
-      gastosPorCategoriaMap.set(
-        cat,
-        (gastosPorCategoriaMap.get(cat) ?? 0) + tx.monto
-      );
-      gastosPorMesMap.set(mes, (gastosPorMesMap.get(mes) ?? 0) + tx.monto);
-      const metodo: PaymentMethod =
-        tx.metodoPago ??
-        (tx.moneda === "CUP" ? "efectivo_cup" : "transferencia");
-      gastosPorMetodoPagoMap.set(
-        metodo,
-        (gastosPorMetodoPagoMap.get(metodo) ?? 0) + tx.monto
-      );
-    }
+  for (const row of facet?.porTipo ?? []) {
+    if (row._id === "income") ingresos = row.total;
+    if (row._id === "expense") gastos = row.total;
   }
 
-  const toSortedArray = (map: Map<string, number>) =>
-    Array.from(map.entries())
-      .map(([categoria, total]) => ({ categoria, total }))
+  const toSortedCategory = (tipo: TransactionType) =>
+    (facet?.porCategoria ?? [])
+      .filter((row) => row._id.tipo === tipo)
+      .map((row) => ({ categoria: row._id.categoria, total: round(row.total) }))
       .sort((a, b) => b.total - a.total);
 
-  const toMonthArray = (map: Map<string, number>) =>
-    Array.from(map.entries())
-      .map(([mes, total]) => ({ mes, total }))
+  const toMonthArray = (tipo: TransactionType) =>
+    (facet?.porMes ?? [])
+      .filter((row) => row._id.tipo === tipo)
+      .map((row) => ({ mes: row._id.mes, total: round(row.total) }))
       .sort((a, b) => a.mes.localeCompare(b.mes));
+
+  const metodoTotals = (tipo: TransactionType) => {
+    const map = new Map<PaymentMethod, number>();
+    for (const row of facet?.porMetodo ?? []) {
+      if (row._id.tipo !== tipo) continue;
+      map.set(row._id.metodo, (map.get(row._id.metodo) ?? 0) + row.total);
+    }
+    return map;
+  };
+
+  const ingresosPorMetodoPagoMap = metodoTotals("income");
+  const gastosPorMetodoPagoMap = metodoTotals("expense");
+
+  let ingresosPorReservas = 0;
+  let ingresosManuales = 0;
+  for (const row of facet?.ingresosFuente ?? []) {
+    if (row._id === "reserva") ingresosPorReservas = row.total;
+    else ingresosManuales += row.total;
+  }
 
   return {
     periodo: { desde, hasta },
     resumen: {
-      ingresos: Math.round(ingresos * 100) / 100,
-      gastos: Math.round(gastos * 100) / 100,
-      balance: Math.round((ingresos - gastos) * 100) / 100,
+      ingresos: round(ingresos),
+      gastos: round(gastos),
+      balance: round(ingresos - gastos),
     },
-    ingresosPorCategoria: toSortedArray(ingresosPorCategoriaMap),
-    gastosPorCategoria: toSortedArray(gastosPorCategoriaMap),
-    ingresosPorMes: toMonthArray(ingresosPorMesMap),
-    gastosPorMes: toMonthArray(gastosPorMesMap),
-    ingresosPorReservas: Math.round(ingresosPorReservas * 100) / 100,
-    ingresosManuales: Math.round(ingresosManuales * 100) / 100,
+    ingresosPorCategoria: toSortedCategory("income"),
+    gastosPorCategoria: toSortedCategory("expense"),
+    ingresosPorMes: toMonthArray("income"),
+    gastosPorMes: toMonthArray("expense"),
+    ingresosPorReservas: round(ingresosPorReservas),
+    ingresosManuales: round(ingresosManuales),
     ingresosPorMetodoPago: PAYMENT_METHOD_OPTIONS.map((option) => ({
       metodo: option.value,
       label: option.label,
-      total:
-        Math.round((ingresosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
-        100,
+      total: round(ingresosPorMetodoPagoMap.get(option.value) ?? 0),
     })).filter((item) => item.total > 0),
     gastosPorMetodoPago: PAYMENT_METHOD_OPTIONS.map((option) => ({
       metodo: option.value,
       label: option.label,
-      total:
-        Math.round((gastosPorMetodoPagoMap.get(option.value) ?? 0) * 100) /
-        100,
+      total: round(gastosPorMetodoPagoMap.get(option.value) ?? 0),
     })).filter((item) => item.total > 0),
   };
 }
