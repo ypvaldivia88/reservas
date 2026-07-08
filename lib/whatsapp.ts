@@ -15,10 +15,36 @@ const defaultAdminPhone =
   process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "+5363233073";
 
 /**
+ * Resuelve el número de WhatsApp de un salón desde su perfil/CMS.
+ */
+export function resolveSalonWhatsapp(salon: {
+  whatsappNumber?: string;
+  contact?: { phone?: string };
+  social?: { whatsapp?: string };
+}): string | undefined {
+  const raw =
+    salon.social?.whatsapp?.trim() ||
+    salon.whatsappNumber?.trim() ||
+    salon.contact?.phone?.trim();
+  return raw || undefined;
+}
+
+/**
  * Get admin phone for a salon (falls back to default)
  */
 export function getSalonWhatsAppNumber(salonWhatsapp?: string): string {
   return salonWhatsapp || defaultAdminPhone;
+}
+
+/**
+ * Enlace wa.me para contactar al salón
+ */
+export function buildSalonWhatsAppLink(
+  salonWhatsapp: string | undefined,
+  text: string
+): string {
+  const phone = getSalonWhatsAppNumber(salonWhatsapp);
+  return `https://wa.me/${cleanPhoneNumber(phone)}?text=${encodeURIComponent(text)}`;
 }
 
 /**

@@ -6,6 +6,10 @@ import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import ReservaForm from "@/components/ReservaForm";
 import NailShapeGuide from "@/components/NailShapeGuide";
 import { salonCmsService } from "@/lib/services/salon-cms.service";
+import {
+  buildSalonWhatsAppLink,
+  resolveSalonWhatsapp,
+} from "@/lib/whatsapp";
 
 interface ReservaPageProps {
   searchParams: Promise<{ slug?: string }>;
@@ -25,6 +29,18 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
       // Sin slug válido, se mantiene el header genérico
     }
   }
+
+  const salonWhatsapp = profile ? resolveSalonWhatsapp(profile) : undefined;
+  const referenciaWaLink = buildSalonWhatsAppLink(
+    salonWhatsapp,
+    "Hola, quiero enviar una referencia de diseño"
+  );
+  const contactWaLink = buildSalonWhatsAppLink(
+    salonWhatsapp,
+    "Hola Quiero reservar una cita"
+  );
+  const displayPhone =
+    profile?.contact?.phone || profile?.whatsappNumber || salonWhatsapp;
 
   const pageContent = (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
@@ -89,7 +105,7 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
               </div>
             }
           >
-            <ReservaForm salonSlug={slug} />
+            <ReservaForm salonSlug={slug} salonWhatsapp={salonWhatsapp} />
           </Suspense>
 
           {/* Call to action - Enviar referencia */}
@@ -103,7 +119,7 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
                 lo recrearemos para ti
               </p>
               <a
-                href="https://wa.me/+5363233073?text=Hola,%20quiero%20enviar%20una%20referencia%20de%20diseño"
+                href={referenciaWaLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white px-6 py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition-all"
@@ -182,7 +198,7 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
               <a
-                href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+                href={contactWaLink}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -193,14 +209,14 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
                       Llámanos
                     </p>
                     <p className="opacity-90 text-sm sm:text-base">
-                      +5 (363) 233-073
+                      {displayPhone || "Contáctanos"}
                     </p>
                   </div>
                 </div>
               </a>
 
               <a
-                href="https://wa.me/+5363233073?text=Hola%20Quiero%20reservar%20una%20cita"
+                href={contactWaLink}
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -15,6 +15,8 @@ import { createIncomeFromReserva } from "@/lib/finances";
 import { isPaymentMethod } from "@/lib/paymentMethods";
 import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
 import { reservaRepository, userRepository } from "@/lib/repositories/user.repository";
+import { salonRepository } from "@/lib/repositories/salon.repository";
+import { resolveSalonWhatsapp } from "@/lib/whatsapp";
 import { DEFAULT_SALON_ID, tenantQuery } from "@/lib/tenant";
 
 export class ReservaService {
@@ -118,7 +120,9 @@ export class ReservaService {
 
     try {
       const insertedId = await reservaRepository.create(salonId, nuevaReserva);
-      return { insertedId };
+      const salon = await salonRepository.findBySalonId(salonId);
+      const whatsappNumber = salon ? resolveSalonWhatsapp(salon) : undefined;
+      return { insertedId, whatsappNumber };
     } catch (error) {
       if (isMongoDuplicateKeyError(error)) {
         throw AppError.conflict(clientDayConflictMessage());

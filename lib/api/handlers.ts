@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ApiResponse } from "@/lib/types";
 import { handleError } from "@/lib/api/responses";
+import { getSession, isSalonAdminRole } from "@/lib/session";
 import {
   buildSalonAdminContext,
   buildPlatformContext,
   buildPublicContext,
   buildAnyAdminContext,
   RequestContext,
+  resolveAdminTenant,
 } from "@/lib/services/tenant-context.service";
 
 type RouteParams = { params: Promise<Record<string, string>> };
@@ -45,6 +47,32 @@ function wrapHandler(
 /** Handler para rutas públicas (reservas, disponibilidad) */
 export function publicHandler(handler: HandlerFn) {
   return wrapHandler(handler, buildPublicContext);
+}
+
+/**
+ * GET híbrido: admin autenticado usa salonId de sesión;
+ * visitantes públicos usan ?slug= (o salón default).
+ */
+async function buildPublicOrSalonAdminContext(
+  request: NextRequest,
+  params: Record<string, string> = {}
+): Promise<RequestContext> {
+  const session = await getSession(request);
+  if (session && isSalonAdminRole(session.role)) {
+    const salonId = resolveAdminTenant(session);
+    return {
+      request,
+      params,
+      session,
+      tenant: { salonId },
+      salonId,
+    };
+  }
+  return buildPublicContext(request, params);
+}
+
+export function publicOrSalonAdminHandler(handler: HandlerFn) {
+  return wrapHandler(handler, buildPublicOrSalonAdminContext);
 }
 
 /** Handler para administradores de salón (excluye platform_admin) */

@@ -89,10 +89,12 @@ const AccordionItem = memo(
 AccordionItem.displayName = "AccordionItem";
 
 interface InspirationGalleryAccordionProps {
+  salonSlug?: string;
   onImageSelect?: (image: ImageData) => void;
 }
 
 export default function InspirationGalleryAccordion({
+  salonSlug,
   onImageSelect,
 }: InspirationGalleryAccordionProps) {
   const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
@@ -129,16 +131,20 @@ export default function InspirationGalleryAccordion({
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [salonSlug]);
+
+  const slugQuery = salonSlug
+    ? `?slug=${encodeURIComponent(salonSlug)}`
+    : "";
 
   const loadData = async () => {
     try {
       const [imagenesRes, categoriasRes] = await Promise.all([
-        fetch("/api/imagenes", {
-          next: { revalidate: 60 }, // Cache for 60 seconds
+        fetch(`/api/imagenes${slugQuery}`, {
+          next: { revalidate: 60 },
         }),
-        fetch("/api/categorias", {
-          next: { revalidate: 60 }, // Cache for 60 seconds
+        fetch(`/api/categorias${slugQuery}`, {
+          next: { revalidate: 60 },
         }),
       ]);
 

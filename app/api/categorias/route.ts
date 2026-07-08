@@ -1,11 +1,11 @@
-import { adminHandler, publicHandler } from "@/lib/api/handlers";
+import { adminHandler, publicOrSalonAdminHandler } from "@/lib/api/handlers";
 import { ok, created } from "@/lib/api/responses";
 import { AppError } from "@/lib/api/errors";
 import { categoriaService } from "@/lib/services/catalog.service";
 
 export const revalidate = 60;
 
-export const GET = publicHandler(async ({ salonId }) => {
+export const GET = publicOrSalonAdminHandler(async ({ salonId }) => {
   const data = await categoriaService.list(salonId);
   return ok(data, {
     headers: {
