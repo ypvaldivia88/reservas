@@ -16,10 +16,23 @@ import { isPaymentMethod } from "@/lib/paymentMethods";
 import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
 import { reservaRepository, userRepository } from "@/lib/repositories/user.repository";
 import { salonRepository } from "@/lib/repositories/salon.repository";
+import { salonCmsService } from "@/lib/services/salon-cms.service";
 import { resolveSalonWhatsapp } from "@/lib/whatsapp";
 import { DEFAULT_SALON_ID, tenantQuery } from "@/lib/tenant";
 
 export class ReservaService {
+  private async getSalonWhatsappForNotifications(
+    salonId: string
+  ): Promise<string | undefined> {
+    try {
+      const profile = await salonCmsService.getPublicBySalonId(salonId);
+      return resolveSalonWhatsapp(profile);
+    } catch {
+      const salon = await salonRepository.findBySalonId(salonId);
+      return salon ? resolveSalonWhatsapp(salon) : undefined;
+    }
+  }
+
   async list(salonId: string): Promise<Reserva[]> {
     return reservaRepository.findAll(salonId);
   }
@@ -120,8 +133,8 @@ export class ReservaService {
 
     try {
       const insertedId = await reservaRepository.create(salonId, nuevaReserva);
-      const salon = await salonRepository.findBySalonId(salonId);
-      const whatsappNumber = salon ? resolveSalonWhatsapp(salon) : undefined;
+      const whatsappNumber =
+        await this.getSalonWhatsappForNotifications(salonId);
       return { insertedId, whatsappNumber };
     } catch (error) {
       if (isMongoDuplicateKeyError(error)) {
@@ -129,6 +142,48 @@ export class ReservaService {
       }
       throw error;
     }
+  }
+
+  async cancelByClient(
+    salonId: string,
+    id: string,
+    telefono: string,
+    motivo?: string
+  ): Promise<{ whatsappNumber?: string }> {
+    const existing = await this.getById(salonId, id);
+    const effectiveSalonId = existing.salonId || salonId || DEFAULT_SALON_ID;
+
+    let telefonoNormalizado: string;
+    try {
+      telefonoNormalizado = phoneUtils.normalize(telefono);
+    } catch {
+      throw new AppError("Formato de teléfono inválido", 400);
+    }
+
+    if (existing.telefono !== telefonoNormalizado) {
+      throw AppError.forbidden(
+        "No tienes permiso para cancelar esta reserva"
+      );
+    }
+
+    if (existing.estado === "cancelada") {
+      throw new AppError("Esta reserva ya está cancelada", 400);
+    }
+
+    if (existing.estado === "completada") {
+      throw new AppError("No se puede cancelar una reserva completada", 400);
+    }
+
+    const updated = await reservaRepository.update(effectiveSalonId, id, {
+      estado: "cancelada",
+    });
+
+    if (!updated) throw AppError.notFound("Reserva no encontrada");
+
+    const whatsappNumber =
+      await this.getSalonWhatsappForNotifications(effectiveSalonId);
+
+    return { whatsappNumber };
   }
 
   async update(salonId: string, id: string, data: Partial<Reserva>) {

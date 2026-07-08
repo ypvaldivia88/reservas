@@ -446,30 +446,33 @@ export default function ReservaForm({
         await res.json();
 
       if (data.success && data.data?.insertedId) {
-        setMensaje(
-          "¡Reserva registrada exitosamente! Abriendo WhatsApp para notificar al admin..."
-        );
-
         const reservaId = data.data.insertedId;
         const notifyWhatsapp = data.data.whatsappNumber || salonWhatsapp;
 
-        // Open WhatsApp with notification after a short delay to show success message
-        setTimeout(() => {
-          openWhatsAppNotification(
-            {
-              nombre: form.nombre,
-              telefono: form.telefono,
-              fechaCita: form.fechaCita,
-              horaCita: form.horaCita,
-              forma: form.forma,
-              largo: parseInt(form.largo),
-              decoracion: form.decoracion,
-              imagenReferencia: selectedImageUrl || undefined, // Incluir URL de imagen si existe
-            },
-            reservaId,
-            notifyWhatsapp
-          );
-        }, WHATSAPP_OPEN_DELAY_MS);
+        setMensaje(
+          notifyWhatsapp
+            ? "¡Reserva registrada exitosamente! Abriendo WhatsApp para notificar al admin..."
+            : "¡Reserva registrada exitosamente! El salón aún no tiene WhatsApp configurado para notificaciones."
+        );
+
+        if (notifyWhatsapp) {
+          setTimeout(() => {
+            openWhatsAppNotification(
+              {
+                nombre: form.nombre,
+                telefono: form.telefono,
+                fechaCita: form.fechaCita,
+                horaCita: form.horaCita,
+                forma: form.forma,
+                largo: parseInt(form.largo),
+                decoracion: form.decoracion,
+                imagenReferencia: selectedImageUrl || undefined,
+              },
+              reservaId,
+              notifyWhatsapp
+            );
+          }, WHATSAPP_OPEN_DELAY_MS);
+        }
 
         // Reset form pero mantener nombre y teléfono
         const savedNombre = form.nombre;
@@ -532,33 +535,48 @@ export default function ReservaForm({
         return;
       }
 
-      // Update reservation status to cancelled
-      const res = await fetch(`/api/reservas/${reservaToCancelId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ estado: "cancelada" }),
-        headers: { "Content-Type": "application/json" },
-      });
+      // Cancelar vía API pública con scope de tenant
+      const res = await fetch(
+        `/api/reservas/${reservaToCancelId}/cancel${tenantQueryString}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            telefono: clientInfo.cliente.telefono || reserva.telefono,
+            motivo: cancellationReason.trim() || undefined,
+          }),
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      const data: ApiResponse = await res.json();
+      const data: ApiResponse<{ whatsappNumber?: string }> = await res.json();
 
       if (data.success) {
-        // Open WhatsApp to notify admin
-        setTimeout(() => {
-          openClientCancellationWhatsApp(
-            {
-              nombre: reserva.nombre,
-              telefono: reserva.telefono,
-              fechaCita: reserva.fechaCita,
-              horaCita: reserva.horaCita,
-              forma: reserva.forma,
-              largo: reserva.largo,
-              decoracion: reserva.decoracion,
-            },
-            reservaToCancelId,
-            cancellationReason.trim() || undefined,
-            salonWhatsapp
-          );
-        }, 500);
+        const notifyWhatsapp = data.data?.whatsappNumber || salonWhatsapp;
+
+        setMensaje(
+          notifyWhatsapp
+            ? "Reserva cancelada exitosamente. Abriendo WhatsApp para notificar al admin..."
+            : "Reserva cancelada exitosamente."
+        );
+
+        if (notifyWhatsapp) {
+          setTimeout(() => {
+            openClientCancellationWhatsApp(
+              {
+                nombre: reserva.nombre,
+                telefono: reserva.telefono,
+                fechaCita: reserva.fechaCita,
+                horaCita: reserva.horaCita,
+                forma: reserva.forma,
+                largo: reserva.largo,
+                decoracion: reserva.decoracion,
+              },
+              reservaToCancelId,
+              cancellationReason.trim() || undefined,
+              notifyWhatsapp
+            );
+          }, 500);
+        }
 
         // Update local state to remove cancelled reservation
         setClientInfo((prev) => {
@@ -571,14 +589,11 @@ export default function ReservaForm({
           };
         });
 
-        setMensaje(
-          "Reserva cancelada exitosamente. Abriendo WhatsApp para notificar al admin..."
-        );
         setShowCancelModal(false);
         setReservaToCancelId(null);
         setCancellationReason("");
       } else {
-        setMensaje(data.message || "Error al cancelar la reserva");
+        setMensaje(data.error || data.message || "Error al cancelar la reserva");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -586,7 +601,13 @@ export default function ReservaForm({
     } finally {
       setIsCancelling(false);
     }
-  }, [reservaToCancelId, clientInfo, cancellationReason, salonWhatsapp]);
+  }, [
+    reservaToCancelId,
+    clientInfo,
+    cancellationReason,
+    salonWhatsapp,
+    tenantQueryString,
+  ]);
 
   const formaDescriptions = {
     coffin: "Rectangular con punta redondeada, elegante y moderna",
