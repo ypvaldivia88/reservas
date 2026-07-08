@@ -36,8 +36,10 @@ interface FormErrors {
 
 export default function ReservaForm({
   salonSlug: salonSlugProp,
+  salonWhatsapp: salonWhatsappProp,
 }: {
   salonSlug?: string;
+  salonWhatsapp?: string;
 }) {
   const searchParams = useSearchParams();
   const salonSlug = salonSlugProp ?? searchParams.get("slug") ?? undefined;
@@ -48,6 +50,38 @@ export default function ReservaForm({
   const tenantParam = salonSlug
     ? `&slug=${encodeURIComponent(salonSlug)}`
     : "";
+
+  const [salonWhatsapp, setSalonWhatsapp] = useState<string | undefined>(
+    salonWhatsappProp
+  );
+
+  useEffect(() => {
+    if (salonWhatsappProp) {
+      setSalonWhatsapp(salonWhatsappProp);
+      return;
+    }
+    if (!salonSlug) return;
+
+    let cancelled = false;
+    fetch(`/api/salons/public?slug=${encodeURIComponent(salonSlug)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled || !data.success) return;
+        const profile = data.data;
+        const number =
+          profile.social?.whatsapp ||
+          profile.whatsappNumber ||
+          profile.contact?.phone;
+        if (number) setSalonWhatsapp(number);
+      })
+      .catch(() => {
+        // Sin perfil público: se usará el número devuelto por la API al crear
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [salonSlug, salonWhatsappProp]);
 
   // Constants
   const WHATSAPP_OPEN_DELAY_MS = 1000;
@@ -408,7 +442,8 @@ export default function ReservaForm({
         headers: { "Content-Type": "application/json" },
       });
 
-      const data: ApiResponse<{ insertedId: string }> = await res.json();
+      const data: ApiResponse<{ insertedId: string; whatsappNumber?: string }> =
+        await res.json();
 
       if (data.success && data.data?.insertedId) {
         setMensaje(
@@ -416,6 +451,7 @@ export default function ReservaForm({
         );
 
         const reservaId = data.data.insertedId;
+        const notifyWhatsapp = data.data.whatsappNumber || salonWhatsapp;
 
         // Open WhatsApp with notification after a short delay to show success message
         setTimeout(() => {
@@ -430,7 +466,8 @@ export default function ReservaForm({
               decoracion: form.decoracion,
               imagenReferencia: selectedImageUrl || undefined, // Incluir URL de imagen si existe
             },
-            reservaId
+            reservaId,
+            notifyWhatsapp
           );
         }, WHATSAPP_OPEN_DELAY_MS);
 
@@ -518,7 +555,8 @@ export default function ReservaForm({
               decoracion: reserva.decoracion,
             },
             reservaToCancelId,
-            cancellationReason.trim() || undefined
+            cancellationReason.trim() || undefined,
+            salonWhatsapp
           );
         }, 500);
 
@@ -548,7 +586,7 @@ export default function ReservaForm({
     } finally {
       setIsCancelling(false);
     }
-  }, [reservaToCancelId, clientInfo, cancellationReason]);
+  }, [reservaToCancelId, clientInfo, cancellationReason, salonWhatsapp]);
 
   const formaDescriptions = {
     coffin: "Rectangular con punta redondeada, elegante y moderna",
