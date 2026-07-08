@@ -76,9 +76,9 @@ export interface ReservaDetails {
 export function generateWhatsAppNotificationLink(
   reserva: ReservaDetails,
   reservaId: string,
-  salonWhatsapp?: string
+  salonWhatsapp: string
 ): string {
-  const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
+  const adminPhone = cleanPhoneNumber(salonWhatsapp);
   // Build the admin edit link
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
   const adminLink = `${baseUrl}/admin/calendario?reserva=${reservaId}`;
@@ -119,13 +119,19 @@ export function openWhatsAppNotification(
   reserva: ReservaDetails,
   reservaId: string,
   salonWhatsapp?: string
-): void {
-  const whatsappLink = generateWhatsAppNotificationLink(reserva, reservaId, salonWhatsapp);
-  
-  // Open in new window/tab
-  if (typeof window !== 'undefined') {
-    window.open(whatsappLink, '_blank');
+): boolean {
+  if (!salonWhatsapp?.trim()) return false;
+
+  const whatsappLink = generateWhatsAppNotificationLink(
+    reserva,
+    reservaId,
+    salonWhatsapp.trim()
+  );
+
+  if (typeof window !== "undefined") {
+    window.open(whatsappLink, "_blank");
   }
+  return true;
 }
 
 /**
@@ -366,10 +372,10 @@ export function openCustomDesignWhatsApp(
 export function generateClientCancellationWhatsAppLink(
   reserva: ReservaDetails,
   reservaId: string,
-  motivo?: string,
-  salonWhatsapp?: string
+  motivo: string | undefined,
+  salonWhatsapp: string
 ): string {
-  const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
+  const adminPhone = cleanPhoneNumber(salonWhatsapp);
   // Build the admin link
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const adminLink = `${baseUrl}/admin/calendario?reserva=${reservaId}`;
@@ -411,12 +417,20 @@ export function openClientCancellationWhatsApp(
   reservaId: string,
   motivo?: string,
   salonWhatsapp?: string
-): void {
-  const whatsappLink = generateClientCancellationWhatsAppLink(reserva, reservaId, motivo, salonWhatsapp);
-  
-  if (typeof window !== 'undefined') {
-    window.open(whatsappLink, '_blank');
+): boolean {
+  if (!salonWhatsapp?.trim()) return false;
+
+  const whatsappLink = generateClientCancellationWhatsAppLink(
+    reserva,
+    reservaId,
+    motivo,
+    salonWhatsapp.trim()
+  );
+
+  if (typeof window !== "undefined") {
+    window.open(whatsappLink, "_blank");
   }
+  return true;
 }
 
 export interface SubscriptionPaymentDetails {
