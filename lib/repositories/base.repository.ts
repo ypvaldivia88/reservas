@@ -6,7 +6,7 @@ import {
   WithId,
 } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import { tenantQuery } from "@/lib/tenant";
+import { withTenantScope } from "@/lib/tenant";
 
 /**
  * Repositorio base con aislamiento por tenant.
@@ -24,7 +24,7 @@ export abstract class BaseRepository {
     salonId: string,
     filter: Filter<Document> = {}
   ): Filter<Document> {
-    return { ...filter, ...tenantQuery(salonId) };
+    return withTenantScope(filter as Record<string, unknown>, salonId) as Filter<Document>;
   }
 
   async findByTenant(

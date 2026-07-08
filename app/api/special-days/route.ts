@@ -1,136 +1,74 @@
-import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { AvailabilityOverride, ApiResponse } from "@/lib/types";
+import { AvailabilityOverride } from "@/lib/types";
+import { withTenantScope } from "@/lib/tenant";
+import { adminHandler } from "@/lib/api/handlers";
+import { ok, created } from "@/lib/api/responses";
+import { AppError } from "@/lib/api/errors";
 
-// GET: Obtiene todos los días especiales configurados
-export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<AvailabilityOverride[]>>> {
-  try {
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-    
-    const specialDays = await db.collection<AvailabilityOverride>("availability_overrides")
-      .find({})
-      .sort({ date: 1 })
-      .toArray();
+export const GET = adminHandler(async ({ salonId }) => {
+  const client = await clientPromise;
+  const db = client.db("nailsalon");
 
-    return NextResponse.json({
-      success: true,
-      data: specialDays as AvailabilityOverride[]
-    });
+  const specialDays = await db
+    .collection<AvailabilityOverride>("availability_overrides")
+    .find(withTenantScope({}, salonId))
+    .sort({ date: 1 })
+    .toArray();
 
-  } catch (error) {
-    console.error('Error en GET /api/special-days:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Error interno del servidor'
-      },
-      { status: 500 }
-    );
+  return ok(specialDays as AvailabilityOverride[]);
+});
+
+export const POST = adminHandler(async ({ salonId, request }) => {
+  const data = await request.json();
+
+  if (!data.date) {
+    throw new AppError("La fecha es requerida", 400);
   }
-}
 
-// POST: Crear o actualizar un día especial
-export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<AvailabilityOverride>>> {
-  try {
-    const data = await request.json();
+  const client = await clientPromise;
+  const db = client.db("nailsalon");
 
-    if (!data.date) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'La fecha es requerida'
-        },
-        { status: 400 }
-      );
-    }
+  const override: Omit<AvailabilityOverride, "_id"> = {
+    salonId,
+    date: data.date,
+    slots: data.slots || [],
+    isWorkingDay: data.isWorkingDay !== undefined ? data.isWorkingDay : true,
+    reason: data.reason || "",
+    createdAt: new Date(),
+  };
 
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    const override: Omit<AvailabilityOverride, '_id'> = {
-      date: data.date,
-      slots: data.slots || [],
-      isWorkingDay: data.isWorkingDay !== undefined ? data.isWorkingDay : true,
-      reason: data.reason || '',
-      createdAt: new Date()
-    };
-
-    const result = await db.collection<AvailabilityOverride>("availability_overrides").findOneAndUpdate(
-      { date: data.date },
+  const result = await db
+    .collection<AvailabilityOverride>("availability_overrides")
+    .findOneAndUpdate(
+      withTenantScope({ date: data.date }, salonId),
       { $set: override },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, returnDocument: "after" }
     );
 
-    if (!result) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Error al crear el día especial'
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: result as AvailabilityOverride,
-      message: 'Día especial creado exitosamente'
-    });
-
-  } catch (error) {
-    console.error('Error en POST /api/special-days:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Error interno del servidor'
-      },
-      { status: 500 }
-    );
+  if (!result) {
+    throw AppError.internal("Error al crear el día especial");
   }
-}
 
-// DELETE: Eliminar un día especial
-export async function DELETE(request: NextRequest): Promise<NextResponse<ApiResponse>> {
-  try {
-    const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
+  return created(result as AvailabilityOverride, "Día especial creado exitosamente");
+});
 
-    if (!date) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'La fecha es requerida'
-        },
-        { status: 400 }
-      );
-    }
+export const DELETE = adminHandler(async ({ salonId, request }) => {
+  const date = request.nextUrl.searchParams.get("date");
 
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    const result = await db.collection<AvailabilityOverride>("availability_overrides").deleteOne({ date });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json({
-        success: false,
-        message: 'No se encontró el día especial para eliminar'
-      }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Día especial eliminado exitosamente'
-    });
-
-  } catch (error) {
-    console.error('Error en DELETE /api/special-days:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Error interno del servidor'
-      },
-      { status: 500 }
-    );
+  if (!date) {
+    throw new AppError("La fecha es requerida", 400);
   }
-}
+
+  const client = await clientPromise;
+  const db = client.db("nailsalon");
+
+  const result = await db
+    .collection<AvailabilityOverride>("availability_overrides")
+    .deleteOne(withTenantScope({ date }, salonId));
+
+  if (result.deletedCount === 0) {
+    throw AppError.notFound("No se encontró el día especial para eliminar");
+  }
+
+  return ok(undefined, { message: "Día especial eliminado exitosamente" });
+});

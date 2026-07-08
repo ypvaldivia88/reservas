@@ -1,9 +1,9 @@
-import { adminHandler, publicHandler } from "@/lib/api/handlers";
+import { adminHandler, publicOrSalonAdminHandler } from "@/lib/api/handlers";
 import { ok, created } from "@/lib/api/responses";
 import { AppError } from "@/lib/api/errors";
 import { servicioService } from "@/lib/services/catalog.service";
 
-export const GET = publicHandler(async ({ salonId }) => {
+export const GET = publicOrSalonAdminHandler(async ({ salonId }) => {
   const data = await servicioService.list(salonId);
   return ok(data);
 });

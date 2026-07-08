@@ -1576,6 +1576,7 @@ export default function ReservaForm({
                   }
                 >
                   <InspirationGalleryAccordion
+                    salonSlug={salonSlug}
                     onImageSelect={(image) => {
                       const designText =
                         image.descripcion ?

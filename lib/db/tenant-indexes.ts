@@ -71,5 +71,46 @@ export async function ensureMultiTenantIndexes(db: Db): Promise<void> {
     }
   );
 
+  const schedules = db.collection("schedules");
+  const scheduleIndexes = await schedules.indexes();
+  const legacyScheduleIndex = scheduleIndexes.find(
+    (idx) => idx.name === "name_1" || (idx.unique && !Object.prototype.hasOwnProperty.call(idx.key, "salonId"))
+  );
+  if (
+    legacyScheduleIndex &&
+    legacyScheduleIndex.name &&
+    !Object.prototype.hasOwnProperty.call(legacyScheduleIndex.key, "salonId")
+  ) {
+    try {
+      await schedules.dropIndex(legacyScheduleIndex.name);
+    } catch {
+      // Índice legacy puede no existir
+    }
+  }
+  await schedules.createIndex(
+    { salonId: 1, name: 1 },
+    { name: "uniq_schedule_name_by_salon", unique: true }
+  );
+
+  const overrides = db.collection("availability_overrides");
+  const overrideIndexes = await overrides.indexes();
+  const legacyDateIndex = overrideIndexes.find(
+    (idx) =>
+      idx.unique &&
+      Object.prototype.hasOwnProperty.call(idx.key, "date") &&
+      !Object.prototype.hasOwnProperty.call(idx.key, "salonId")
+  );
+  if (legacyDateIndex?.name) {
+    try {
+      await overrides.dropIndex(legacyDateIndex.name);
+    } catch {
+      // Índice legacy puede no existir
+    }
+  }
+  await overrides.createIndex(
+    { salonId: 1, date: 1 },
+    { name: "uniq_override_date_by_salon", unique: true }
+  );
+
   tenantIndexesReady = true;
 }

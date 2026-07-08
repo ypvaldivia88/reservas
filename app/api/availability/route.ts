@@ -267,7 +267,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
   const result = await db
     .collection<AvailabilityOverride>("availability_overrides")
     .findOneAndUpdate(
-      { date: data.date, ...tenantQuery(salonId) },
+      withTenantScope({ date: data.date }, salonId),
       { $set: override },
       { upsert: true, returnDocument: "after" }
     );
@@ -288,10 +288,9 @@ export const DELETE = adminHandler(async ({ salonId, request }) => {
   const client = await clientPromise;
   const db = client.db("nailsalon");
 
-  await db.collection<AvailabilityOverride>("availability_overrides").deleteOne({
-    date,
-    ...tenantQuery(salonId),
-  });
+  await db.collection<AvailabilityOverride>("availability_overrides").deleteOne(
+    withTenantScope({ date }, salonId)
+  );
 
   return ok(undefined, { message: "Override eliminado exitosamente" });
 });

@@ -38,21 +38,22 @@ const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
   );
 };
 
-export default function DynamicInspirationGallery() {
+export default function DynamicInspirationGallery({ slug }: { slug?: string }) {
   const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
+
   useEffect(() => {
     loadData();
-  }, []);
+  }, [slugQuery]);
 
   const loadData = async () => {
     try {
-      // Fetch images and categories in parallel
       const [imagenesRes, categoriasRes] = await Promise.all([
-        fetch("/api/imagenes"),
-        fetch("/api/categorias"),
+        fetch(`/api/imagenes${slugQuery}`),
+        fetch(`/api/categorias${slugQuery}`),
       ]);
 
       if (imagenesRes.ok && categoriasRes.ok) {

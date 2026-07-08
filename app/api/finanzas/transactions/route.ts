@@ -104,7 +104,10 @@ export const POST = adminHandler(async ({ salonId, request }) => {
   if (categoriaId) {
     const cat = (await db
       .collection(Collections.FINANCIAL_CATEGORIES)
-      .findOne({ _id: new ObjectId(categoriaId) })) as FinancialCategory | null;
+      .findOne({
+        _id: new ObjectId(categoriaId),
+        ...tenantQuery(salonId),
+      })) as FinancialCategory | null;
     categoriaNombre = cat?.nombre;
   }
 

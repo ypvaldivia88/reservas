@@ -27,7 +27,10 @@ export const DELETE = adminHandler(async ({ salonId, params }) => {
 
   await db
     .collection(Collections.FINANCIAL_TRANSACTIONS)
-    .deleteOne({ _id: new ObjectId(id) });
+    .deleteOne({
+      _id: new ObjectId(id),
+      ...tenantQuery(salonId),
+    });
 
   return ok(undefined, { message: "Transacción eliminada" });
 });
