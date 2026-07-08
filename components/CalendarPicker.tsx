@@ -13,6 +13,7 @@ interface CalendarPickerProps {
   selectedDate: string;
   selectedTime: string;
   telefono?: string;
+  salonSlug?: string;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string) => void;
 }
@@ -21,6 +22,7 @@ export default function CalendarPicker({
   selectedDate,
   selectedTime,
   telefono,
+  salonSlug,
   onDateSelect,
   onTimeSelect,
 }: CalendarPickerProps) {
@@ -42,8 +44,10 @@ export default function CalendarPicker({
         telefono?.trim() ?
           `&telefono=${encodeURIComponent(telefono.trim())}`
         : "";
+      const slugQuery =
+        salonSlug ? `&slug=${encodeURIComponent(salonSlug)}` : "";
       const res = await fetch(
-        `/api/availability?startDate=${dateUtils.formatToYYYYMMDD(startDate)}&endDate=${dateUtils.formatToYYYYMMDD(endDate)}${telefonoQuery}`
+        `/api/availability?startDate=${dateUtils.formatToYYYYMMDD(startDate)}&endDate=${dateUtils.formatToYYYYMMDD(endDate)}${telefonoQuery}${slugQuery}`
       );
 
       if (res.ok) {
@@ -57,7 +61,7 @@ export default function CalendarPicker({
     } finally {
       setLoading(false);
     }
-  }, [currentMonth, telefono]);
+  }, [currentMonth, telefono, salonSlug]);
 
   useEffect(() => {
     loadAvailability();

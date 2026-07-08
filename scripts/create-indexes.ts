@@ -9,6 +9,7 @@ import "./load-env";
 import clientPromise from "@/lib/mongodb";
 import { DB_NAME } from "@/lib/db/collections";
 import { dedupeAllReservaIncomeTransactions, ensureFinancialQueryIndexes } from "@/lib/finances";
+import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
 
 async function createIndexes() {
   try {
@@ -29,43 +30,6 @@ async function createIndexes() {
       { name: "idx_fecha_estado" }
     );
     console.log("✅ Índice creado: reservas.fechaCita + estado");
-
-    await db.collection("reservas").createIndex(
-      { fechaCita: 1, horaCita: 1 },
-      {
-        name: "uniq_active_slot",
-        unique: true,
-        partialFilterExpression: {
-          estado: { $in: ["pendiente", "confirmada"] },
-        },
-      }
-    );
-    console.log("✅ Índice creado: reservas.fechaCita + horaCita (único activo)");
-
-    await db.collection("reservas").createIndex(
-      { telefono: 1, fechaCita: 1 },
-      {
-        name: "uniq_active_client_day_by_phone",
-        unique: true,
-        partialFilterExpression: {
-          estado: { $in: ["pendiente", "confirmada"] },
-        },
-      }
-    );
-    console.log("✅ Índice creado: reservas.telefono + fechaCita (único activo/día)");
-
-    await db.collection("users").createIndex(
-      { telefono: 1, role: 1 },
-      {
-        name: "idx_users_telefono_role",
-        unique: true,
-        partialFilterExpression: {
-          role: "cliente",
-          telefono: { $exists: true },
-        },
-      }
-    );
-    console.log("✅ Índice creado: users.telefono + role (único para clientes)");
 
     await db.collection("categorias").createIndex(
       { activo: 1, orden: 1 },
@@ -90,6 +54,11 @@ async function createIndexes() {
     await ensureFinancialQueryIndexes(db);
     console.log(
       "✅ Índices de finanzas creados: uniq_reserva_income_by_method, idx_salon_fecha, idx_salon_categories"
+    );
+
+    await ensureMultiTenantIndexes(db);
+    console.log(
+      "✅ Índices multi-tenant creados: uniq_cliente_phone_by_salon, uniq_active_slot_by_salon, uniq_active_client_day_by_salon"
     );
 
     console.log("\n✨ Todos los índices creados exitosamente!");

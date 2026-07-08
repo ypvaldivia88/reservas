@@ -13,6 +13,7 @@ import {
 } from "@/lib/reservaValidation";
 import { createIncomeFromReserva } from "@/lib/finances";
 import { isPaymentMethod } from "@/lib/paymentMethods";
+import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
 import { reservaRepository, userRepository } from "@/lib/repositories/user.repository";
 import { DEFAULT_SALON_ID, tenantQuery } from "@/lib/tenant";
 
@@ -34,6 +35,7 @@ export class ReservaService {
     }
 
     const db = await getDb();
+    await ensureMultiTenantIndexes(db);
 
     const slotConflict = await findActiveSlotConflict(
       db,
@@ -67,10 +69,26 @@ export class ReservaService {
         );
       }
     } else {
-      cliente = await userRepository.createCliente(salonId, {
-        nombre: nombreNormalizado,
-        telefono: telefonoNormalizado,
-      });
+      try {
+        cliente = await userRepository.createCliente(salonId, {
+          nombre: nombreNormalizado,
+          telefono: telefonoNormalizado,
+        });
+      } catch (error) {
+        if (isMongoDuplicateKeyError(error)) {
+          cliente = await userRepository.findClienteByPhone(
+            salonId,
+            telefonoNormalizado
+          );
+          if (!cliente) {
+            throw AppError.conflict(
+              "Este teléfono ya está registrado en otro salón. Contacta al administrador."
+            );
+          }
+        } else {
+          throw error;
+        }
+      }
     }
 
     const clienteId = cliente._id?.toString();

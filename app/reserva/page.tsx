@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Suspense } from "react";
 import Header from "@/components/Header";
 import TenantHeader from "@/components/TenantHeader";
 import TenantBrandingProvider from "@/components/TenantBrandingProvider";
@@ -81,7 +82,15 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
       {/* Form Section - Mobile First */}
       <section className="pb-12 sm:pb-16 md:pb-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ReservaForm />
+          <Suspense
+            fallback={
+              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+                Cargando formulario...
+              </div>
+            }
+          >
+            <ReservaForm salonSlug={slug} />
+          </Suspense>
 
           {/* Call to action - Enviar referencia */}
           <div className="mt-8 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/20 dark:to-violet-900/20 rounded-xl p-4 sm:p-6 border border-blue-100 dark:border-blue-800">

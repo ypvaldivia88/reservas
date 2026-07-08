@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
 import { User, Reserva, ApiResponse } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
+import { tenantQuery } from "@/lib/tenant";
+import { resolvePublicTenant } from "@/lib/services/tenant-context.service";
+import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
+import { getDb } from "@/lib/mongodb";
+import { Collections } from "@/lib/db/collections";
 
 interface ClientCheckResponse {
   exists: boolean;
@@ -9,7 +13,6 @@ interface ClientCheckResponse {
   reservasActivas?: Reserva[];
 }
 
-// GET: Check if client exists by phone and return active reservations
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<ApiResponse<ClientCheckResponse>>> {
@@ -27,10 +30,6 @@ export async function GET(
       );
     }
 
-    const client = await clientPromise;
-    const db = client.db("nailsalon");
-
-    // Normalize phone for consistent search (removes spaces, adds +53, etc.)
     let telefonoNormalizado: string;
     try {
       telefonoNormalizado = phoneUtils.normalize(telefono);
@@ -45,10 +44,14 @@ export async function GET(
       });
     }
 
-    // Find client by normalized phone
-    const cliente = await db.collection<User>("users").findOne({
+    const { salonId } = await resolvePublicTenant(request);
+    const db = await getDb();
+    await ensureMultiTenantIndexes(db);
+
+    const cliente = await db.collection<User>(Collections.USERS).findOne({
       telefono: telefonoNormalizado,
       role: "cliente",
+      ...tenantQuery(salonId),
     });
 
     if (!cliente) {
@@ -61,12 +64,12 @@ export async function GET(
       });
     }
 
-    // Get active reservations (pendiente or confirmada)
     const reservasActivas = await db
-      .collection<Reserva>("reservas")
+      .collection<Reserva>(Collections.RESERVAS)
       .find({
         clienteId: cliente._id?.toString(),
         estado: { $in: ["pendiente", "confirmada"] },
+        ...tenantQuery(salonId),
       })
       .sort({ fechaCita: 1 })
       .toArray();

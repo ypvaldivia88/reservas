@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ReservaFormData,
   FORMAS_UNAS,
@@ -33,7 +34,21 @@ interface FormErrors {
   horaCita?: string;
 }
 
-export default function ReservaForm() {
+export default function ReservaForm({
+  salonSlug: salonSlugProp,
+}: {
+  salonSlug?: string;
+}) {
+  const searchParams = useSearchParams();
+  const salonSlug = salonSlugProp ?? searchParams.get("slug") ?? undefined;
+
+  const tenantQueryString = salonSlug
+    ? `?slug=${encodeURIComponent(salonSlug)}`
+    : "";
+  const tenantParam = salonSlug
+    ? `&slug=${encodeURIComponent(salonSlug)}`
+    : "";
+
   // Constants
   const WHATSAPP_OPEN_DELAY_MS = 1000;
 
@@ -174,7 +189,7 @@ export default function ReservaForm() {
     try {
       // Enviar el teléfono tal cual (el backend lo normalizará)
       const res = await fetch(
-        `/api/clientes/check-phone?telefono=${encodeURIComponent(telefono.trim())}`
+        `/api/clientes/check-phone?telefono=${encodeURIComponent(telefono.trim())}${tenantParam}`
       );
       const data: ApiResponse<{
         exists: boolean;
@@ -208,7 +223,7 @@ export default function ReservaForm() {
     } finally {
       setIsCheckingPhone(false);
     }
-  }, []);
+  }, [tenantParam]);
 
   // Update colores field when selectedColors changes
   useEffect(() => {
@@ -387,7 +402,7 @@ export default function ReservaForm() {
     setMensaje("");
 
     try {
-      const res = await fetch("/api/reservas", {
+      const res = await fetch(`/api/reservas${tenantQueryString}`, {
         method: "POST",
         body: JSON.stringify(form),
         headers: { "Content-Type": "application/json" },
@@ -448,7 +463,7 @@ export default function ReservaForm() {
           }, 500); // Pequeño delay para que se procese la nueva reserva
         }
       } else {
-        setMensaje(data.message || "Error al guardar la reserva");
+        setMensaje(data.error || data.message || "Error al guardar la reserva");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -1098,6 +1113,7 @@ export default function ReservaForm() {
                 selectedDate={form.fechaCita}
                 selectedTime={form.horaCita}
                 telefono={form.telefono}
+                salonSlug={salonSlug}
                 onDateSelect={(date) => {
                   setForm((prev) => ({ ...prev, fechaCita: date }));
                   setErrors((prev) => ({ ...prev, fechaCita: undefined }));
