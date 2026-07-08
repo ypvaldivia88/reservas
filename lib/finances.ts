@@ -214,9 +214,22 @@ async function upsertReservaIncomeTransaction(
   );
 }
 
-interface CobroBreakdownItem {
+export interface CobroBreakdownItem {
   metodo: PaymentMethod | null;
   monto: number;
+}
+
+export function resolveManualCobroBreakdown(input: {
+  cobroEfectivo?: number;
+  cobroTransferencia?: number;
+}): CobroBreakdownItem[] {
+  return resolveCobroBreakdown({
+    costo: 0,
+    cobroEfectivo: input.cobroEfectivo,
+    cobroTransferencia: input.cobroTransferencia,
+  }).filter((item): item is CobroBreakdownItem & { metodo: PaymentMethod } =>
+    item.metodo != null
+  );
 }
 
 function resolveCobroBreakdown(reserva: {

@@ -80,6 +80,7 @@ export default function FinanzasPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
   const syncInFlightRef = useRef(false);
   const isInitialLoadRef = useRef(true);
   const [showForm, setShowForm] = useState(false);
@@ -102,12 +103,21 @@ export default function FinanzasPage() {
 
   const [form, setForm] = useState({
     tipo: "income" as TransactionType,
-    monto: "",
+    cobroEfectivo: "",
+    cobroTransferencia: "",
     fecha: new Date().toISOString().split("T")[0],
     descripcion: "",
     categoriaId: "",
-    metodoPago: "transferencia" as PaymentMethod,
   });
+
+  const getFormCobroTotal = () => {
+    const efectivo = form.cobroEfectivo ? parseFloat(form.cobroEfectivo) : 0;
+    const transferencia = form.cobroTransferencia
+      ? parseFloat(form.cobroTransferencia)
+      : 0;
+    if (isNaN(efectivo) || isNaN(transferencia)) return 0;
+    return efectivo + transferencia;
+  };
 
   const fetchDashboard = useCallback(
     async (options?: { showLoading?: boolean }) => {
@@ -188,29 +198,51 @@ export default function FinanzasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setFormError("");
+
+    const cobroEfectivo = form.cobroEfectivo
+      ? parseFloat(form.cobroEfectivo)
+      : 0;
+    const cobroTransferencia = form.cobroTransferencia
+      ? parseFloat(form.cobroTransferencia)
+      : 0;
+
+    if (
+      (isNaN(cobroEfectivo) || cobroEfectivo < 0) ||
+      (isNaN(cobroTransferencia) || cobroTransferencia < 0) ||
+      cobroEfectivo + cobroTransferencia <= 0
+    ) {
+      setFormError("Indica el monto en efectivo y/o transferencia");
+      return;
+    }
+
     const res = await fetch("/api/finanzas/transactions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...form,
-        monto: parseFloat(form.monto),
+        tipo: form.tipo,
+        fecha: form.fecha,
+        descripcion: form.descripcion,
+        categoriaId: form.categoriaId || undefined,
+        cobroEfectivo,
+        cobroTransferencia,
       }),
     });
     const data = await res.json();
     if (data.success) {
       setShowForm(false);
+      setFormError("");
       setForm({
         tipo: "income",
-        monto: "",
+        cobroEfectivo: "",
+        cobroTransferencia: "",
         fecha: new Date().toISOString().split("T")[0],
         descripcion: "",
         categoriaId: "",
-        metodoPago: "transferencia",
       });
       loadData();
     } else {
-      setError(data.error || "No se pudo registrar la transacción");
+      setFormError(data.error || "No se pudo registrar la transacción");
     }
   };
 
@@ -259,7 +291,7 @@ export default function FinanzasPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="primary" onClick={() => setShowForm(true)}>
+          <Button variant="primary" onClick={() => { setFormError(""); setShowForm(true); }}>
             + Nueva transacción
           </Button>
           <Button
@@ -612,6 +644,11 @@ export default function FinanzasPage() {
               Nueva transacción
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {formError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium block mb-1">Tipo</label>
                 <select
@@ -651,39 +688,56 @@ export default function FinanzasPage() {
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">
-                  Método de pago
-                </label>
-                <select
-                  value={form.metodoPago}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      metodoPago: e.target.value as PaymentMethod,
-                    })
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
-                >
-                  {PAYMENT_METHOD_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">
-                  Monto (CUP)
+                  {form.tipo === "expense"
+                    ? "Pago en efectivo (CUP)"
+                    : "Cobro en efectivo (CUP)"}
                 </label>
                 <input
                   type="number"
                   step="0.01"
-                  min="0.01"
-                  required
-                  value={form.monto}
-                  onChange={(e) => setForm({ ...form, monto: e.target.value })}
+                  min="0"
+                  value={form.cobroEfectivo}
+                  onChange={(e) =>
+                    setForm({ ...form, cobroEfectivo: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  placeholder="0.00"
                 />
               </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">
+                  {form.tipo === "expense"
+                    ? "Pago por transferencia (CUP)"
+                    : "Cobro por transferencia (CUP)"}
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.cobroTransferencia}
+                  onChange={(e) =>
+                    setForm({ ...form, cobroTransferencia: e.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  placeholder="0.00"
+                />
+              </div>
+              {getFormCobroTotal() > 0 && (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Total:{" "}
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {getFormCobroTotal().toFixed(2)} CUP
+                  </span>
+                  {form.cobroEfectivo &&
+                    form.cobroTransferencia &&
+                    parseFloat(form.cobroEfectivo) > 0 &&
+                    parseFloat(form.cobroTransferencia) > 0 && (
+                      <span className="block text-xs mt-1">
+                        Puedes dividir el pago entre efectivo y transferencia.
+                      </span>
+                    )}
+                </p>
+              )}
               <div>
                 <label className="text-sm font-medium block mb-1">Fecha</label>
                 <input
@@ -712,7 +766,10 @@ export default function FinanzasPage() {
                 <Button
                   type="button"
                   variant="outlined-secondary"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setFormError("");
+                    setShowForm(false);
+                  }}
                 >
                   Cancelar
                 </Button>

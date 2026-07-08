@@ -14,6 +14,7 @@ import {
   getMonedaForPaymentMethod,
   isPaymentMethod,
 } from "@/lib/paymentMethods";
+import { resolveManualCobroBreakdown } from "@/lib/finances";
 
 export const GET = adminHandler(async ({ salonId, request }) => {
   const tipo = request.nextUrl.searchParams.get("tipo");
@@ -44,20 +45,56 @@ export const GET = adminHandler(async ({ salonId, request }) => {
 
 export const POST = adminHandler(async ({ salonId, request }) => {
   const body = await request.json();
-  const { tipo, monto, fecha, descripcion, categoriaId, metodoPago } = body;
+  const {
+    tipo,
+    fecha,
+    descripcion,
+    categoriaId,
+    cobroEfectivo,
+    cobroTransferencia,
+    monto,
+    metodoPago,
+  } = body;
 
   if (!tipo || !["income", "expense"].includes(tipo)) {
     throw new AppError("tipo debe ser income o expense", 400);
   }
-  if (!monto || monto <= 0) {
-    throw new AppError("monto debe ser mayor a 0", 400);
-  }
   if (!fecha || !descripcion) {
     throw new AppError("fecha y descripcion son requeridos", 400);
   }
-  if (!metodoPago || !isPaymentMethod(metodoPago)) {
+
+  const hasSplitCobro =
+    cobroEfectivo !== undefined || cobroTransferencia !== undefined;
+
+  let breakdown = hasSplitCobro
+    ? resolveManualCobroBreakdown({
+        cobroEfectivo:
+          cobroEfectivo !== undefined ? Number(cobroEfectivo) : undefined,
+        cobroTransferencia:
+          cobroTransferencia !== undefined
+            ? Number(cobroTransferencia)
+            : undefined,
+      })
+    : [];
+
+  if (!hasSplitCobro) {
+    if (!monto || Number(monto) <= 0) {
+      throw new AppError("monto debe ser mayor a 0", 400);
+    }
+    if (!metodoPago || !isPaymentMethod(metodoPago)) {
+      throw new AppError(
+        "metodoPago debe ser transferencia o efectivo",
+        400
+      );
+    }
+    breakdown = [
+      { metodo: metodoPago as PaymentMethod, monto: Number(monto) },
+    ];
+  }
+
+  if (breakdown.length === 0) {
     throw new AppError(
-      "metodoPago debe ser transferencia o efectivo",
+      "Indica el monto en efectivo y/o transferencia",
       400
     );
   }
@@ -71,28 +108,44 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     categoriaNombre = cat?.nombre;
   }
 
-  const resolvedMetodoPago = metodoPago as PaymentMethod;
-
-  const transaction: Omit<FinancialTransaction, "_id"> = {
+  const baseTransaction = {
     salonId,
     tipo,
     categoriaId,
     categoriaNombre,
-    monto: Number(monto),
-    moneda: getMonedaForPaymentMethod(resolvedMetodoPago),
-    metodoPago: resolvedMetodoPago,
     fecha,
     descripcion: descripcion.trim(),
-    fuente: "manual",
+    fuente: "manual" as const,
     fechaCreacion: new Date(),
   };
 
-  const result = await db
-    .collection(Collections.FINANCIAL_TRANSACTIONS)
-    .insertOne(transaction);
+  const createdTransactions: FinancialTransaction[] = [];
+
+  for (const item of breakdown) {
+    const metodo = item.metodo as PaymentMethod;
+    const transaction: Omit<FinancialTransaction, "_id"> = {
+      ...baseTransaction,
+      monto: item.monto,
+      moneda: getMonedaForPaymentMethod(metodo),
+      metodoPago: metodo,
+    };
+
+    const result = await db
+      .collection(Collections.FINANCIAL_TRANSACTIONS)
+      .insertOne(transaction);
+
+    createdTransactions.push({
+      _id: result.insertedId.toString(),
+      ...transaction,
+    });
+  }
 
   return created(
-    { _id: result.insertedId.toString(), ...transaction },
-    "Transacción registrada"
+    createdTransactions.length === 1
+      ? createdTransactions[0]
+      : createdTransactions,
+    createdTransactions.length > 1
+      ? "Transacciones registradas"
+      : "Transacción registrada"
   );
 });
