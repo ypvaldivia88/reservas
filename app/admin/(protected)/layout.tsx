@@ -2,15 +2,12 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
+import AdminSidebarMenu from "@/components/AdminSidebarMenu";
 import AdminRoleGuard from "@/components/AdminRoleGuard";
 import ThemeToggle from "@/components/ThemeToggle";
 import HamburgerButton from "@/components/HamburgerButton";
 import { Button } from "@/components/ui/Button";
-import {
-  HomeIcon,
-  LogoutIcon,
-} from "@/components/ui/Icons";
-import Link from "next/link";
+import { HomeIcon } from "@/components/ui/Icons";
 
 export default function AdminProtectedLayout({
   children,
@@ -22,12 +19,6 @@ export default function AdminProtectedLayout({
   const pathname = usePathname();
   const isPlatformRoute = pathname.startsWith("/admin/platform");
   const profileHref = isPlatformRoute ? "/admin/platform/perfil" : "/admin/perfil";
-
-  const salonSecondaryItems = [
-    { href: "/admin/sitio", label: "Sitio" },
-    { href: "/admin/suscripcion", label: "Plan" },
-    { href: profileHref, label: "Mi Perfil" },
-  ];
 
   const closeMenu = () => setIsMobileMenuOpen(false);
 
@@ -72,9 +63,10 @@ export default function AdminProtectedLayout({
               </div>
             </div>
 
-            {/* Desktop View - Botones */}
-            <div className="hidden md:flex items-center gap-3 flex-shrink-0">
-              <ThemeToggle />
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
+              <div className="hidden md:flex">
+                <ThemeToggle />
+              </div>
 
               <Button
                 onClick={() => router.push("/")}
@@ -86,42 +78,10 @@ export default function AdminProtectedLayout({
                 className="rounded-full p-2"
               />
 
-              {isPlatformRoute ? (
-                <>
-                  <Link href={profileHref}>
-                    <Button variant="primary" size="sm">
-                      Mi Perfil
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={handleLogout}
-                    variant="outlined-secondary"
-                    size="sm"
-                    icon={<LogoutIcon />}
-                  >
-                    Cerrar Sesión
-                  </Button>
-                </>
-              ) : (
-                <HamburgerButton
-                  isOpen={isMobileMenuOpen}
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  ariaLabel="Menú de administración"
-                />
-              )}
-            </div>
+              <div className="md:hidden">
+                <ThemeToggle />
+              </div>
 
-            {/* Mobile View - Hamburger Menu */}
-            <div className="flex md:hidden items-center gap-1 sm:gap-2 flex-shrink-0">
-              <Button
-                onClick={() => router.push("/")}
-                variant="ghost"
-                size="sm"
-                icon={<HomeIcon />}
-                aria-label="Ir a la vista del cliente"
-                className="rounded-full p-2"
-              />
-              <ThemeToggle />
               <HamburgerButton
                 isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -129,53 +89,16 @@ export default function AdminProtectedLayout({
               />
             </div>
           </div>
-
-          {/* Menú secundario expandible (Sitio, Plan, Perfil, Sesión) */}
-          {isMobileMenuOpen && (
-            <div
-              className={`mt-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg p-3 space-y-2 animate-fadeInUp ${
-                isPlatformRoute ? "md:hidden" : ""
-              }`}
-            >
-              {!isPlatformRoute &&
-                salonSecondaryItems.map((item) => (
-                  <Link key={item.href} href={item.href} className="block" onClick={closeMenu}>
-                    <Button
-                      variant={
-                        pathname.startsWith(item.href) ? "primary" : "outlined-secondary"
-                      }
-                      size="sm"
-                      fullWidth
-                    >
-                      {item.label}
-                    </Button>
-                  </Link>
-                ))}
-
-              {isPlatformRoute && (
-                <Link href={profileHref} className="block" onClick={closeMenu}>
-                  <Button variant="primary" size="sm" fullWidth>
-                    Mi Perfil
-                  </Button>
-                </Link>
-              )}
-
-              <Button
-                onClick={() => {
-                  handleLogout();
-                  closeMenu();
-                }}
-                variant="outlined-secondary"
-                size="sm"
-                icon={<LogoutIcon />}
-                fullWidth
-              >
-                Cerrar Sesión
-              </Button>
-            </div>
-          )}
         </div>
       </header>
+
+      <AdminSidebarMenu
+        isOpen={isMobileMenuOpen}
+        onClose={closeMenu}
+        profileHref={profileHref}
+        onLogout={handleLogout}
+        isPlatformRoute={isPlatformRoute}
+      />
 
       {/* Navegación (solo salones, no plataforma) */}
       {!isPlatformRoute && <AdminNav />}
