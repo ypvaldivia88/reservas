@@ -1,12 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Servicio, ImageData } from "@/lib/types";
+import { Servicio, ImageData, BusinessTemplate } from "@/lib/types";
+import { getReservaTemplateConfig } from "@/lib/reserva-template-config";
 
 interface DynamicServicesSectionProps {
   slug?: string;
+  businessTemplate?: BusinessTemplate | null;
 }
 
-export default function DynamicServicesSection({ slug }: DynamicServicesSectionProps) {
+export default function DynamicServicesSection({
+  slug,
+  businessTemplate,
+}: DynamicServicesSectionProps) {
+  const servicesSubtitle = getReservaTemplateConfig(businessTemplate)
+    .servicesSubtitle;
   const [servicios, setServicios] = useState<(Servicio & { imagen?: ImageData })[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -90,8 +97,7 @@ export default function DynamicServicesSection({ slug }: DynamicServicesSectionP
             Nuestros Servicios
           </h2>
           <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl mx-auto px-4">
-            Ofrecemos una amplia gama de servicios para el cuidado y
-            embellecimiento de tus uñas
+            {servicesSubtitle}
           </p>
         </div>
 

@@ -10,6 +10,7 @@ import {
   buildSalonWhatsAppLink,
   resolveSalonWhatsapp,
 } from "@/lib/whatsapp";
+import { getReservaTemplateConfig } from "@/lib/reserva-template-config";
 
 interface ReservaPageProps {
   searchParams: Promise<{ slug?: string }>;
@@ -31,9 +32,10 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
   }
 
   const salonWhatsapp = profile ? resolveSalonWhatsapp(profile) : undefined;
+  const pageConfig = getReservaTemplateConfig(profile?.businessTemplate);
   const referenciaWaLink = buildSalonWhatsAppLink(
     salonWhatsapp,
-    "Hola, quiero enviar una referencia de diseño"
+    pageConfig.page.referenceWaMessage
   );
   const contactWaLink = buildSalonWhatsAppLink(
     salonWhatsapp,
@@ -48,15 +50,16 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 sm:mb-8">
             <span className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:mb-4 sm:px-4 sm:py-2 sm:text-sm">
-              Reserva en pocos pasos
+              {pageConfig.page.badge}
             </span>
             <h1 className="mb-4 text-2xl font-bold leading-tight sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl">
-              Reserva tu
-              <span className="block text-primary">cita</span>
+              {pageConfig.page.heroTitle}
+              <span className="block text-primary">
+                {pageConfig.page.heroHighlight}
+              </span>
             </h1>
             <p className="mx-auto max-w-2xl px-2 text-base text-muted-foreground sm:text-lg">
-              Solo necesitamos lo esencial. Los colores y la decoración son
-              opcionales — puedes decidirlo después con tu manicurista.
+              {pageConfig.page.heroSubtitle}
             </p>
           </div>
         </div>
@@ -76,11 +79,10 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
 
           <SurfaceCard padding="default" className="mt-8 text-center">
             <h3 className="mb-2 text-lg font-bold sm:text-xl">
-              ¿Tienes una imagen de referencia?
+              {pageConfig.page.referenceTitle}
             </h3>
             <p className="mb-4 text-sm text-muted-foreground">
-              Si encontraste un diseño que te gusta, envíanoslo por WhatsApp y
-              lo recrearemos para ti
+              {pageConfig.page.referenceDescription}
             </p>
             <a
               href={referenciaWaLink}
@@ -98,28 +100,12 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center sm:mb-12">
             <h2 className="mb-3 text-2xl font-bold sm:mb-4 sm:text-3xl">
-              ¿Por qué reservar con nosotros?
+              {pageConfig.page.benefitsTitle}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
-            {[
-              {
-                icon: "⏰",
-                title: "Horarios Flexibles",
-                desc: "Disponibilidad de lunes a sábado con horarios que se adaptan a ti",
-              },
-              {
-                icon: "💎",
-                title: "Calidad Premium",
-                desc: "Solo utilizamos los mejores productos y técnicas profesionales",
-              },
-              {
-                icon: "🎯",
-                title: "Atención Personalizada",
-                desc: "Cada servicio se adapta a tus gustos y necesidades específicas",
-              },
-            ].map((benefit, index) => (
+            {pageConfig.page.benefits.map((benefit, index) => (
               <SurfaceCard key={index} padding="default" className="text-center">
                 <div className="mb-3 text-3xl sm:mb-4 sm:text-4xl">{benefit.icon}</div>
                 <h3 className="mb-2 text-lg font-semibold sm:text-xl">{benefit.title}</h3>

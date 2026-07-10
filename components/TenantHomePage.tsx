@@ -90,7 +90,10 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           </div>
         </section>
 
-        <DynamicServicesSection slug={profile.slug} />
+        <DynamicServicesSection
+          slug={profile.slug}
+          businessTemplate={profile.businessTemplate}
+        />
 
         {/* Features */}
         {content.features && content.features.length > 0 && (

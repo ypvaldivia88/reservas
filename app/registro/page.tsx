@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { BusinessTemplate } from "@/lib/types";
 import { markWelcomePending } from "@/lib/salon-onboarding";
+import { getReservaTemplateConfig } from "@/lib/reserva-template-config";
 
 function slugify(text: string): string {
   return text
@@ -121,6 +122,7 @@ export default function RegistroPage() {
   const publicHost = publicHostFromOrigin(origin);
   const shortPublicUrl =
     form.slug && publicHost ? `${publicHost}/${form.slug}` : "";
+  const registrationConfig = getReservaTemplateConfig(form.businessTemplate);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,14 +255,16 @@ export default function RegistroPage() {
           className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5 shadow-sm"
         >
           <div>
-            <label htmlFor="nombre" className="text-sm font-medium block mb-1">Nombre del salón</label>
+            <label htmlFor="nombre" className="text-sm font-medium block mb-1">
+              {registrationConfig.registration.nombreLabel}
+            </label>
             <input
               id="nombre"
               required
               value={form.nombre}
               onChange={(e) => handleNombreChange(e.target.value)}
               className="w-full min-h-11 px-4 py-3 rounded-lg border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Ej: Bella Nails Studio"
+              placeholder={registrationConfig.registration.nombrePlaceholder}
             />
           </div>
 
@@ -286,7 +290,7 @@ export default function RegistroPage() {
                 }
                 pattern="[a-z0-9]+(-[a-z0-9]+)*"
                 className="w-full min-h-11 border-0 bg-transparent px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                placeholder="mi-salon"
+                placeholder={registrationConfig.registration.slugPlaceholder}
                 autoComplete="off"
                 spellCheck={false}
               />

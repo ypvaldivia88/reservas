@@ -6,6 +6,7 @@ import {
   ApiResponse,
   Reserva,
   User,
+  BusinessTemplate,
 } from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
 import {
@@ -18,7 +19,15 @@ import { phoneUtils } from "@/lib/utils";
 import { FORMA_LABELS } from "@/lib/nail-form-labels";
 import { isValidHexColor, normalizeHexColor } from "@/lib/color-utils";
 import ReservaServiceDetailsStep from "@/components/reserva/ReservaServiceDetailsStep";
+import ReservaGenericDetailsStep, {
+  applyGenericDefaults,
+} from "@/components/reserva/ReservaGenericDetailsStep";
 import ReservaOptionalPreferences from "@/components/reserva/ReservaOptionalPreferences";
+import {
+  getReservaTemplateConfig,
+  isManicureReservation,
+  formatActiveReservationDetail,
+} from "@/lib/reserva-template-config";
 import { IconInput } from "@/components/design/IconInput";
 
 interface FormErrors {
@@ -51,6 +60,18 @@ export default function ReservaForm({
   const [salonWhatsapp, setSalonWhatsapp] = useState<string | undefined>(
     salonWhatsappProp
   );
+  const [businessTemplate, setBusinessTemplate] = useState<
+    BusinessTemplate | undefined
+  >(undefined);
+  const [profileLoaded, setProfileLoaded] = useState(!salonSlug);
+
+  const templateOptions = { pendingSlug: Boolean(salonSlug && !profileLoaded) };
+  const templateConfig = getReservaTemplateConfig(
+    businessTemplate,
+    templateOptions
+  );
+  const isManicure = isManicureReservation(businessTemplate, templateOptions);
+  const wizard = templateConfig.reservation.wizard;
 
   useEffect(() => {
     if (salonWhatsappProp) {
@@ -65,6 +86,8 @@ export default function ReservaForm({
       .then((data) => {
         if (cancelled || !data.success) return;
         const profile = data.data;
+        setBusinessTemplate(profile.businessTemplate);
+        setProfileLoaded(true);
         const number =
           profile.social?.whatsapp ||
           profile.whatsappNumber ||
@@ -72,7 +95,7 @@ export default function ReservaForm({
         if (number) setSalonWhatsapp(number);
       })
       .catch(() => {
-        // Sin perfil público: se usará el número devuelto por la API al crear
+        setProfileLoaded(true);
       });
 
     return () => {
@@ -161,9 +184,13 @@ export default function ReservaForm({
           }
           break;
         case "forma":
+          if (!isManicureReservation(businessTemplate, templateOptions))
+            return undefined;
           if (!value) return "Selecciona una forma";
           break;
         case "largo":
+          if (!isManicureReservation(businessTemplate, templateOptions))
+            return undefined;
           if (!value) return "Selecciona un largo";
           break;
         case "fechaCita":
@@ -174,7 +201,7 @@ export default function ReservaForm({
           break;
       }
     },
-    []
+    [businessTemplate, salonSlug, profileLoaded]
   );
 
   // Modifica la función checkClientByPhone
@@ -345,17 +372,19 @@ export default function ReservaForm({
             isValid = false;
           }
           break;
-        case 3: // Forma y largo
-          ["forma", "largo"].forEach((field) => {
-            const error = validateField(
-              field as keyof ReservaFormData,
-              form[field as keyof ReservaFormData]
-            );
-            if (error) {
-              newErrors[field as keyof FormErrors] = error;
-              isValid = false;
-            }
-          });
+        case 3:
+          if (isManicure) {
+            ["forma", "largo"].forEach((field) => {
+              const error = validateField(
+                field as keyof ReservaFormData,
+                form[field as keyof ReservaFormData]
+              );
+              if (error) {
+                newErrors[field as keyof FormErrors] = error;
+                isValid = false;
+              }
+            });
+          }
           break;
         case 4: // Confirmar
           break;
@@ -364,15 +393,19 @@ export default function ReservaForm({
       setErrors(newErrors);
       return isValid;
     },
-    [form, validateField, clientInfo]
+    [form, validateField, clientInfo, isManicure, templateConfig]
   );
 
   const handleNext = useCallback(() => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-      window.scrollTo({ top: 400, behavior: "smooth" });
+    if (!validateStep(currentStep)) return;
+
+    if (currentStep === 3 && !isManicure) {
+      setForm((prev) => applyGenericDefaults(prev, templateConfig));
     }
-  }, [currentStep, validateStep]);
+
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    window.scrollTo({ top: 400, behavior: "smooth" });
+  }, [currentStep, validateStep, isManicure, templateConfig]);
 
   const handlePrevious = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -406,6 +439,11 @@ export default function ReservaForm({
     setMensaje("");
 
     try {
+      let submitForm = form;
+      if (!isManicure) {
+        submitForm = applyGenericDefaults(form, templateConfig);
+      }
+
       for (let step = 1; step <= 3; step++) {
         if (!validateStep(step)) {
           setCurrentStep(step);
@@ -415,14 +453,14 @@ export default function ReservaForm({
       }
 
       const decoracionParts: string[] = [];
-      if (form.decoracion?.trim()) {
-        decoracionParts.push(form.decoracion.trim());
+      if (submitForm.decoracion?.trim()) {
+        decoracionParts.push(submitForm.decoracion.trim());
       }
-      if (form.colores?.trim()) {
-        decoracionParts.push(`Colores: ${form.colores.trim()}`);
+      if (submitForm.colores?.trim()) {
+        decoracionParts.push(`Colores: ${submitForm.colores.trim()}`);
       }
       const payload = {
-        ...form,
+        ...submitForm,
         decoracion: decoracionParts.join("; "),
       };
 
@@ -449,17 +487,18 @@ export default function ReservaForm({
           setTimeout(() => {
             openWhatsAppNotification(
               {
-                nombre: form.nombre,
-                telefono: form.telefono,
-                fechaCita: form.fechaCita,
-                horaCita: form.horaCita,
-                forma: form.forma,
-                largo: parseInt(form.largo),
-                decoracion: form.decoracion,
+                nombre: submitForm.nombre,
+                telefono: submitForm.telefono,
+                fechaCita: submitForm.fechaCita,
+                horaCita: submitForm.horaCita,
+                forma: submitForm.forma,
+                largo: parseInt(submitForm.largo),
+                decoracion: payload.decoracion,
                 imagenReferencia: selectedImageUrl || undefined,
               },
               reservaId,
-              notifyWhatsapp
+              notifyWhatsapp,
+              businessTemplate
             );
           }, WHATSAPP_OPEN_DELAY_MS);
         }
@@ -469,10 +508,10 @@ export default function ReservaForm({
         const savedTelefono = form.telefono;
 
         setForm({
-          nombre: savedNombre, // Mantener nombre
-          telefono: savedTelefono, // Mantener teléfono
-          forma: "",
-          largo: "1",
+          nombre: savedNombre,
+          telefono: savedTelefono,
+          forma: isManicure ? "square" : "",
+          largo: isManicure ? "3" : "3",
           colores: "",
           decoracion: "",
           fechaCita: "",
@@ -600,17 +639,17 @@ export default function ReservaForm({
   ]);
 
   const stepTitles = [
-    "Tus datos",
-    "Fecha y hora",
-    "Tu manicura",
-    "Confirmar",
+    wizard.step1.title,
+    wizard.step2.title,
+    wizard.step3.title,
+    wizard.step4.title,
   ];
 
   const stepHints = [
-    "Teléfono y nombre — lo mínimo para contactarte",
-    "Elige el día y la hora que te venga bien",
-    "Puedes dejar la recomendación del salón y seguir",
-    "Revisa el resumen y confirma tu cita",
+    wizard.step1.hint,
+    wizard.step2.hint,
+    wizard.step3.hint,
+    wizard.step4.hint,
   ];
 
   const applyRecommendedService = () => {
@@ -739,7 +778,12 @@ export default function ReservaForm({
                     : "text-primary-foreground/50"
                   }`}
                 >
-                  {stepTitles[step - 1].split(" ")[0]}
+                  {[
+                    wizard.step1,
+                    wizard.step2,
+                    wizard.step3,
+                    wizard.step4,
+                  ][step - 1].shortLabel}
                 </span>
               </div>
               {step < totalSteps && (
@@ -875,7 +919,7 @@ export default function ReservaForm({
                       type="text"
                       autoComplete="name"
                       placeholder={
-                        isNameEnabled ? "Ej: María García"
+                        isNameEnabled ? wizard.step1.nombrePlaceholder
                         : clientInfo ?
                           "Cargado automáticamente"
                         : "Primero ingresa tu teléfono"
@@ -1071,9 +1115,10 @@ export default function ReservaForm({
                                       </span>
                                     </div>
                                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                                      {reserva.forma} • Largo #{reserva.largo}
-                                      {reserva.decoracion &&
-                                        ` • ${reserva.decoracion}`}
+                                      {formatActiveReservationDetail(
+                                        reserva,
+                                        businessTemplate
+                                      )}
                                     </p>
                                   </div>
                                   <button
@@ -1156,13 +1201,25 @@ export default function ReservaForm({
             </div>
           )}
 
-          {/* Step 3: Tu manicura */}
-          {currentStep === 3 && (
+          {/* Step 3: Detalles del servicio */}
+          {currentStep === 3 && isManicure && (
             <ReservaServiceDetailsStep
               form={form}
               errors={errors}
               onFieldChange={handleChange}
               onApplyRecommended={applyRecommendedService}
+            />
+          )}
+          {currentStep === 3 && !isManicure && (
+            <ReservaGenericDetailsStep
+              config={templateConfig}
+              notes={form.decoracion}
+              onNotesChange={(value) =>
+                setForm((prev) => ({ ...prev, decoracion: value }))
+              }
+              onQuickOption={(option) =>
+                setForm((prev) => ({ ...prev, decoracion: option }))
+              }
             />
           )}
 
@@ -1171,7 +1228,7 @@ export default function ReservaForm({
             <div className="space-y-5 animate-fadeIn">
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 sm:p-6">
                 <h3 className="mb-4 text-lg font-semibold text-foreground">
-                  Resumen de tu cita
+                  {wizard.step4.summaryTitle}
                 </h3>
                 <dl className="space-y-3 text-base">
                   <div className="flex justify-between gap-4">
@@ -1191,23 +1248,31 @@ export default function ReservaForm({
                     <dd className="font-medium text-right">{form.horaCita}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-muted-foreground">Forma</dt>
+                    <dt className="text-muted-foreground">
+                      {templateConfig.reservation.summaryDetailsLabel}
+                    </dt>
                     <dd className="font-medium text-right">
-                      {FORMA_LABELS[form.forma as keyof typeof FORMA_LABELS]
-                        ?.label ?? form.forma}
+                      {isManicure ?
+                        FORMA_LABELS[form.forma as keyof typeof FORMA_LABELS]
+                          ?.label ?? form.forma
+                      : form.decoracion || "A confirmar con el negocio"}
                     </dd>
                   </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-muted-foreground">Largo</dt>
-                    <dd className="font-medium text-right">Nivel {form.largo}</dd>
-                  </div>
-                  {form.colores && (
+                  {isManicure && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Largo</dt>
+                      <dd className="font-medium text-right">
+                        Nivel {form.largo}
+                      </dd>
+                    </div>
+                  )}
+                  {!isManicure && form.colores && (
                     <div className="flex justify-between gap-4">
                       <dt className="text-muted-foreground">Colores</dt>
                       <dd className="font-medium text-right">{form.colores}</dd>
                     </div>
                   )}
-                  {form.decoracion && (
+                  {form.decoracion && isManicure && (
                     <div className="flex justify-between gap-4">
                       <dt className="text-muted-foreground">Decoración</dt>
                       <dd className="font-medium text-right">{form.decoracion}</dd>
@@ -1220,6 +1285,7 @@ export default function ReservaForm({
                 open={showOptionalPreferences}
                 onToggle={() => setShowOptionalPreferences((prev) => !prev)}
                 salonSlug={salonSlug}
+                preferences={templateConfig.reservation.optionalPreferences}
                 selectedColors={selectedColors}
                 customColor={customColor}
                 selectedDecorations={selectedDecorations}
@@ -1244,12 +1310,12 @@ export default function ReservaForm({
 
               <div className="rounded-xl border border-primary/20 bg-muted/30 p-4 sm:p-5">
                 <h4 className="mb-2 text-base font-semibold text-foreground">
-                  Qué pasa después
+                  {wizard.step4.afterTitle}
                 </h4>
                 <ul className="space-y-2 text-sm text-muted-foreground sm:text-base">
-                  <li>Te contactaremos para confirmar tu cita</li>
-                  <li>Duración aproximada: 60–90 minutos</li>
-                  <li>Puedes reagendar o cancelar con 24 h de anticipación</li>
+                  {wizard.step4.afterBullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -1276,7 +1342,7 @@ export default function ReservaForm({
                 fullWidth
                 size="lg"
               >
-                {currentStep === 3 ? "Ver resumen →" : "Siguiente →"}
+                {currentStep === 3 ? wizard.step4.nextFromStep3 : "Siguiente →"}
               </Button>
             : <Button
                 type="button"
@@ -1304,7 +1370,7 @@ export default function ReservaForm({
                   )
                 }
               >
-                Confirmar cita
+                {wizard.step4.submitLabel}
               </Button>
             }
           </div>

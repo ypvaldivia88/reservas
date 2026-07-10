@@ -2,7 +2,8 @@
 
 import { lazy, Suspense } from "react";
 import ColorField from "@/components/design/ColorField";
-import { normalizeHexColor, isValidHexColor } from "@/lib/color-utils";
+import { isValidHexColor } from "@/lib/color-utils";
+import { ReservaOptionalPreferencesCopy } from "@/lib/reserva-template-config";
 
 const InspirationGalleryAccordion = lazy(
   () => import("@/components/InspirationGalleryAccordion")
@@ -19,20 +20,11 @@ const PREDEFINED_COLORS = [
   { name: "Morado", color: "#9370DB" },
 ];
 
-const PREDEFINED_DECORATIONS = [
-  "Francés clásico",
-  "Con brillos",
-  "Degradado",
-  "Con piedras",
-  "Flores",
-  "Diseño abstracto",
-  "Nail art personalizado",
-];
-
 interface ReservaOptionalPreferencesProps {
   open: boolean;
   onToggle: () => void;
   salonSlug?: string;
+  preferences: ReservaOptionalPreferencesCopy;
   selectedColors: string[];
   customColor: string;
   selectedDecorations: string[];
@@ -55,6 +47,7 @@ export default function ReservaOptionalPreferences({
   open,
   onToggle,
   salonSlug,
+  preferences,
   selectedColors,
   customColor,
   selectedDecorations,
@@ -67,6 +60,8 @@ export default function ReservaOptionalPreferences({
   onCustomDecorationChange,
   onImageSelect,
 }: ReservaOptionalPreferencesProps) {
+  const decorations = preferences.decorations;
+
   return (
     <div className="rounded-xl border border-border/80 bg-muted/20">
       <button
@@ -76,8 +71,8 @@ export default function ReservaOptionalPreferences({
         aria-expanded={open}
       >
         <div>
-          <p className="text-base font-semibold">Colores y decoración</p>
-          <p className="text-sm text-muted-foreground">Opcional — puedes saltarlo</p>
+          <p className="text-base font-semibold">{preferences.title}</p>
+          <p className="text-sm text-muted-foreground">{preferences.subtitle}</p>
         </div>
         <span className="text-xl text-muted-foreground" aria-hidden>
           {open ? "−" : "+"}
@@ -86,8 +81,11 @@ export default function ReservaOptionalPreferences({
 
       {open && (
         <div className="space-y-5 border-t border-border/60 px-4 pb-4 pt-4">
+          {preferences.showColorPicker && (
           <div>
-            <p className="mb-3 text-sm font-medium">Colores que te gustan</p>
+            <p className="mb-3 text-sm font-medium">
+              {preferences.colorsSectionTitle ?? "Colores que te gustan"}
+            </p>
             <div className="flex flex-wrap gap-2">
               {PREDEFINED_COLORS.map((colorOption) => {
                 const selected = selectedColors.includes(colorOption.name);
@@ -175,11 +173,15 @@ export default function ReservaOptionalPreferences({
               </div>
             )}
           </div>
+          )}
 
+          {decorations.length > 0 && (
           <div>
-            <p className="mb-3 text-sm font-medium">Decoración o diseño</p>
+            <p className="mb-3 text-sm font-medium">
+              {preferences.decorationsSectionTitle ?? "Decoración o diseño"}
+            </p>
             <div className="flex flex-wrap gap-2">
-              {PREDEFINED_DECORATIONS.map((decoration) => {
+              {decorations.map((decoration) => {
                 const selected = selectedDecorations.includes(decoration);
                 return (
                   <button
@@ -202,13 +204,19 @@ export default function ReservaOptionalPreferences({
               rows={3}
               value={customDecoration}
               onChange={(e) => onCustomDecorationChange(e.target.value)}
-              placeholder="Cuéntanos con tus palabras qué te gustaría (opcional)"
+              placeholder={
+                preferences.customDecorationPlaceholder ??
+                "Cuéntanos con tus palabras qué te gustaría (opcional)"
+              }
               className="input-field mt-3 min-h-[5.5rem] text-base"
             />
           </div>
+          )}
 
           <div className="border-t border-border/60 pt-4">
-            <p className="mb-3 text-sm font-medium">Inspiración de la galería</p>
+            <p className="mb-3 text-sm font-medium">
+              {preferences.gallerySectionTitle ?? "Inspiración de la galería"}
+            </p>
             <Suspense
               fallback={
                 <div className="py-8 text-center text-sm text-muted-foreground">

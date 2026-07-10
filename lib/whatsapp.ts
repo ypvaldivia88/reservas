@@ -3,6 +3,11 @@
 
 import { BillingCycle } from "@/lib/types";
 import { getBillingCycleLabel, SUBSCRIPTION_CURRENCY } from "@/lib/subscription";
+import {
+  buildWhatsAppConfirmationMessage,
+  buildWhatsAppNotificationMessage,
+} from "@/lib/reserva-template-config";
+import type { BusinessTemplate } from "@/lib/types";
 
 // Platform WhatsApp for subscription payments
 const platformPhone =
@@ -76,35 +81,20 @@ export interface ReservaDetails {
 export function generateWhatsAppNotificationLink(
   reserva: ReservaDetails,
   reservaId: string,
-  salonWhatsapp: string
+  salonWhatsapp: string,
+  businessTemplate?: BusinessTemplate | null
 ): string {
   const adminPhone = cleanPhoneNumber(salonWhatsapp);
-  // Build the admin edit link
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
   const adminLink = `${baseUrl}/admin/calendario?reserva=${reservaId}`;
 
-  // Build the message
-  const message = `🆕 *Nueva Reserva de Uñas*
+  const message = buildWhatsAppNotificationMessage(
+    reserva,
+    adminLink,
+    businessTemplate
+  );
 
-👤 *Cliente:* ${reserva.nombre}
-📞 *Teléfono:* ${reserva.telefono}
-📅 *Fecha:* ${reserva.fechaCita}
-🕐 *Hora:* ${reserva.horaCita}
-💅 *Forma:* ${reserva.forma}
-📏 *Largo:* ${reserva.largo}
-${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ""}
-${reserva.imagenReferencia ? `\n🖼️ *Imagen de Referencia:*\n${reserva.imagenReferencia}` : ""}
-
-🔗 *Gestionar reserva:*
-${adminLink}
-
-_Click en el link para confirmar, editar o cancelar la reserva._`;
-
-  // Encode the message for URL
   const encodedMessage = encodeURIComponent(message);
-
-  // Generate WhatsApp link
-  // Use api.whatsapp.com for better compatibility with mobile and desktop
   const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(adminPhone)}&text=${encodedMessage}`;
 
   return whatsappLink;
@@ -118,14 +108,16 @@ _Click en el link para confirmar, editar o cancelar la reserva._`;
 export function openWhatsAppNotification(
   reserva: ReservaDetails,
   reservaId: string,
-  salonWhatsapp?: string
+  salonWhatsapp?: string,
+  businessTemplate?: BusinessTemplate | null
 ): boolean {
   if (!salonWhatsapp?.trim()) return false;
 
   const whatsappLink = generateWhatsAppNotificationLink(
     reserva,
     reservaId,
-    salonWhatsapp.trim()
+    salonWhatsapp.trim(),
+    businessTemplate
   );
 
   if (typeof window !== "undefined") {
@@ -142,19 +134,10 @@ export function openWhatsAppNotification(
  */
 export function generateConfirmationWhatsAppLink(
   clientPhone: string,
-  reserva: ReservaDetails
+  reserva: ReservaDetails,
+  businessTemplate?: BusinessTemplate | null
 ): string {
-  const message = `✅ *Reserva Confirmada*
-
-Hola ${reserva.nombre}, tu reserva ha sido confirmada.
-
-📅 *Fecha:* ${reserva.fechaCita}
-🕐 *Hora:* ${reserva.horaCita}
-💅 *Forma:* ${reserva.forma}
-📏 *Largo:* ${reserva.largo}
-${reserva.decoracion ? `🎨 *Decoración:* ${reserva.decoracion}` : ''}
-
-¡Te esperamos! 💖`;
+  const message = buildWhatsAppConfirmationMessage(reserva, businessTemplate);
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappLink = `https://api.whatsapp.com/send?phone=${cleanPhoneNumber(clientPhone)}&text=${encodedMessage}`;
