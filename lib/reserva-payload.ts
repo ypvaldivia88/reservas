@@ -7,7 +7,7 @@ import {
   RESERVA_NEUTRAL_FORMA,
   RESERVA_NEUTRAL_LARGO,
   ReservaInput,
-} from "@/lib/reservaValidation";
+} from "@/lib/reserva-constants";
 
 /**
  * Field ownership per template (stored in `reservas` collection):
