@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { ArrowLeft, CheckCircle2, Store } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import SurfaceCard from "@/components/design/SurfaceCard";
 import { BusinessTemplate } from "@/lib/types";
 import { markWelcomePending } from "@/lib/salon-onboarding";
 import { getReservaTemplateConfig } from "@/lib/reserva-template-config";
@@ -176,40 +178,38 @@ export default function RegistroPage() {
     const reservaUrl = `${origin}/reserva?slug=${success.slug}`;
 
     return (
-      <div id="main-content" className="min-h-screen bg-background py-12 px-4">
-        <div className="max-w-lg mx-auto">
-          <div className="rounded-xl border border-border bg-card p-6 sm:p-8 text-center shadow-sm">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+        <div id="main-content" className="w-full max-w-lg">
+          <SurfaceCard padding="lg" className="shadow-md text-center">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+              <CheckCircle2 className="size-8" aria-hidden />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               ¡{success.nombre} está listo!
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="mt-2 text-sm text-muted-foreground mb-6">
               Tu salón fue creado con 14 días de prueba (hasta el {success.trialEndsAt}).
               Comparte estos enlaces con tus clientes:
             </p>
 
             <div className="space-y-4 text-left mb-8">
               <div>
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Página de tu salón
                 </label>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 font-mono text-sm break-all">
+                  <div className="flex-1 px-4 py-3 rounded-xl bg-muted/50 border border-border font-mono text-sm break-all">
                     {salonUrl}
                   </div>
                   <CopyButton text={salonUrl} />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Enlace directo de reservas
                 </label>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 font-mono text-sm break-all">
+                  <div className="flex-1 px-4 py-3 rounded-xl bg-muted/50 border border-border font-mono text-sm break-all">
                     {reservaUrl}
                   </div>
                   <CopyButton text={reservaUrl} />
@@ -229,33 +229,39 @@ export default function RegistroPage() {
                 </Button>
               </Link>
             </div>
-          </div>
+          </SurfaceCard>
         </div>
       </div>
     );
   }
 
   return (
-    <div id="main-content" className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-lg mx-auto">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-sm text-primary hover:underline mb-4 inline-block">
-            ← Volver al inicio
-          </Link>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Registra tu salón
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            14 días de prueba gratis · Sin tarjeta de crédito
-          </p>
-        </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5 shadow-sm"
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div id="main-content" className="w-full max-w-lg">
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
+          <ArrowLeft className="size-4" aria-hidden />
+          Volver al portal
+        </Link>
+
+        <SurfaceCard padding="lg" className="shadow-md">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Store className="size-6" aria-hidden />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Registra tu salón
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              14 días de prueba gratis · Sin tarjeta de crédito
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="nombre" className="text-sm font-medium block mb-1">
+            <label htmlFor="nombre" className="mb-1.5 block text-sm font-medium">
               {registrationConfig.registration.nombreLabel}
             </label>
             <input
@@ -263,13 +269,13 @@ export default function RegistroPage() {
               required
               value={form.nombre}
               onChange={(e) => handleNombreChange(e.target.value)}
-              className="w-full min-h-11 px-4 py-3 rounded-lg border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="input-field"
               placeholder={registrationConfig.registration.nombrePlaceholder}
             />
           </div>
 
           <div>
-            <label htmlFor="slug" className="mb-1 block text-sm font-medium">
+            <label htmlFor="slug" className="mb-1.5 block text-sm font-medium">
               URL de tu salón
             </label>
             <div className="overflow-hidden rounded-lg border border-input bg-background">
@@ -302,41 +308,41 @@ export default function RegistroPage() {
               </p>
             )}
             {slugStatus === "checking" && (
-              <p className="text-xs text-gray-500 mt-1">Verificando...</p>
+              <p className="mt-1 text-xs text-muted-foreground">Verificando...</p>
             )}
             {slugStatus === "ok" && (
-              <p className="text-xs text-green-600 mt-1">✓ Disponible</p>
+              <p className="mt-1 text-xs text-green-600 dark:text-green-400">✓ Disponible</p>
             )}
             {slugStatus === "taken" && (
-              <p className="text-xs text-red-600 mt-1">✗ Ya en uso</p>
+              <p className="mt-1 text-xs text-destructive">✗ Ya en uso</p>
             )}
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-2">
+            <label className="mb-2 block text-sm font-medium">
               Tipo de negocio
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {templates.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, businessTemplate: t.id }))}
-                  className={`p-3 rounded-xl border-2 text-left transition-all ${
+                  className={`rounded-xl border-2 p-3 text-left transition-all ${
                     form.businessTemplate === t.id
-                      ? "border-violet-500 bg-violet-50 dark:bg-violet-900/20"
-                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300"
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/40"
                   }`}
                 >
                   <span className="text-xl">{t.icon}</span>
-                  <p className="text-sm font-medium mt-1">{t.nombre}</p>
+                  <p className="mt-1 text-sm font-medium">{t.nombre}</p>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">
+            <label className="mb-1.5 block text-sm font-medium">
               WhatsApp (opcional)
             </label>
             <input
@@ -344,27 +350,27 @@ export default function RegistroPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, whatsappNumber: e.target.value }))
               }
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="input-field"
               placeholder="+53 5 123 4567"
             />
           </div>
 
-          <hr className="border-gray-200 dark:border-gray-700" />
+          <hr className="border-border" />
 
           <div>
-            <label className="text-sm font-medium block mb-1">Tu nombre</label>
+            <label className="mb-1.5 block text-sm font-medium">Tu nombre</label>
             <input
               required
               value={form.adminNombre}
               onChange={(e) =>
                 setForm((f) => ({ ...f, adminNombre: e.target.value }))
               }
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="input-field"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">Usuario admin</label>
+            <label className="mb-1.5 block text-sm font-medium">Usuario admin</label>
             <input
               required
               value={form.adminUsername}
@@ -374,14 +380,14 @@ export default function RegistroPage() {
                   adminUsername: e.target.value.toLowerCase(),
                 }))
               }
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="input-field"
               placeholder="miusuario"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium block mb-1">Contraseña</label>
+              <label className="mb-1.5 block text-sm font-medium">Contraseña</label>
               <input
                 required
                 type="password"
@@ -390,11 +396,11 @@ export default function RegistroPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, adminPassword: e.target.value }))
                 }
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                className="input-field"
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">Confirmar</label>
+              <label className="mb-1.5 block text-sm font-medium">Confirmar</label>
               <input
                 required
                 type="password"
@@ -405,13 +411,16 @@ export default function RegistroPage() {
                     adminPasswordConfirm: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                className="input-field"
               />
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 p-3 rounded-xl text-sm">
+            <div
+              className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              role="alert"
+            >
               {error}
             </div>
           )}
@@ -420,13 +429,14 @@ export default function RegistroPage() {
             Crear mi salón
           </Button>
 
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{" "}
-            <Link href="/admin" className="text-violet-600 hover:underline">
+            <Link href="/admin" className="font-medium text-primary hover:underline">
               Iniciar sesión
             </Link>
           </p>
-        </form>
+          </form>
+        </SurfaceCard>
       </div>
     </div>
   );

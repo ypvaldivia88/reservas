@@ -3,13 +3,17 @@ import { usePathname } from "next/navigation";
 import Header from "./Header";
 import PlatformHeader from "./PlatformHeader";
 
-const PLATFORM_PATHS = ["/", "/registro"];
+const PLATFORM_PATHS = ["/"];
 const RESERVED_PATHS = ["/", "/reserva", "/registro"];
 
 export default function AppHeader() {
   const pathname = usePathname();
 
   if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
+  if (pathname === "/registro") {
     return null;
   }
 
