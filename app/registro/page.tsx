@@ -15,6 +15,15 @@ function slugify(text: string): string {
     .slice(0, 48);
 }
 
+function publicHostFromOrigin(origin: string): string {
+  if (!origin) return "";
+  try {
+    return new URL(origin).host;
+  } catch {
+    return origin.replace(/^https?:\/\//, "").split("/")[0];
+  }
+}
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -32,7 +41,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="shrink-0 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition-colors"
+      className="shrink-0 min-h-10 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition-colors"
     >
       {copied ? "¡Copiado!" : "Copiar"}
     </button>
@@ -104,7 +113,9 @@ export default function RegistroPage() {
     }));
   };
 
-  const publicUrl = form.slug && origin ? `${origin}/${form.slug}` : "";
+  const publicHost = publicHostFromOrigin(origin);
+  const shortPublicUrl =
+    form.slug && publicHost ? `${publicHost}/${form.slug}` : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,9 +168,9 @@ export default function RegistroPage() {
     const reservaUrl = `${origin}/reserva?slug=${success.slug}`;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+      <div id="main-content" className="min-h-screen bg-background py-12 px-4">
         <div className="max-w-lg mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700 text-center">
+          <div className="rounded-xl border border-border bg-card p-6 sm:p-8 text-center shadow-sm">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -217,56 +228,67 @@ export default function RegistroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+    <div id="main-content" className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-8">
-          <Link href="/" className="text-sm text-violet-600 hover:underline mb-4 inline-block">
+          <Link href="/" className="text-sm text-primary hover:underline mb-4 inline-block">
             ← Volver al inicio
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold tracking-tight">
             Registra tu salón
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             14 días de prueba gratis · Sin tarjeta de crédito
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 space-y-5 border border-gray-200 dark:border-gray-700"
+          className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5 shadow-sm"
         >
           <div>
-            <label className="text-sm font-medium block mb-1">Nombre del salón</label>
+            <label htmlFor="nombre" className="text-sm font-medium block mb-1">Nombre del salón</label>
             <input
+              id="nombre"
               required
               value={form.nombre}
               onChange={(e) => handleNombreChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="w-full min-h-11 px-4 py-3 rounded-lg border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Ej: Bella Nails Studio"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">
+            <label htmlFor="slug" className="mb-1 block text-sm font-medium">
               URL de tu salón
             </label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 shrink-0 hidden sm:inline">
-                {origin || "…"}/
-              </span>
+            <div className="overflow-hidden rounded-lg border border-input bg-background">
+              {origin && (
+                <div
+                  className="truncate border-b border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground"
+                  title={`${origin}/`}
+                >
+                  {origin}/
+                </div>
+              )}
               <input
+                id="slug"
                 required
                 value={form.slug}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, slug: slugify(e.target.value) }))
                 }
                 pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                className="w-full min-h-11 border-0 bg-transparent px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                placeholder="mi-salon"
+                autoComplete="off"
+                spellCheck={false}
               />
             </div>
-            {publicUrl && slugStatus === "ok" && (
-              <p className="text-xs text-gray-500 mt-2 font-mono break-all">
-                Tu página: <span className="text-violet-600 dark:text-violet-400">{publicUrl}</span>
+            {shortPublicUrl && slugStatus === "ok" && (
+              <p className="mt-2 break-all text-xs text-muted-foreground">
+                Tu página:{" "}
+                <span className="font-medium text-primary">{shortPublicUrl}</span>
               </p>
             )}
             {slugStatus === "checking" && (

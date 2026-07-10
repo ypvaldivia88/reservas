@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Servicio, ImageData } from "@/lib/types";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
+import PageHeader from "@/components/design/PageHeader";
+import SurfaceCard from "@/components/design/SurfaceCard";
 import {
   PlusIcon,
   EditIcon,
@@ -186,12 +188,10 @@ export default function ServiciosAdmin() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-gray-300 font-medium">
-            Cargando servicios...
-          </p>
+          <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="font-medium text-muted-foreground">Cargando servicios...</p>
         </div>
       </div>
     );
@@ -199,30 +199,10 @@ export default function ServiciosAdmin() {
 
   return (
     <>
-      {/* Header Section */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-              <svg
-                className="w-8 h-8 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-              </svg>
-              <span>Servicios</span>
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Administra los servicios que se muestran en la página principal
-            </p>
-          </div>
+      <PageHeader
+        title="Servicios"
+        description="Administra los servicios que se muestran en la página principal."
+        actions={
           <Button
             onClick={() => {
               resetForm();
@@ -231,35 +211,24 @@ export default function ServiciosAdmin() {
             disabled={saving}
             icon={<PlusIcon />}
           >
-            Nuevo Servicio
+            Nuevo servicio
           </Button>
-        </div>
-      </div>
+        }
+      />
       {/* Init Banner */}
       {showInitBanner && (
-        <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/20 dark:to-violet-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl shadow-lg">
-          <div className="flex items-start space-x-4">
-            <svg
-              className="w-10 h-10 text-blue-600 dark:text-blue-400 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            <div className="flex-1">
-              <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-2">
-                ¡Bienvenido a la Gestión de Servicios!
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                No tienes servicios creados aún. Puedes inicializar los 4
-                servicios por defecto (Gel/Softgel, Base Rubber, Gel Dipping,
-                Pedicure) o crear los tuyos propios desde cero.
+        <SurfaceCard className="mb-6 border-primary/30 bg-primary/5">
+          <div className="flex items-start gap-4">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-2 text-lg font-semibold">Empieza con servicios</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                No tienes servicios creados aún. Puedes inicializar los 4 servicios por defecto
+                (Gel/Softgel, Base Rubber, Gel Dipping, Pedicure) o crear los tuyos desde cero.
               </p>
               <div className="flex gap-3">
                 <Button
@@ -299,24 +268,21 @@ export default function ServiciosAdmin() {
               </div>
             </div>
           </div>
-        </div>
+        </SurfaceCard>
       )}
 
       {message && (
-        <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="mb-4 rounded-lg border border-border bg-card px-4 py-3 text-sm shadow-sm">
           <p>{message}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {servicios.map((servicio) => {
           const imagen = getImageById(servicio.imagenId);
           return (
-            <div
-              key={servicio._id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
-            >
-              <div className="relative h-48 bg-gray-200 dark:bg-gray-700">
+            <SurfaceCard key={servicio._id} padding="none" className="overflow-hidden">
+              <div className="relative h-48 bg-muted">
                 {imagen ?
                   <Image
                     src={imagen.blobUrl}
@@ -417,14 +383,14 @@ export default function ServiciosAdmin() {
                   </Button>
                 </div>
               </div>
-            </div>
+            </SurfaceCard>
           );
         })}
       </div>
 
       {servicios.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">
             No hay servicios. Crea uno nuevo para comenzar.
           </p>
         </div>

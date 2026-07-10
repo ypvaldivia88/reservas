@@ -383,65 +383,6 @@ export default function FinanzasPage() {
         <FinanzasSkeleton />
       ) : (
         <>
-      {/* Resumen */}
-      {report && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
-            <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-              Ingresos totales
-            </p>
-            <p className="text-2xl font-bold text-green-800 dark:text-green-300">
-              {formatTransactionAmount(report.resumen.ingresos)}
-            </p>
-            <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-              Reservas: {formatTransactionAmount(report.ingresosPorReservas)} ·
-              Manual: {formatTransactionAmount(report.ingresosManuales)}
-            </p>
-          </div>
-          {ingresosPorMetodoPago.map((item) => (
-            <div
-              key={item.metodo}
-              className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800"
-            >
-              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                {item.label}
-              </p>
-              <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300">
-                {formatTransactionAmount(item.total)}
-              </p>
-            </div>
-          ))}
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
-            <p className="text-sm text-red-700 dark:text-red-400 font-medium">
-              Gastos
-            </p>
-            <p className="text-2xl font-bold text-red-800 dark:text-red-300">
-              {formatTransactionAmount(report.resumen.gastos)}
-            </p>
-          </div>
-          <div
-            className={`rounded-xl p-5 border ${
-              report.resumen.balance >= 0
-                ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-                : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
-            }`}
-          >
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Balance (CUP)
-            </p>
-            <p
-              className={`text-2xl font-bold ${
-                report.resumen.balance >= 0
-                  ? "text-blue-800 dark:text-blue-300"
-                  : "text-orange-800 dark:text-orange-300"
-              }`}
-            >
-              {formatTransactionAmount(report.resumen.balance)}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Reportes por categoría y forma de cobro */}
       {report && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

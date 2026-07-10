@@ -130,47 +130,54 @@ export default function InspirationGalleryAccordion({
   );
 
   useEffect(() => {
-    loadData();
-  }, [salonSlug]);
+    let cancelled = false;
+    const slugQuery = salonSlug
+      ? `?slug=${encodeURIComponent(salonSlug)}`
+      : "";
 
-  const slugQuery = salonSlug
-    ? `?slug=${encodeURIComponent(salonSlug)}`
-    : "";
+    async function loadData() {
+      try {
+        const [imagenesRes, categoriasRes] = await Promise.all([
+          fetch(`/api/imagenes${slugQuery}`, {
+            next: { revalidate: 60 },
+          }),
+          fetch(`/api/categorias${slugQuery}`, {
+            next: { revalidate: 60 },
+          }),
+        ]);
 
-  const loadData = async () => {
-    try {
-      const [imagenesRes, categoriasRes] = await Promise.all([
-        fetch(`/api/imagenes${slugQuery}`, {
-          next: { revalidate: 60 },
-        }),
-        fetch(`/api/categorias${slugQuery}`, {
-          next: { revalidate: 60 },
-        }),
-      ]);
+        if (cancelled) return;
 
-      if (imagenesRes.ok && categoriasRes.ok) {
-        const imagenesData = await imagenesRes.json();
-        const categoriasData = await categoriasRes.json();
+        if (imagenesRes.ok && categoriasRes.ok) {
+          const imagenesData = await imagenesRes.json();
+          const categoriasData = await categoriasRes.json();
 
-        if (imagenesData.success && categoriasData.success) {
-          const imagenes: ImageData[] = imagenesData.data;
-          const cats: Categoria[] = categoriasData.data;
+          if (imagenesData.success && categoriasData.success) {
+            const imagenes: ImageData[] = imagenesData.data;
+            const cats: Categoria[] = categoriasData.data;
 
-          // Filter images for inspiration gallery
-          const inspirationImages = imagenes.filter(
-            (img) => img.enGaleriaInspiracion
-          );
+            const inspirationImages = imagenes.filter(
+              (img) => img.enGaleriaInspiracion
+            );
 
-          setGalleryImages(inspirationImages);
-          setCategorias(cats.filter((cat) => cat.activo));
+            setGalleryImages(inspirationImages);
+            setCategorias(cats.filter((cat) => cat.activo));
+          }
         }
+      } catch (error) {
+        console.error("Error loading gallery data:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading gallery data:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    setLoading(true);
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [salonSlug]);
 
   if (loading) {
     return (

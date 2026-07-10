@@ -28,7 +28,10 @@ export async function resolvePublicTenant(
   const slug = request.nextUrl.searchParams.get("slug");
   if (slug) {
     const salon = await getSalonBySlug(slug);
-    if (salon) return { salonId: salon.salonId, slug: salon.slug };
+    if (!salon) {
+      throw AppError.notFound("Salón no encontrado");
+    }
+    return { salonId: salon.salonId, slug: salon.slug };
   }
   return { salonId: DEFAULT_SALON_ID };
 }

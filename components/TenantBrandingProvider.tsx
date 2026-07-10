@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizeHexColor } from "@/lib/color-utils";
 import { SalonBranding } from "@/lib/types";
 
 interface TenantBrandingProviderProps {
@@ -25,9 +26,9 @@ export default function TenantBrandingProvider({
   branding,
   children,
 }: TenantBrandingProviderProps) {
-  const primary = branding.primaryColor || "#2563eb";
-  const secondary = branding.secondaryColor || "#7c3aed";
-  const accent = branding.accentColor || "#93c5fd";
+  const primary = normalizeHexColor(branding.primaryColor || "", "#2563eb");
+  const secondary = normalizeHexColor(branding.secondaryColor || "", "#7c3aed");
+  const accent = normalizeHexColor(branding.accentColor || "", "#93c5fd");
 
   const style = {
     "--color-primary-dark": primary,
@@ -46,6 +47,8 @@ export default function TenantBrandingProvider({
     "--tenant-primary": primary,
     "--tenant-secondary": secondary,
     "--tenant-primary-rgb": hexToRgb(primary) || "37, 99, 235",
+    "--primary": primary,
+    "--ring": primary,
   } as React.CSSProperties;
 
   return (

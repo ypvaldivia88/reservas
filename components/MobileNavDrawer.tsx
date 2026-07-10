@@ -97,7 +97,7 @@ export default function MobileNavDrawer({
       >
         {/* Decorative gradient accent */}
         <div
-          className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400"
+          className="absolute top-0 left-0 right-0 h-1 bg-primary"
           style={
             accentColor
               ? {
@@ -109,13 +109,13 @@ export default function MobileNavDrawer({
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-gray-200/60 dark:border-white/10">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
+        <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-border/60">
+          <h2 className="text-lg font-bold tracking-tight">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
             aria-label="Cerrar menú"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,16 +144,16 @@ export default function MobileNavDrawer({
                   <Link
                     href={link.href}
                     onClick={onClose}
-                    className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-700 dark:text-gray-200 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/25 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200 active:scale-[0.98]"
+                    className="group flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-foreground hover:bg-muted hover:text-primary transition-all duration-200 active:scale-[0.98]"
                   >
                     {link.icon && (
-                      <span className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
+                      <span className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-muted text-primary group-hover:bg-primary/10 transition-colors">
                         {link.icon}
                       </span>
                     )}
                     <span className="text-base">{link.label}</span>
                     <svg
-                      className="w-4 h-4 ml-auto opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all duration-200 text-blue-500"
+                      className="w-4 h-4 ml-auto opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all duration-200 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -174,13 +174,13 @@ export default function MobileNavDrawer({
 
         {/* CTA footer */}
         {cta && (
-          <div className="p-4 pt-2 border-t border-gray-200/60 dark:border-white/10 safe-area-bottom">
+          <div className="p-4 pt-2 border-t border-border/60 safe-area-bottom">
             <Link
               href={cta.href}
               onClick={onClose}
               className={
                 cta.className ??
-                "flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full text-white font-semibold text-base bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
+                "flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full text-primary-foreground font-semibold text-base bg-primary hover:bg-primary/90 shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
               }
               style={cta.style}
             >

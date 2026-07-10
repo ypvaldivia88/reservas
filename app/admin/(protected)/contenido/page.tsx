@@ -4,6 +4,8 @@ import { ImageData, Categoria, Servicio } from "@/lib/types";
 import { preprocessImage, isValidImageFile, isValidFileSize } from "@/lib/imageUtils";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
+import PageHeader from "@/components/design/PageHeader";
+import SurfaceCard from "@/components/design/SurfaceCard";
 import {
   PlusIcon,
   EditIcon,
@@ -686,12 +688,10 @@ export default function ContenidoAdmin() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-gray-300 font-medium">
-            Cargando contenido...
-          </p>
+          <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="font-medium text-muted-foreground">Cargando contenido...</p>
         </div>
       </div>
     );
@@ -699,34 +699,35 @@ export default function ContenidoAdmin() {
 
   return (
     <>
-      {/* Global Message */}
+      <PageHeader
+        title="Contenido y galería"
+        description="Sube imágenes, asígnalas a servicios y marca cuáles aparecen en tu landing."
+      />
+
       {message && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-l-4 border-blue-500 dark:border-blue-400 shadow-lg animate-fadeInUp">
-          <p className="text-center text-sm font-semibold text-blue-900 dark:text-white">
-            {message}
-          </p>
+        <div className="mb-6 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-center text-sm font-medium">
+          {message}
         </div>
       )}
 
-      {/* Filters and Quick Actions */}
-      <div className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl p-6 mb-6 border border-gray-200 dark:border-white/20">
-        <div className="flex flex-col justify-between items-start gap-4">
+      <SurfaceCard className="mb-6" padding="default">
+        <div className="flex flex-col justify-between gap-4">
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <select
               value={filterGaleria}
               onChange={(e) => setFilterGaleria(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="input-field text-sm"
             >
               <option value="">Todas las galerías</option>
-              <option value="dashboard">Nuestros Trabajos</option>
-              <option value="inspiracion">Galería Inspiración</option>
+              <option value="dashboard">Nuestros Trabajos (landing)</option>
+              <option value="inspiracion">Galería Inspiración (reserva)</option>
             </select>
 
             <select
               value={filterCategoria}
               onChange={(e) => setFilterCategoria(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="input-field text-sm"
             >
               <option value="">Todas las categorías</option>
               {categorias.map((cat) => (
@@ -739,7 +740,7 @@ export default function ContenidoAdmin() {
             <select
               value={filterServicio}
               onChange={(e) => setFilterServicio(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="input-field text-sm"
             >
               <option value="">Todos los servicios</option>
               {servicios.map((srv) => (
@@ -779,8 +780,8 @@ export default function ContenidoAdmin() {
 
         {/* Selection and Bulk Actions Bar */}
         {filteredImages.filter((img) => img.blobUrl).length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="mt-4 border-t border-border pt-4">
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -790,9 +791,9 @@ export default function ContenidoAdmin() {
                       filteredImages.filter((img) => img.blobUrl).length
                   }
                   onChange={toggleSelectAll}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  className="size-4 rounded border-border text-primary focus:ring-ring"
                 />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm font-medium text-muted-foreground">
                   {selectedImages.size === 0 ?
                     "Seleccionar todo"
                   : `${selectedImages.size} seleccionada(s)`}
@@ -850,17 +851,16 @@ export default function ContenidoAdmin() {
         )}
 
         {/* Filter summary */}
-        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-3 text-sm text-muted-foreground">
           Mostrando {filteredImages.filter((img) => img.blobUrl).length} de{" "}
           {imagenes.length} imágenes
           {imagenes.some((img) => !img.blobUrl) && (
-            <span className="ml-2 text-orange-600 dark:text-orange-400 font-semibold">
-              ⚠️ {imagenes.filter((img) => !img.blobUrl).length} imágenes sin
-              migrar (no se muestran)
+            <span className="ml-2 font-semibold text-orange-600 dark:text-orange-400">
+              {imagenes.filter((img) => !img.blobUrl).length} imágenes sin migrar
             </span>
           )}
         </div>
-      </div>
+      </SurfaceCard>
 
       {/* Migration Warning Banner */}
       {imagenes.some((img) => !img.blobUrl) && (

@@ -1,4 +1,6 @@
+import { CheckCircle2 } from "lucide-react";
 import { SalonStat } from "@/lib/types";
+import { CompactMetricRow } from "@/components/design/dashboard";
 
 interface StatsSectionProps {
   stats?: SalonStat[];
@@ -14,31 +16,20 @@ const DEFAULT_STATS: SalonStat[] = [
 
 export default function StatsSection({
   stats = DEFAULT_STATS,
-  primaryColor,
 }: StatsSectionProps) {
-  const colorStyle = primaryColor ? { color: primaryColor } : undefined;
-
   return (
-    <section className="py-12 sm:py-14 lg:py-16 bg-white dark:bg-gray-900">
+    <section className="py-12 sm:py-14 lg:py-16 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <div
-                className={`flex justify-center mb-2 ${!primaryColor ? "text-blue-600 dark:text-blue-400" : ""}`}
-                style={colorStyle}
-              >
-                <svg className="w-10 h-10 sm:w-12 sm:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {stat.number}
-              </div>
-              <div className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
-                {stat.label}
-              </div>
-            </div>
+            <CompactMetricRow
+              key={index}
+              icon={CheckCircle2}
+              title={stat.label}
+              subtitle="Nuestro salón"
+              value={stat.number}
+              badge={{ label: "Destacado", variant: "muted" }}
+            />
           ))}
         </div>
       </div>

@@ -1,11 +1,8 @@
 "use client";
-import Image from "next/image";
-import { useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ReservaFormData,
-  FORMAS_UNAS,
-  LARGOS_UNAS,
   ApiResponse,
   Reserva,
   User,
@@ -18,11 +15,11 @@ import {
 import { Button } from "./ui/Button";
 import { XIcon, CheckIcon } from "./ui/Icons";
 import { phoneUtils } from "@/lib/utils";
-
-// Lazy load the gallery accordion (only load when Step 6 is reached)
-const InspirationGalleryAccordion = lazy(
-  () => import("./InspirationGalleryAccordion")
-);
+import { FORMA_LABELS } from "@/lib/nail-form-labels";
+import { isValidHexColor, normalizeHexColor } from "@/lib/color-utils";
+import ReservaServiceDetailsStep from "@/components/reserva/ReservaServiceDetailsStep";
+import ReservaOptionalPreferences from "@/components/reserva/ReservaOptionalPreferences";
+import { IconInput } from "@/components/design/IconInput";
 
 interface FormErrors {
   nombre?: string;
@@ -88,37 +85,13 @@ export default function ReservaForm({
 
   // Wizard step state
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 7; // Aumentado de 4 a 7
-
-  // Predefined colors
-  const PREDEFINED_COLORS = [
-    { name: "Rosa", color: "#FFB6C1" },
-    { name: "Rojo", color: "#DC143C" },
-    { name: "Dorado", color: "#FFD700" },
-    { name: "Plata", color: "#C0C0C0" },
-    { name: "Negro", color: "#000000" },
-    { name: "Blanco", color: "#FFFFFF" },
-    { name: "Azul", color: "#4169E1" },
-    { name: "Morado", color: "#9370DB" },
-    { name: "Verde", color: "#32CD32" },
-  ];
-
-  // Predefined decorations
-  const PREDEFINED_DECORATIONS = [
-    "💅 Francés clásico",
-    "✨ Glitter",
-    "🌈 Degradado",
-    "💎 Piedras/Cristales",
-    "🌸 Flores",
-    "⭐ Diseño abstracto",
-    "🎨 Nail art personalizado",
-    "🦋 Mariposas",
-  ];
+  const [showOptionalPreferences, setShowOptionalPreferences] = useState(false);
+  const totalSteps = 4;
 
   const [form, setForm] = useState<ReservaFormData>({
     nombre: "",
     telefono: "",
-    forma: "",
+    forma: "square",
     largo: "3",
     colores: "",
     decoracion: "",
@@ -372,22 +345,19 @@ export default function ReservaForm({
             isValid = false;
           }
           break;
-        case 3: // Forma de Uñas
-          const formaError = validateField("forma", form.forma);
-          if (formaError) {
-            newErrors.forma = formaError;
-            isValid = false;
-          }
+        case 3: // Forma y largo
+          ["forma", "largo"].forEach((field) => {
+            const error = validateField(
+              field as keyof ReservaFormData,
+              form[field as keyof ReservaFormData]
+            );
+            if (error) {
+              newErrors[field as keyof FormErrors] = error;
+              isValid = false;
+            }
+          });
           break;
-        case 4: // Largo de Uñas
-          const largoError = validateField("largo", form.largo);
-          if (largoError) {
-            newErrors.largo = largoError;
-            isValid = false;
-          }
-          break;
-        case 5: // Colores (opcional, siempre válido)
-        case 6: // Decoración (opcional, siempre válido)
+        case 4: // Confirmar
           break;
       }
 
@@ -436,9 +406,29 @@ export default function ReservaForm({
     setMensaje("");
 
     try {
+      for (let step = 1; step <= 3; step++) {
+        if (!validateStep(step)) {
+          setCurrentStep(step);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const decoracionParts: string[] = [];
+      if (form.decoracion?.trim()) {
+        decoracionParts.push(form.decoracion.trim());
+      }
+      if (form.colores?.trim()) {
+        decoracionParts.push(`Colores: ${form.colores.trim()}`);
+      }
+      const payload = {
+        ...form,
+        decoracion: decoracionParts.join("; "),
+      };
+
       const res = await fetch(`/api/reservas${tenantQueryString}`, {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
 
@@ -609,22 +599,34 @@ export default function ReservaForm({
     tenantQueryString,
   ]);
 
-  const formaDescriptions = {
-    coffin: "Rectangular con punta redondeada, elegante y moderna",
-    almond: "Forma ovalada puntiaguda que alarga los dedos",
-    stiletto: "Muy Puntiaguda y dramática, perfecta para nail art",
-    square: "Forma cuadrada clásica, práctica y resistente",
+  const stepTitles = [
+    "Tus datos",
+    "Fecha y hora",
+    "Tu manicura",
+    "Confirmar",
+  ];
+
+  const stepHints = [
+    "Teléfono y nombre — lo mínimo para contactarte",
+    "Elige el día y la hora que te venga bien",
+    "Puedes dejar la recomendación del salón y seguir",
+    "Revisa el resumen y confirma tu cita",
+  ];
+
+  const applyRecommendedService = () => {
+    setForm((prev) => ({ ...prev, forma: "square", largo: "3" }));
+    setErrors((prev) => ({ ...prev, forma: undefined, largo: undefined }));
   };
 
-  const stepTitles = [
-    "Información Personal",
-    "Fecha y Hora",
-    "Forma de Uñas",
-    "Largo de Uñas",
-    "Colores",
-    "Decoración",
-    "Confirmar Reserva",
-  ];
+  const handleAddCustomColor = () => {
+    const trimmed = customColor.trim();
+    if (!isValidHexColor(trimmed)) return;
+    const normalized = normalizeHexColor(trimmed);
+    if (!selectedColors.includes(normalized)) {
+      setSelectedColors((prev) => [...prev, normalized]);
+      setCustomColor("");
+    }
+  };
 
   const getStepIcon = (step: number) => {
     switch (step) {
@@ -678,57 +680,6 @@ export default function ReservaForm({
           </svg>
         );
       case 4:
-        // Largo de uñas - icono de regla/medida
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-        );
-      case 5:
-        // Colores - icono de paleta de colores
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-            />
-          </svg>
-        );
-      case 6:
-        // Decoración - icono de brillos/estrellas
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-            />
-          </svg>
-        );
-      case 7:
         return (
           <svg
             className="w-5 h-5"
@@ -750,9 +701,9 @@ export default function ReservaForm({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transition-colors duration-200">
+    <div className="overflow-hidden rounded-2xl bg-card shadow-xl transition-colors duration-200 sm:rounded-3xl">
       {/* Progress Steps Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-white">
+      <div className="bg-primary px-4 py-4 text-primary-foreground sm:px-6 sm:py-5 md:px-8 md:py-6">
         <div className="flex items-center justify-between mb-4">
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
             <div key={step} className="flex items-center flex-1">
@@ -760,9 +711,9 @@ export default function ReservaForm({
                 <div
                   className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
                     step === currentStep ?
-                      "bg-white text-blue-600 dark:text-blue-500 shadow-lg"
-                    : step < currentStep ? "bg-blue-400 text-white"
-                    : "bg-blue-800/30 text-white/50"
+                      "bg-card text-primary shadow-lg"
+                    : step < currentStep ? "bg-primary/70 text-primary-foreground"
+                    : "bg-primary-foreground/20 text-primary-foreground/50"
                   }`}
                 >
                   {step < currentStep ?
@@ -783,9 +734,9 @@ export default function ReservaForm({
                 </div>
                 <span
                   className={`text-xs mt-1 font-medium hidden sm:block ${
-                    step === currentStep ? "text-white"
-                    : step < currentStep ? "text-blue-200"
-                    : "text-white/50"
+                    step === currentStep ? "text-primary-foreground"
+                    : step < currentStep ? "text-primary-foreground/80"
+                    : "text-primary-foreground/50"
                   }`}
                 >
                   {stepTitles[step - 1].split(" ")[0]}
@@ -794,7 +745,7 @@ export default function ReservaForm({
               {step < totalSteps && (
                 <div
                   className={`h-1 flex-1 mx-1 sm:mx-2 rounded transition-all ${
-                    step < currentStep ? "bg-blue-400" : "bg-blue-800/30"
+                    step < currentStep ? "bg-primary/70" : "bg-primary-foreground/20"
                   }`}
                 />
               )}
@@ -806,7 +757,7 @@ export default function ReservaForm({
             {stepTitles[currentStep - 1]}
           </h2>
           <p className="opacity-90 text-sm sm:text-base mt-1">
-            Paso {currentStep} de {totalSteps}
+            Paso {currentStep} de {totalSteps} · {stepHints[currentStep - 1]}
           </p>
         </div>
       </div>
@@ -821,45 +772,48 @@ export default function ReservaForm({
                 <div>
                   <label
                     htmlFor="telefono"
-                    className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                    className="mb-2 block text-base font-semibold"
                   >
-                    Teléfono de Contacto *
+                    Tu teléfono *
                   </label>
                   <div className="relative">
-                    <input
+                    <IconInput
                       id="telefono"
                       name="telefono"
                       type="tel"
-                      placeholder="Ej: 55551234 o +53 5555 1234"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="Ej: 5555 1234"
                       value={form.telefono}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base ${
+                      className={`min-h-12 rounded-xl border-2 bg-card text-base ${
                         errors.telefono ?
                           "border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
-                        : "border-gray-200 dark:border-gray-600 focus:border-blue-300 dark:focus:border-blue-500"
+                        : "border-gray-200 dark:border-gray-600 focus:border-primary"
                       }`}
                       required
+                      icon={
+                        <svg
+                          className="size-5 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                      }
+                      trailing={
+                        isCheckingPhone ? (
+                          <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        ) : undefined
+                      }
                     />
-                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-blue-600 dark:text-blue-400">
-                      <svg
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                    </span>
-                    {isCheckingPhone && (
-                      <span className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-                      </span>
-                    )}
                   </div>
                   {errors.telefono && (
                     <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
@@ -869,7 +823,7 @@ export default function ReservaForm({
                   {!errors.telefono &&
                     !isCheckingPhone &&
                     form.telefono.length >= 8 && (
-                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 flex items-center">
+                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-primary flex items-center">
                         <svg
                           className="w-4 h-4 mr-1 flex-shrink-0"
                           fill="none"
@@ -910,17 +864,18 @@ export default function ReservaForm({
                 <div>
                   <label
                     htmlFor="nombre"
-                    className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                    className="mb-2 block text-base font-semibold"
                   >
-                    Nombre Completo *
+                    Tu nombre *
                   </label>
                   <div className="relative">
-                    <input
+                    <IconInput
                       id="nombre"
                       name="nombre"
                       type="text"
+                      autoComplete="name"
                       placeholder={
-                        isNameEnabled ? "Ingresa tu nombre completo"
+                        isNameEnabled ? "Ej: María García"
                         : clientInfo ?
                           "Cargado automáticamente"
                         : "Primero ingresa tu teléfono"
@@ -928,47 +883,48 @@ export default function ReservaForm({
                       value={form.nombre}
                       onChange={handleChange}
                       disabled={!isNameEnabled && !clientInfo}
-                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white text-sm sm:text-base ${
+                      className={`min-h-12 rounded-xl border-2 text-base ${
                         !isNameEnabled && !clientInfo ?
-                          "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60"
+                          "cursor-not-allowed bg-gray-100 opacity-60 dark:bg-gray-800"
                         : errors.nombre ?
                           "border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
                         : clientInfo ?
-                          "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600"
-                        : "border-gray-200 dark:border-gray-600 focus:border-blue-300 dark:focus:border-blue-500 bg-white dark:bg-gray-700"
+                          "border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
+                        : "border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700"
                       }`}
                       required
-                    />
-                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                      {clientInfo ?
-                        <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      : <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
+                      icon={
+                        clientInfo ?
+                          <svg
+                            className="size-5 text-green-600 dark:text-green-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        : <svg
+                            className="size-5 text-muted-foreground"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
                       }
-                    </span>
+                    />
                   </div>
                   {errors.nombre && (
                     <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
@@ -976,7 +932,7 @@ export default function ReservaForm({
                     </p>
                   )}
                   {!isNameEnabled && !clientInfo && !isCheckingPhone && (
-                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 flex items-center">
+                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-primary flex items-center">
                       <svg
                         className="w-4 h-4 mr-1 flex-shrink-0"
                         fill="none"
@@ -1016,10 +972,10 @@ export default function ReservaForm({
 
               {/* Client info display */}
               {showClientInfo && clientInfo && (
-                <div className="mt-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="mt-3 p-3 sm:p-4 bg-primary/10 border-2 border-primary/30 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm sm:text-base font-medium text-blue-900 dark:text-blue-200 mb-2 flex items-center">
+                      <p className="text-sm sm:text-base font-medium text-foreground mb-2 flex items-center">
                         <svg
                           className="w-5 h-5 mr-2 flex-shrink-0"
                           fill="none"
@@ -1037,7 +993,7 @@ export default function ReservaForm({
                       </p>
                       {clientInfo.reservasActivas.length > 0 ?
                         <div>
-                          <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 mb-2 flex items-center">
+                          <p className="text-xs sm:text-sm text-foreground mb-2 flex items-center">
                             <svg
                               className="w-4 h-4 mr-1 flex-shrink-0"
                               fill="none"
@@ -1062,7 +1018,7 @@ export default function ReservaForm({
                             {clientInfo.reservasActivas.map((reserva) => (
                               <div
                                 key={reserva._id}
-                                className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-3 rounded border border-blue-200 dark:border-blue-700"
+                                className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-3 rounded border border-primary/30"
                               >
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                   <div className="flex-1">
@@ -1147,7 +1103,7 @@ export default function ReservaForm({
                             ))}
                           </div>
                         </div>
-                      : <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300">
+                      : <p className="text-xs sm:text-sm text-foreground">
                           No tienes reservas activas en este momento.
                         </p>
                       }
@@ -1155,7 +1111,7 @@ export default function ReservaForm({
                     <button
                       type="button"
                       onClick={() => setShowClientInfo(false)}
-                      className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                      className="ml-2 text-primary hover:text-foreground"
                     >
                       ✕
                     </button>
@@ -1200,574 +1156,101 @@ export default function ReservaForm({
             </div>
           )}
 
-          {/* Step 3: Forma de Uñas */}
+          {/* Step 3: Tu manicura */}
           {currentStep === 3 && (
-            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
-                  Forma de Uñas *
-                </label>
-
-                {/* Imagen de referencia */}
-                <div className="relative mb-4 rounded-xl overflow-hidden h-36 sm:h-64 md:h-80 shadow-md border border-gray-200 dark:border-gray-600">
-                  <Image
-                    src="/images/forma.jpg"
-                    alt="Guía de formas de uñas"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {FORMAS_UNAS.map((forma) => (
-                    <label
-                      key={forma}
-                      className={`relative flex flex-col items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 min-h-[140px] ${
-                        form.forma === forma ?
-                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 shadow-md"
-                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-500"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="forma"
-                        value={forma}
-                        checked={form.forma === forma}
-                        onChange={handleChange}
-                        className="sr-only"
-                        required
-                      />
-
-                      <div className="w-12 h-12 mb-2 flex items-center justify-center">
-                        {forma === "stiletto" && (
-                          <div
-                            className="w-8 h-8 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100"
-                            style={{
-                              clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                            }}
-                          />
-                        )}
-                        {forma === "almond" && (
-                          <div
-                            className="w-6 h-10 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100 rounded-full"
-                            style={{
-                              clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",
-                            }}
-                          />
-                        )}
-                        {forma === "coffin" && (
-                          <div
-                            className="w-6 h-10 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100 rounded-b-full"
-                            style={{
-                              clipPath:
-                                "polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)",
-                            }}
-                          />
-                        )}
-                        {forma === "square" && (
-                          <div className="w-6 h-10 bg-gradient-to-t from-gray-700 to-gray-400 dark:from-gray-300 dark:to-gray-100 rounded-sm" />
-                        )}
-                      </div>
-
-                      <span
-                        className={`text-sm font-semibold text-center mb-2 ${
-                          form.forma === forma ?
-                            "text-blue-700 dark:text-blue-300"
-                          : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        {forma.charAt(0).toUpperCase() + forma.slice(1)}
-                      </span>
-
-                      <p
-                        className={`text-xs text-center px-2 ${
-                          form.forma === forma ?
-                            "text-blue-600 dark:text-blue-400"
-                          : "text-gray-500 dark:text-gray-400"
-                        }`}
-                      >
-                        {
-                          formaDescriptions[
-                            forma as keyof typeof formaDescriptions
-                          ]
-                        }
-                      </p>
-
-                      {form.forma === forma && (
-                        <span className="absolute top-2 right-2 text-blue-600 dark:text-blue-400 text-lg">
-                          ✓
-                        </span>
-                      )}
-                    </label>
-                  ))}
-                </div>
-
-                {errors.forma && (
-                  <p className="mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
-                    <span className="mr-1">⚠️</span> {errors.forma}
-                  </p>
-                )}
-              </div>
-            </div>
+            <ReservaServiceDetailsStep
+              form={form}
+              errors={errors}
+              onFieldChange={handleChange}
+              onApplyRecommended={applyRecommendedService}
+            />
           )}
 
-          {/* Step 4: Largo de Uñas */}
+          {/* Step 4: Confirmar */}
           {currentStep === 4 && (
-            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
-              <div>
-                <label
-                  htmlFor="largo"
-                  className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4"
-                >
-                  Largo Deseado *
-                </label>
-
-                <div className="relative mb-4 rounded-xl overflow-hidden h-80 sm:h-64 md:h-80 shadow-md border border-gray-200 dark:border-gray-600">
-                  <Image
-                    src="/images/medidas.png"
-                    alt="Guía de longitudes de uñas"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="flex justify-between px-1 mb-2">
-                  {LARGOS_UNAS.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() =>
-                        handleChange({
-                          target: { name: "largo", value: n.toString() },
-                        } as any)
-                      }
-                      className={`text-xs font-semibold transition-all ${
-                        form.largo === n.toString() ?
-                          "text-blue-600 dark:text-blue-400 scale-125"
-                        : "text-gray-500 dark:text-gray-400 hover:text-blue-500"
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-
-                <input
-                  type="range"
-                  min="1"
-                  max="8"
-                  step="1"
-                  value={form.largo || "1"}
-                  onChange={(e) =>
-                    handleChange({
-                      target: { name: "largo", value: e.target.value },
-                    } as any)
-                  }
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500"
-                />
-
-                {form.largo && (
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-2 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                        />
-                      </svg>
-                      Seleccionaste:{" "}
-                      <strong className="ml-1">#{form.largo}</strong> -
-                      <span className="ml-1">
-                        {parseInt(form.largo) <= 3 ?
-                          "Corto (Natural y práctico)"
-                        : parseInt(form.largo) <= 5 ?
-                          "Medio (Equilibrio perfecto)"
-                        : "Largo (Elegante y llamativo)"}
-                      </span>
-                    </p>
-                  </div>
-                )}
-
-                {errors.largo && (
-                  <p className="mt-2 text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center">
-                    <span className="mr-1">⚠️</span> {errors.largo}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Colores */}
-          {currentStep === 5 && (
-            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  Colores Preferidos
-                </label>
-
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {PREDEFINED_COLORS.map((colorOption) => (
-                    <button
-                      key={colorOption.name}
-                      type="button"
-                      onClick={() => toggleColor(colorOption.name)}
-                      className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                        selectedColors.includes(colorOption.name) ?
-                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500"
-                      }`}
-                    >
-                      <span
-                        className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
-                        style={{ backgroundColor: colorOption.color }}
-                      />
-                      {colorOption.name}
-                      {selectedColors.includes(colorOption.name) && (
-                        <span>✓</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mb-3">
-                  <label className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <svg
-                      className="w-4 h-4 mr-1 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-                      />
-                    </svg>
-                    O elige colores personalizados:
-                  </label>
-                  <div className="flex items-stretch gap-2 sm:gap-3">
-                    <div className="relative flex-shrink-0">
-                      <input
-                        type="color"
-                        value={customColor || "#000000"}
-                        onChange={(e) => setCustomColor(e.target.value)}
-                        className="h-10 w-12 sm:h-12 sm:w-16 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700 overflow-hidden"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                      placeholder="#000000"
-                      maxLength={7}
-                      className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (
-                          customColor.trim() &&
-                          !selectedColors.includes(customColor.trim())
-                        ) {
-                          setSelectedColors((prev) => [
-                            ...prev,
-                            customColor.trim(),
-                          ]);
-                          setCustomColor("");
-                        }
-                      }}
-                      disabled={!customColor.trim()}
-                      className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
-                    >
-                      + Agregar
-                    </button>
-                  </div>
-                </div>
-
-                {selectedColors.length > 0 && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">
-                      Colores seleccionados:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedColors.map((color) => {
-                        const colorData = PREDEFINED_COLORS.find(
-                          (c) => c.name === color
-                        );
-                        const isHexColor = color.startsWith("#");
-
-                        return (
-                          <div
-                            key={color}
-                            className="flex items-center gap-2 px-2 py-1 bg-white dark:bg-gray-800 rounded-full border border-blue-200 dark:border-blue-700"
-                          >
-                            <span
-                              className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
-                              style={{
-                                backgroundColor:
-                                  isHexColor ? color : colorData?.color,
-                              }}
-                            />
-                            <span className="text-xs text-gray-700 dark:text-gray-300">
-                              {color}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSelectedColors((prev) =>
-                                  prev.filter((c) => c !== color)
-                                )
-                              }
-                              className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 ml-1"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Step 6: Decoración */}
-          {currentStep === 6 && (
-            <div className="space-y-3 sm:space-y-4 animate-fadeIn">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  Decoración Especial (Opcional)
-                </label>
-
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {PREDEFINED_DECORATIONS.map((decoration) => (
-                    <button
-                      key={decoration}
-                      type="button"
-                      onClick={() => toggleDecoration(decoration)}
-                      className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
-                        selectedDecorations.includes(decoration) ?
-                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500"
-                      }`}
-                    >
-                      {decoration}
-                      {selectedDecorations.includes(decoration) && (
-                        <span className="ml-1">✓</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    rows={2}
-                    value={customDecoration}
-                    onChange={(e) => setCustomDecoration(e.target.value)}
-                    placeholder="O describe tu diseño personalizado aquí..."
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 pl-8 sm:pl-12 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 resize-none transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base"
-                  />
-                  <span className="absolute left-2 sm:left-4 top-2 sm:top-3 text-blue-600 dark:text-blue-400">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-                      />
-                    </svg>
-                  </span>
-                </div>
-
-                {(selectedDecorations.length > 0 ||
-                  customDecoration.trim()) && (
-                  <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                    Seleccionado:{" "}
-                    {[...selectedDecorations, customDecoration.trim()]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
-                )}
-
-                <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                  <svg
-                    className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Si no tienes una idea específica, nuestras profesionales te
-                  ayudarán a elegir el diseño perfecto
-                </p>
-              </div>
-
-              {/* Galería de Inspiración - Solo en Step 6 */}
-              <div className="mt-6 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center items-center py-12">
-                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
-                      <span className="ml-3 text-gray-600 dark:text-gray-400">
-                        Cargando galería...
-                      </span>
-                    </div>
-                  }
-                >
-                  <InspirationGalleryAccordion
-                    salonSlug={salonSlug}
-                    onImageSelect={(image) => {
-                      const designText =
-                        image.descripcion ?
-                          `${image.titulo || image.nombre} - ${image.descripcion}`
-                        : image.titulo || image.nombre;
-                      setCustomDecoration(designText);
-                      setSelectedImageUrl(image.blobUrl); // Guardar URL de la imagen
-                    }}
-                  />
-                </Suspense>
-              </div>
-            </div>
-          )}
-
-          {/* Step 7: Confirmar Reserva */}
-          {currentStep === 7 && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-2 flex-shrink-0 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                    />
-                  </svg>
-                  Resumen de tu Reserva
+            <div className="space-y-5 animate-fadeIn">
+              <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 sm:p-6">
+                <h3 className="mb-4 text-lg font-semibold text-foreground">
+                  Resumen de tu cita
                 </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Nombre:
-                    </span>
-                    <span className="font-medium">{form.nombre}</span>
+                <dl className="space-y-3 text-base">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Nombre</dt>
+                    <dd className="font-medium text-right">{form.nombre}</dd>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Teléfono:
-                    </span>
-                    <span className="font-medium">{form.telefono}</span>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Teléfono</dt>
+                    <dd className="font-medium text-right">{form.telefono}</dd>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Fecha:
-                    </span>
-                    <span className="font-medium">{form.fechaCita}</span>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Fecha</dt>
+                    <dd className="font-medium text-right">{form.fechaCita}</dd>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Hora:
-                    </span>
-                    <span className="font-medium">{form.horaCita}</span>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Hora</dt>
+                    <dd className="font-medium text-right">{form.horaCita}</dd>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Forma:
-                    </span>
-                    <span className="font-medium capitalize">{form.forma}</span>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Forma</dt>
+                    <dd className="font-medium text-right">
+                      {FORMA_LABELS[form.forma as keyof typeof FORMA_LABELS]
+                        ?.label ?? form.forma}
+                    </dd>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Largo:
-                    </span>
-                    <span className="font-medium">#{form.largo}</span>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Largo</dt>
+                    <dd className="font-medium text-right">Nivel {form.largo}</dd>
                   </div>
                   {form.colores && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Colores:
-                      </span>
-                      <span className="font-medium text-right">
-                        {form.colores}
-                      </span>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Colores</dt>
+                      <dd className="font-medium text-right">{form.colores}</dd>
                     </div>
                   )}
                   {form.decoracion && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Decoración:
-                      </span>
-                      <span className="font-medium text-right">
-                        {form.decoracion}
-                      </span>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Decoración</dt>
+                      <dd className="font-medium text-right">{form.decoracion}</dd>
                     </div>
                   )}
-                </div>
+                </dl>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800">
-                <div className="flex items-start space-x-2 sm:space-x-3">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base mb-1 sm:mb-2">
-                      Información Importante
-                    </h4>
-                    <ul className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                      <li>
-                        • Te contactaremos en las próximas horas para confirmar
-                        tu cita
-                      </li>
-                      <li>
-                        • Duración aproximada: 60-90 minutos según el servicio
-                      </li>
-                      <li>
-                        • Solo puedes tener una cita activa por día
-                      </li>
-                      <li>
-                        • Puedes reagendar o cancelar con 24 horas de
-                        anticipación
-                      </li>
-                      <li>• Aceptamos efectivo y tarjetas de crédito/débito</li>
-                    </ul>
-                  </div>
-                </div>
+              <ReservaOptionalPreferences
+                open={showOptionalPreferences}
+                onToggle={() => setShowOptionalPreferences((prev) => !prev)}
+                salonSlug={salonSlug}
+                selectedColors={selectedColors}
+                customColor={customColor}
+                selectedDecorations={selectedDecorations}
+                customDecoration={customDecoration}
+                onToggleColor={toggleColor}
+                onCustomColorChange={setCustomColor}
+                onAddCustomColor={handleAddCustomColor}
+                onRemoveColor={(color) =>
+                  setSelectedColors((prev) => prev.filter((c) => c !== color))
+                }
+                onToggleDecoration={toggleDecoration}
+                onCustomDecorationChange={setCustomDecoration}
+                onImageSelect={(image) => {
+                  const designText =
+                    image.descripcion ?
+                      `${image.titulo || image.nombre} - ${image.descripcion}`
+                    : image.titulo || image.nombre || "";
+                  setCustomDecoration(designText);
+                  setSelectedImageUrl(image.blobUrl);
+                }}
+              />
+
+              <div className="rounded-xl border border-primary/20 bg-muted/30 p-4 sm:p-5">
+                <h4 className="mb-2 text-base font-semibold text-foreground">
+                  Qué pasa después
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground sm:text-base">
+                  <li>Te contactaremos para confirmar tu cita</li>
+                  <li>Duración aproximada: 60–90 minutos</li>
+                  <li>Puedes reagendar o cancelar con 24 h de anticipación</li>
+                </ul>
               </div>
             </div>
           )}
@@ -1793,7 +1276,7 @@ export default function ReservaForm({
                 fullWidth
                 size="lg"
               >
-                Siguiente →
+                {currentStep === 3 ? "Ver resumen →" : "Siguiente →"}
               </Button>
             : <Button
                 type="button"
@@ -1815,13 +1298,13 @@ export default function ReservaForm({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                        d="M5 13l4 4L19 7"
                       />
                     </svg>
                   )
                 }
               >
-                Confirmar Reserva
+                Confirmar cita
               </Button>
             }
           </div>
@@ -1856,7 +1339,7 @@ export default function ReservaForm({
       {/* Cancellation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+          <div className="animate-fadeIn rounded-2xl bg-card shadow-2xl max-w-md w-full p-6">
             <div className="flex items-start mb-4">
               <span className="text-4xl mr-3">⚠️</span>
               <div>

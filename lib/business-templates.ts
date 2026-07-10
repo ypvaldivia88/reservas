@@ -1,3 +1,4 @@
+import { getTemplateHeroUrl } from "@/lib/placeholder-config";
 import {
   BusinessTemplate,
   SalonBranding,
@@ -33,7 +34,7 @@ const manicureTemplate: BusinessTemplateConfig = {
     primaryColor: "#2563eb",
     secondaryColor: "#7c3aed",
     accentColor: "#93c5fd",
-    heroImageUrl: "/main.avif",
+    heroImageUrl: getTemplateHeroUrl("manicure"),
   },
   content: {
     heroTitle: "Belleza en tus",
@@ -158,7 +159,7 @@ const peluqueriaTemplate: BusinessTemplateConfig = {
     primaryColor: "#db2777",
     secondaryColor: "#9333ea",
     accentColor: "#f9a8d4",
-    heroImageUrl: "/main.avif",
+    heroImageUrl: getTemplateHeroUrl("peluqueria"),
   },
   content: {
     heroTitle: "Tu estilo,",
@@ -269,7 +270,7 @@ const barberiaTemplate: BusinessTemplateConfig = {
     primaryColor: "#1e293b",
     secondaryColor: "#b45309",
     accentColor: "#d97706",
-    heroImageUrl: "/main.avif",
+    heroImageUrl: getTemplateHeroUrl("barberia"),
   },
   content: {
     heroTitle: "Estilo y",
@@ -380,7 +381,7 @@ const tatuajesTemplate: BusinessTemplateConfig = {
     primaryColor: "#0f172a",
     secondaryColor: "#dc2626",
     accentColor: "#f87171",
-    heroImageUrl: "/main.avif",
+    heroImageUrl: getTemplateHeroUrl("tatuajes"),
   },
   content: {
     heroTitle: "Arte que",
@@ -491,7 +492,7 @@ const genericTemplate: BusinessTemplateConfig = {
     primaryColor: "#0891b2",
     secondaryColor: "#0e7490",
     accentColor: "#67e8f9",
-    heroImageUrl: "/main.avif",
+    heroImageUrl: getTemplateHeroUrl("generic"),
   },
   content: {
     heroTitle: "Bienvenido a",

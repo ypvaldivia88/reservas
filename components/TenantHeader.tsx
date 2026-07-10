@@ -72,11 +72,10 @@ export default function TenantHeader({
 
   const logoUrl = profile.branding.logoSmallUrl || profile.branding.logoUrl;
   const primary = profile.branding.primaryColor || "#2563eb";
-  const secondary = profile.branding.secondaryColor || primary;
 
   return (
     <>
-    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
           <Link
@@ -101,7 +100,7 @@ export default function TenantHeader({
                 {profile.nombre.charAt(0).toUpperCase()}
               </div>
             )}
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
               {profile.nombre}
             </h1>
           </Link>
@@ -111,15 +110,14 @@ export default function TenantHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-gray-700 dark:text-gray-300 hover:text-[var(--tenant-primary)] transition-colors font-medium"
+                className="font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
             ))}
             <Link
               href={reservaPath}
-              className="text-white px-4 py-2 rounded-full text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300"
-              style={{ background: `linear-gradient(to right, ${primary}, ${secondary})` }}
+              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
             >
               Reservar Cita
             </Link>
@@ -146,9 +144,9 @@ export default function TenantHeader({
       cta={{
         href: reservaPath,
         label: "Reservar Cita",
-        style: { background: `linear-gradient(to right, ${primary}, ${secondary})` },
+        style: { background: primary },
         className:
-          "flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full text-white font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]",
+          "flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full text-primary-foreground font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]",
       }}
     />
   </>
