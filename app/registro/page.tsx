@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { BusinessTemplate } from "@/lib/types";
+import { markWelcomePending } from "@/lib/salon-onboarding";
 
 function slugify(text: string): string {
   return text
@@ -152,6 +153,7 @@ export default function RegistroPage() {
       const data = await res.json();
 
       if (data.success) {
+        markWelcomePending();
         setSuccess({
           nombre: data.data.nombre,
           slug: data.data.slug,
@@ -219,9 +221,9 @@ export default function RegistroPage() {
                   Ver mi página
                 </Button>
               </Link>
-              <Link href="/admin/calendario" className="flex-1">
+              <Link href="/admin/dashboard?bienvenida=1" className="flex-1">
                 <Button variant="primary" fullWidth size="lg">
-                  Ir al panel admin
+                  Configurar mi sitio
                 </Button>
               </Link>
             </div>
