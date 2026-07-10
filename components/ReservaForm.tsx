@@ -16,6 +16,8 @@ import {
   openClientCancellationWhatsApp,
 } from "@/lib/whatsapp";
 import { Button } from "./ui/Button";
+import ColorField from "@/components/design/ColorField";
+import { normalizeHexColor, isValidHexColor } from "@/lib/color-utils";
 import { XIcon, CheckIcon } from "./ui/Icons";
 import { phoneUtils } from "@/lib/utils";
 
@@ -1437,57 +1439,42 @@ export default function ReservaForm({
                 </div>
 
                 <div className="mb-3">
-                  <label className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <svg
-                      className="w-4 h-4 mr-1 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-                      />
-                    </svg>
-                    O elige colores personalizados:
-                  </label>
-                  <div className="flex items-stretch gap-2 sm:gap-3">
-                    <div className="relative flex-shrink-0">
-                      <input
-                        type="color"
-                        value={customColor || "#000000"}
-                        onChange={(e) => setCustomColor(e.target.value)}
-                        className="h-10 w-12 sm:h-12 sm:w-16 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer bg-white dark:bg-gray-700 overflow-hidden"
-                      />
-                    </div>
-                    <input
-                      type="text"
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <ColorField
+                      label="Color personalizado"
+                      description="Elige un tono y agrégalo a tu selección"
                       value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                      placeholder="#000000"
-                      maxLength={7}
-                      className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                      onChange={setCustomColor}
+                      fallback="#e11d48"
+                      compact
+                      presets={[
+                        "#f8b4c4",
+                        "#e11d48",
+                        "#dc2626",
+                        "#f97316",
+                        "#eab308",
+                        "#22c55e",
+                        "#3b82f6",
+                        "#8b5cf6",
+                        "#1e293b",
+                      ]}
+                      className="min-w-0 flex-1"
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        if (
-                          customColor.trim() &&
-                          !selectedColors.includes(customColor.trim())
-                        ) {
-                          setSelectedColors((prev) => [
-                            ...prev,
-                            customColor.trim(),
-                          ]);
+                        const trimmed = customColor.trim();
+                        if (!isValidHexColor(trimmed)) return;
+                        const normalized = normalizeHexColor(trimmed);
+                        if (!selectedColors.includes(normalized)) {
+                          setSelectedColors((prev) => [...prev, normalized]);
                           setCustomColor("");
                         }
                       }}
-                      disabled={!customColor.trim()}
-                      className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
+                      disabled={!isValidHexColor(customColor.trim())}
+                      className="h-10 shrink-0 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:mb-1"
                     >
-                      + Agregar
+                      Agregar color
                     </button>
                   </div>
                 </div>

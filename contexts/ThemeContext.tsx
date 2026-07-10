@@ -1,65 +1,68 @@
 "use client";
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
+export type DarkTone = "soft" | "balanced" | "deep";
 
 interface ThemeContextType {
   theme: Theme;
+  darkTone: DarkTone;
   toggleTheme: () => void;
+  setDarkTone: (tone: DarkTone) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function applyDarkTone(tone: DarkTone) {
+  document.documentElement.setAttribute("data-dark-tone", tone);
+}
+
+function applyThemeClass(theme: Theme) {
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+  const [darkTone, setDarkToneState] = useState<DarkTone>("soft");
 
   useEffect(() => {
-    // Priority: manually set theme (localStorage) > system preference
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    
-    let initialTheme: Theme;
-    if (savedTheme) {
-      // If user has manually set a theme, use it (highest priority)
-      initialTheme = savedTheme;
-    } else {
-      // Otherwise, default to system preference
-      initialTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    
+    const savedTone = localStorage.getItem("darkTone") as DarkTone | null;
+
+    const initialTheme: Theme =
+      savedTheme ??
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const initialTone: DarkTone =
+      savedTone === "balanced" || savedTone === "deep" ? savedTone : "soft";
+
     setTheme(initialTheme);
-    
-    // Apply theme to document
-    if (initialTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    
-    setMounted(true);
+    setDarkToneState(initialTone);
+    applyThemeClass(initialTheme);
+    applyDarkTone(initialTone);
   }, []);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => {
       const newTheme = prevTheme === "light" ? "dark" : "light";
-      
-      // Save to localStorage - this gives it priority over system preference
       localStorage.setItem("theme", newTheme);
-      
-      // Apply theme to document immediately
-      if (newTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-      
+      applyThemeClass(newTheme);
       return newTheme;
     });
   };
 
-  // Always provide the context, even before mounting
+  const setDarkTone = (tone: DarkTone) => {
+    setDarkToneState(tone);
+    localStorage.setItem("darkTone", tone);
+    applyDarkTone(tone);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, darkTone, toggleTheme, setDarkTone }}>
       {children}
     </ThemeContext.Provider>
   );

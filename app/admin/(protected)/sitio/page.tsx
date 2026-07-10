@@ -3,7 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import PageHeader from "@/components/design/PageHeader";
+import SurfaceCard from "@/components/design/SurfaceCard";
+import SegmentedControl from "@/components/design/dashboard/SegmentedControl";
+import ColorField from "@/components/design/ColorField";
+import { normalizeHexColor } from "@/lib/color-utils";
 import {
   BusinessTemplate,
   SalonBranding,
@@ -22,6 +28,53 @@ interface TemplateOption {
   descripcion: string;
   icon: string;
   branding: SalonBranding;
+}
+
+const TAB_OPTIONS: { value: Tab; label: string }[] = [
+  { value: "plantilla", label: "Plantilla" },
+  { value: "marca", label: "Marca" },
+  { value: "contenido", label: "Contenido" },
+  { value: "contacto", label: "Contacto" },
+];
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <label className="mb-1.5 block text-sm font-medium">{children}</label>;
+}
+
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+  className = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`input-field ${className}`}
+    />
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-base font-semibold tracking-tight sm:text-lg">{children}</h3>
+  );
+}
+
+function normalizeBranding(branding: SalonBranding): SalonBranding {
+  return {
+    ...branding,
+    primaryColor: normalizeHexColor(branding.primaryColor || "", "#2563eb"),
+    secondaryColor: normalizeHexColor(branding.secondaryColor || "", "#7c3aed"),
+    accentColor: normalizeHexColor(branding.accentColor || "", "#f43f5e"),
+  };
 }
 
 export default function SitioAdmin() {
@@ -56,7 +109,7 @@ export default function SitioAdmin() {
         const cms: SalonPublicProfile = salonData.data.cms;
         setSlug(salonData.data.slug || cms.slug);
         setBusinessTemplate(cms.businessTemplate || "generic");
-        setBranding(cms.branding || {});
+        setBranding(normalizeBranding(cms.branding || {}));
         setContent(cms.content || {});
         setContact(cms.contact || {});
         setSocial(cms.social || {});
@@ -84,9 +137,9 @@ export default function SitioAdmin() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage("✓ Cambios guardados");
+        setMessage("Cambios guardados");
         const cms = data.data as SalonPublicProfile;
-        setBranding(cms.branding);
+        setBranding(normalizeBranding(cms.branding));
         setContent(cms.content);
         setContact(cms.contact);
         setSocial(cms.social);
@@ -102,7 +155,12 @@ export default function SitioAdmin() {
   };
 
   const applyTemplate = async (template: BusinessTemplate, resetContent: boolean) => {
-    if (resetContent && !confirm("¿Restablecer todo el contenido con los valores de la plantilla? Se perderán tus textos personalizados.")) {
+    if (
+      resetContent &&
+      !confirm(
+        "¿Restablecer todo el contenido con los valores de la plantilla? Se perderán tus textos personalizados."
+      )
+    ) {
       return;
     }
     await save({
@@ -133,7 +191,7 @@ export default function SitioAdmin() {
       if (uploadData.success && uploadData.data?.blobUrl) {
         const newBranding = { ...branding, [field]: uploadData.data.blobUrl };
         setBranding(newBranding);
-        await save({ branding: newBranding });
+        await save({ branding: normalizeBranding(newBranding) });
       } else {
         setMessage(uploadData.error || "Error al subir imagen");
       }
@@ -144,165 +202,171 @@ export default function SitioAdmin() {
     }
   };
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "plantilla", label: "Plantilla" },
-    { id: "marca", label: "Marca" },
-    { id: "contenido", label: "Contenido" },
-    { id: "contacto", label: "Contacto" },
-  ];
-
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent" />
+        <div className="size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Mi Sitio Web
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-            Personaliza la identidad y contenido de tu negocio
-          </p>
-        </div>
-        {slug && (
-          <Link
-            href={`/${slug}`}
-            target="_blank"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Ver sitio → /{slug}
-          </Link>
-        )}
-      </div>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <PageHeader
+        title="Mi sitio web"
+        description="Personaliza la identidad y el contenido visible en tu landing."
+        actions={
+          slug ? (
+            <Link
+              href={`/${slug}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              Ver sitio
+              <ExternalLink className="size-3.5" aria-hidden />
+            </Link>
+          ) : undefined
+        }
+      />
 
       {message && (
-        <div className={`mb-4 p-3 rounded-lg text-sm ${message.startsWith("✓") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+        <div
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            message === "Cambios guardados"
+              ? "border-primary/30 bg-primary/10 text-foreground"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
+          }`}
+          role="status"
+        >
           {message}
         </div>
       )}
 
-      <div className="flex gap-1 mb-6 overflow-x-auto">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === tab.id
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl value={activeTab} options={TAB_OPTIONS} onChange={setActiveTab} />
 
-      {/* Plantilla */}
       {activeTab === "plantilla" && (
         <div className="space-y-4">
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Elige una plantilla según tu tipo de negocio. Puedes aplicar solo los colores o restablecer todo el contenido.
+          <p className="text-sm text-muted-foreground">
+            Elige una plantilla según tu tipo de negocio. Puedes aplicar solo los colores o
+            restablecer todo el contenido.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {templates.map((t) => (
-              <div
+              <SurfaceCard
                 key={t.id}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  businessTemplate === t.id
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                    : "border-gray-200 dark:border-gray-700"
-                }`}
+                className={
+                  businessTemplate === t.id ? "border-primary ring-1 ring-primary/20" : ""
+                }
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl">{t.icon}</span>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{t.nombre}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{t.descripcion}</p>
-                    <div className="flex gap-1 mt-2">
-                      <div className="w-5 h-5 rounded-full" style={{ background: t.branding.primaryColor }} />
-                      <div className="w-5 h-5 rounded-full" style={{ background: t.branding.secondaryColor }} />
-                      <div className="w-5 h-5 rounded-full" style={{ background: t.branding.accentColor }} />
+                  <span className="text-3xl" aria-hidden>
+                    {t.icon}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold">{t.nombre}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{t.descripcion}</p>
+                    <div className="mt-2 flex gap-1">
+                      <div
+                        className="size-5 rounded-full border border-border"
+                        style={{ background: t.branding.primaryColor }}
+                      />
+                      <div
+                        className="size-5 rounded-full border border-border"
+                        style={{ background: t.branding.secondaryColor }}
+                      />
+                      <div
+                        className="size-5 rounded-full border border-border"
+                        style={{ background: t.branding.accentColor }}
+                      />
                     </div>
-                    <div className="flex gap-2 mt-3">
-                      <button
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outlined-secondary"
                         onClick={() => applyTemplate(t.id, false)}
                         disabled={saving}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200"
                       >
                         Solo colores
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outlined-primary"
                         onClick={() => applyTemplate(t.id, true)}
                         disabled={saving}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
                       >
                         Restablecer todo
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
-              </div>
+              </SurfaceCard>
             ))}
           </div>
         </div>
       )}
 
-      {/* Marca */}
       {activeTab === "marca" && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {(["logoUrl", "logoSmallUrl", "heroImageUrl"] as const).map((field) => (
-              <div key={field} className="p-4 border rounded-xl dark:border-gray-700">
-                <label className="text-sm font-medium block mb-2">
-                  {field === "logoUrl" ? "Logo principal" : field === "logoSmallUrl" ? "Logo pequeño (header)" : "Imagen hero"}
-                </label>
-                {branding[field] && (
-                  <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden bg-gray-100">
-                    <Image src={branding[field]!} alt="" fill className="object-contain" />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0], field)}
-                  className="text-xs w-full"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {(["primaryColor", "secondaryColor", "accentColor"] as const).map((field) => (
-              <div key={field}>
-                <label className="text-sm font-medium block mb-1">
-                  {field === "primaryColor" ? "Color principal" : field === "secondaryColor" ? "Color secundario" : "Color acento"}
-                </label>
-                <div className="flex gap-2 items-center">
+          <SurfaceCard>
+            <SectionTitle>Imágenes de marca</SectionTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              El logo pequeño aparece en el header; la imagen hero cubre la sección principal.
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {(["logoUrl", "logoSmallUrl", "heroImageUrl"] as const).map((field) => (
+                <div key={field} className="rounded-lg border border-border bg-muted/30 p-3">
+                  <FieldLabel>
+                    {field === "logoUrl"
+                      ? "Logo principal"
+                      : field === "logoSmallUrl"
+                        ? "Logo pequeño (header)"
+                        : "Imagen hero"}
+                  </FieldLabel>
+                  {branding[field] && (
+                    <div className="relative mb-2 h-24 w-full overflow-hidden rounded-lg bg-muted">
+                      <Image src={branding[field]!} alt="" fill className="object-contain" />
+                    </div>
+                  )}
                   <input
-                    type="color"
-                    value={branding[field] || "#2563eb"}
-                    onChange={(e) => setBranding({ ...branding, [field]: e.target.value })}
-                    className="w-10 h-10 rounded cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={branding[field] || ""}
-                    onChange={(e) => setBranding({ ...branding, [field]: e.target.value })}
-                    className="flex-1 px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0], field)}
+                    className="w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-primary file:px-2 file:py-1 file:text-xs file:text-primary-foreground"
                   />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </SurfaceCard>
+
+          <SurfaceCard>
+            <SectionTitle>Paleta de colores</SectionTitle>
+            <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <ColorField
+                label="Color principal"
+                description="Botones, enlaces y acentos principales"
+                value={branding.primaryColor || ""}
+                onChange={(v) => setBranding({ ...branding, primaryColor: v })}
+                fallback="#2563eb"
+              />
+              <ColorField
+                label="Color secundario"
+                description="Gradientes y fondos del hero"
+                value={branding.secondaryColor || ""}
+                onChange={(v) => setBranding({ ...branding, secondaryColor: v })}
+                fallback="#7c3aed"
+              />
+              <ColorField
+                label="Color acento"
+                description="Detalles y elementos decorativos"
+                value={branding.accentColor || ""}
+                onChange={(v) => setBranding({ ...branding, accentColor: v })}
+                fallback="#f43f5e"
+              />
+            </div>
+          </SurfaceCard>
 
           <Button
-            onClick={() => save({ branding, whatsappNumber })}
+            onClick={() => save({ branding: normalizeBranding(branding), whatsappNumber })}
             disabled={saving}
           >
             {saving ? "Guardando..." : "Guardar marca"}
@@ -310,42 +374,96 @@ export default function SitioAdmin() {
         </div>
       )}
 
-      {/* Contenido */}
       {activeTab === "contenido" && (
         <div className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Hero</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SurfaceCard className="space-y-4">
+            <SectionTitle>Hero</SectionTitle>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-sm block mb-1">Título</label>
-                <input
+                <FieldLabel>Título</FieldLabel>
+                <TextInput
                   value={content.heroTitle || ""}
-                  onChange={(e) => setContent({ ...content, heroTitle: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+                  onChange={(v) => setContent({ ...content, heroTitle: v })}
                 />
               </div>
               <div>
-                <label className="text-sm block mb-1">Destacado</label>
-                <input
+                <FieldLabel>Destacado</FieldLabel>
+                <TextInput
                   value={content.heroHighlight || ""}
-                  onChange={(e) => setContent({ ...content, heroHighlight: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+                  onChange={(v) => setContent({ ...content, heroHighlight: v })}
                 />
               </div>
             </div>
             <div>
-              <label className="text-sm block mb-1">Subtítulo</label>
+              <FieldLabel>Subtítulo</FieldLabel>
               <textarea
                 value={content.heroSubtitle || ""}
                 onChange={(e) => setContent({ ...content, heroSubtitle: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+                className="input-field min-h-[88px] resize-y"
               />
             </div>
-          </div>
+          </SurfaceCard>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Estadísticas</h3>
+          <SurfaceCard className="space-y-4">
+            <SectionTitle>Beneficios</SectionTitle>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Título de sección</FieldLabel>
+                <TextInput
+                  value={content.featuresTitle || ""}
+                  onChange={(v) => setContent({ ...content, featuresTitle: v })}
+                  placeholder="¿Por qué elegirnos?"
+                />
+              </div>
+              <div>
+                <FieldLabel>Subtítulo</FieldLabel>
+                <TextInput
+                  value={content.featuresSubtitle || ""}
+                  onChange={(v) => setContent({ ...content, featuresSubtitle: v })}
+                />
+              </div>
+            </div>
+            {(content.features || []).map((feature, i) => (
+              <div key={i} className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
+                <input
+                  value={feature.title}
+                  onChange={(e) => {
+                    const features = [...(content.features || [])];
+                    features[i] = { ...features[i], title: e.target.value };
+                    setContent({ ...content, features });
+                  }}
+                  placeholder="Título del beneficio"
+                  className="input-field"
+                />
+                <input
+                  value={feature.description}
+                  onChange={(e) => {
+                    const features = [...(content.features || [])];
+                    features[i] = { ...features[i], description: e.target.value };
+                    setContent({ ...content, features });
+                  }}
+                  placeholder="Descripción"
+                  className="input-field"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() =>
+                setContent({
+                  ...content,
+                  features: [...(content.features || []), { title: "", description: "" }],
+                })
+              }
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              + Agregar beneficio
+            </button>
+          </SurfaceCard>
+
+          <SurfaceCard className="space-y-4">
+            <SectionTitle>Estadísticas</SectionTitle>
             {(content.stats || []).map((stat, i) => (
               <div key={i} className="flex gap-2">
                 <input
@@ -356,7 +474,7 @@ export default function SitioAdmin() {
                     setContent({ ...content, stats });
                   }}
                   placeholder="Número"
-                  className="w-24 px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-28"
                 />
                 <input
                   value={stat.label}
@@ -366,31 +484,75 @@ export default function SitioAdmin() {
                     setContent({ ...content, stats });
                   }}
                   placeholder="Etiqueta"
-                  className="flex-1 px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field flex-1"
                 />
               </div>
             ))}
             <button
-              onClick={() => setContent({ ...content, stats: [...(content.stats || []), { number: "", label: "" }] })}
-              className="text-sm text-blue-600"
+              type="button"
+              onClick={() =>
+                setContent({ ...content, stats: [...(content.stats || []), { number: "", label: "" }] })
+              }
+              className="text-sm font-medium text-primary hover:underline"
             >
               + Agregar estadística
             </button>
-          </div>
+          </SurfaceCard>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Testimonios</h3>
+          <SurfaceCard className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Título galería</FieldLabel>
+                <TextInput
+                  value={content.galleryTitle || ""}
+                  onChange={(v) => setContent({ ...content, galleryTitle: v })}
+                  placeholder="Nuestros Trabajos"
+                />
+              </div>
+              <div>
+                <FieldLabel>Subtítulo galería</FieldLabel>
+                <TextInput
+                  value={content.gallerySubtitle || ""}
+                  onChange={(v) => setContent({ ...content, gallerySubtitle: v })}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Las imágenes de la galería se gestionan en{" "}
+              <Link href="/admin/contenido" className="font-medium text-primary hover:underline">
+                Contenido
+              </Link>
+              , marcando &quot;Nuestros Trabajos&quot; en cada imagen.
+            </p>
+          </SurfaceCard>
+
+          <SurfaceCard className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Título testimonios</FieldLabel>
+                <TextInput
+                  value={content.testimonialsTitle || ""}
+                  onChange={(v) => setContent({ ...content, testimonialsTitle: v })}
+                />
+              </div>
+              <div>
+                <FieldLabel>Subtítulo testimonios</FieldLabel>
+                <TextInput
+                  value={content.testimonialsSubtitle || ""}
+                  onChange={(v) => setContent({ ...content, testimonialsSubtitle: v })}
+                />
+              </div>
+            </div>
             {(content.testimonials || []).map((t, i) => (
-              <div key={i} className="p-3 border rounded-lg dark:border-gray-700 space-y-2">
-                <input
+              <div key={i} className="space-y-2 rounded-lg border border-border p-3">
+                <TextInput
                   value={t.name}
-                  onChange={(e) => {
+                  onChange={(v) => {
                     const testimonials = [...(content.testimonials || [])];
-                    testimonials[i] = { ...testimonials[i], name: e.target.value };
+                    testimonials[i] = { ...testimonials[i], name: v };
                     setContent({ ...content, testimonials });
                   }}
                   placeholder="Nombre"
-                  className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
                 />
                 <textarea
                   value={t.text}
@@ -401,39 +563,123 @@ export default function SitioAdmin() {
                   }}
                   placeholder="Testimonio"
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
+                  className="input-field min-h-[72px] resize-y"
                 />
               </div>
             ))}
             <button
+              type="button"
               onClick={() =>
                 setContent({
                   ...content,
                   testimonials: [...(content.testimonials || []), { name: "", text: "", rating: 5 }],
                 })
               }
-              className="text-sm text-blue-600"
+              className="text-sm font-medium text-primary hover:underline"
             >
               + Agregar testimonio
             </button>
-          </div>
+          </SurfaceCard>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">SEO</h3>
-            <input
+          <SurfaceCard className="space-y-4">
+            <SectionTitle>Proceso</SectionTitle>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Título</FieldLabel>
+                <TextInput
+                  value={content.processTitle || ""}
+                  onChange={(v) => setContent({ ...content, processTitle: v })}
+                />
+              </div>
+              <div>
+                <FieldLabel>Subtítulo</FieldLabel>
+                <TextInput
+                  value={content.processSubtitle || ""}
+                  onChange={(v) => setContent({ ...content, processSubtitle: v })}
+                />
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Texto del botón</FieldLabel>
+              <TextInput
+                value={content.processCta || ""}
+                onChange={(v) => setContent({ ...content, processCta: v })}
+                placeholder="Reservar cita"
+              />
+            </div>
+            {(content.processSteps || []).map((step, i) => (
+              <div key={i} className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
+                <input
+                  value={step.title}
+                  onChange={(e) => {
+                    const processSteps = [...(content.processSteps || [])];
+                    processSteps[i] = { ...processSteps[i], title: e.target.value };
+                    setContent({ ...content, processSteps });
+                  }}
+                  placeholder="Paso"
+                  className="input-field"
+                />
+                <input
+                  value={step.description}
+                  onChange={(e) => {
+                    const processSteps = [...(content.processSteps || [])];
+                    processSteps[i] = { ...processSteps[i], description: e.target.value };
+                    setContent({ ...content, processSteps });
+                  }}
+                  placeholder="Descripción"
+                  className="input-field"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() =>
+                setContent({
+                  ...content,
+                  processSteps: [...(content.processSteps || []), { title: "", description: "" }],
+                })
+              }
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              + Agregar paso
+            </button>
+          </SurfaceCard>
+
+          <SurfaceCard className="space-y-4">
+            <SectionTitle>Llamada a la acción final</SectionTitle>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>Título</FieldLabel>
+                <TextInput
+                  value={content.ctaTitle || ""}
+                  onChange={(v) => setContent({ ...content, ctaTitle: v })}
+                />
+              </div>
+              <div>
+                <FieldLabel>Subtítulo</FieldLabel>
+                <TextInput
+                  value={content.ctaSubtitle || ""}
+                  onChange={(v) => setContent({ ...content, ctaSubtitle: v })}
+                />
+              </div>
+            </div>
+          </SurfaceCard>
+
+          <SurfaceCard className="space-y-4">
+            <SectionTitle>SEO</SectionTitle>
+            <TextInput
               value={content.seoTitle || ""}
-              onChange={(e) => setContent({ ...content, seoTitle: e.target.value })}
+              onChange={(v) => setContent({ ...content, seoTitle: v })}
               placeholder="Título SEO"
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
             />
             <textarea
               value={content.seoDescription || ""}
               onChange={(e) => setContent({ ...content, seoDescription: e.target.value })}
               placeholder="Descripción SEO"
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="input-field min-h-[72px] resize-y"
             />
-          </div>
+          </SurfaceCard>
 
           <Button onClick={() => save({ content })} disabled={saving}>
             {saving ? "Guardando..." : "Guardar contenido"}
@@ -441,57 +687,59 @@ export default function SitioAdmin() {
         </div>
       )}
 
-      {/* Contacto */}
       {activeTab === "contacto" && (
-        <div className="space-y-4">
+        <SurfaceCard className="space-y-4">
+          <SectionTitle>Contacto y redes</SectionTitle>
           <div>
-            <label className="text-sm block mb-1">WhatsApp / Teléfono</label>
-            <input
+            <FieldLabel>WhatsApp / Teléfono principal</FieldLabel>
+            <TextInput
               value={whatsappNumber}
-              onChange={(e) => setWhatsappNumber(e.target.value)}
+              onChange={setWhatsappNumber}
               placeholder="+53..."
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
             />
           </div>
           <div>
-            <label className="text-sm block mb-1">Dirección</label>
-            <input
+            <FieldLabel>Teléfono en la landing</FieldLabel>
+            <TextInput
+              value={contact.phone || ""}
+              onChange={(v) => setContact({ ...contact, phone: v })}
+              placeholder="Opcional si difiere del WhatsApp"
+            />
+          </div>
+          <div>
+            <FieldLabel>Dirección</FieldLabel>
+            <TextInput
               value={contact.address || ""}
-              onChange={(e) => setContact({ ...contact, address: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+              onChange={(v) => setContact({ ...contact, address: v })}
             />
           </div>
           <div>
-            <label className="text-sm block mb-1">URL de mapa (Google Maps)</label>
-            <input
+            <FieldLabel>URL de mapa (Google Maps)</FieldLabel>
+            <TextInput
               value={contact.addressUrl || ""}
-              onChange={(e) => setContact({ ...contact, addressUrl: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+              onChange={(v) => setContact({ ...contact, addressUrl: v })}
             />
           </div>
           <div>
-            <label className="text-sm block mb-1">Horarios</label>
-            <input
+            <FieldLabel>Horarios</FieldLabel>
+            <TextInput
               value={contact.hours || ""}
-              onChange={(e) => setContact({ ...contact, hours: e.target.value })}
+              onChange={(v) => setContact({ ...contact, hours: v })}
               placeholder="Lun - Vie: 9:00 AM - 6:00 PM"
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
             />
           </div>
           <div>
-            <label className="text-sm block mb-1">Facebook</label>
-            <input
+            <FieldLabel>Facebook</FieldLabel>
+            <TextInput
               value={social.facebook || ""}
-              onChange={(e) => setSocial({ ...social, facebook: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+              onChange={(v) => setSocial({ ...social, facebook: v })}
             />
           </div>
           <div>
-            <label className="text-sm block mb-1">Instagram</label>
-            <input
+            <FieldLabel>Instagram</FieldLabel>
+            <TextInput
               value={social.instagram || ""}
-              onChange={(e) => setSocial({ ...social, instagram: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-700"
+              onChange={(v) => setSocial({ ...social, instagram: v })}
             />
           </div>
           <Button
@@ -500,7 +748,7 @@ export default function SitioAdmin() {
           >
             {saving ? "Guardando..." : "Guardar contacto"}
           </Button>
-        </div>
+        </SurfaceCard>
       )}
     </div>
   );

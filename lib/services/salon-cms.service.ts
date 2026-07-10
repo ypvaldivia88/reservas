@@ -131,7 +131,15 @@ export class SalonCmsService {
       updates.contact = config.contact;
       updates.social = config.social;
     } else {
-      updates.branding = config.branding;
+      const salon = await salonRepository.findBySalonId(salonId);
+      if (!salon) throw AppError.notFound("Salón no encontrado");
+
+      updates.branding = {
+        ...salon.branding,
+        primaryColor: config.branding.primaryColor,
+        secondaryColor: config.branding.secondaryColor,
+        accentColor: config.branding.accentColor,
+      };
     }
 
     const updated = await salonRepository.updateBySalonId(salonId, updates);

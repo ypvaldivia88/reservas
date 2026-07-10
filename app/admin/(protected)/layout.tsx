@@ -6,6 +6,7 @@ import AdminNav from "@/components/AdminNav";
 import AdminSidebarMenu from "@/components/AdminSidebarMenu";
 import AdminRoleGuard from "@/components/AdminRoleGuard";
 import ThemeToggle from "@/components/ThemeToggle";
+import DarkToneSelect from "@/components/DarkToneSelect";
 import HamburgerButton from "@/components/HamburgerButton";
 import { Button } from "@/components/ui/Button";
 import { HomeIcon } from "@/components/ui/Icons";
@@ -54,6 +55,7 @@ export default function AdminProtectedLayout({
             </div>
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <DarkToneSelect />
               <div className="hidden md:flex">
                 <ThemeToggle />
               </div>
