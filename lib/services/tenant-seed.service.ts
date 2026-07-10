@@ -18,7 +18,7 @@ export async function seedTenantMedia(
   heroImageUrl: string;
   serviceCount: number;
   imageCount: number;
-  source: "unsplash" | "local";
+  source: "unsplash" | "curated";
 }> {
   const placeholders = pack ?? (await resolvePlaceholderPack(template));
   const services = getBusinessTemplate(template).defaultServices;
@@ -73,7 +73,7 @@ export async function reseedTenantMedia(
   heroImageUrl: string;
   serviceCount: number;
   imageCount: number;
-  source: "unsplash" | "local";
+  source: "unsplash" | "curated";
 }> {
   const scope = tenantQuery(salonId);
   const now = new Date();
