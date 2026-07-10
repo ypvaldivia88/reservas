@@ -2,10 +2,16 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { DEFAULT_PLANS } from "@/lib/subscription";
+import {
+  calculatePlanPrice,
+  DEFAULT_PLANS,
+  formatSubscriptionAmount,
+} from "@/lib/subscription";
 
 export default function PricingSection() {
   const plan = DEFAULT_PLANS[0];
+  const semiannual = calculatePlanPrice(plan, "semiannual");
+  const yearly = calculatePlanPrice(plan, "yearly");
 
   return (
     <section id="precios" className="border-y border-border/60 bg-muted/30 py-16 sm:py-20">
@@ -52,16 +58,36 @@ export default function PricingSection() {
               </ul>
 
               <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-                <p>
-                  <span className="font-medium text-foreground">
-                    {plan.descuentoSemestralPorcentaje}% descuento
-                  </span>{" "}
-                  en plan semestral ·{" "}
-                  <span className="font-medium text-foreground">
-                    {plan.descuentoAnualPorcentaje}% descuento
-                  </span>{" "}
-                  en plan anual
-                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <p className="font-medium text-foreground">Mensual</p>
+                    <p className="mt-1 tabular-nums">
+                      {formatSubscriptionAmount(plan.precioMensual)}/mes
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">
+                      6 meses · {plan.descuentoSemestralPorcentaje}% off
+                    </p>
+                    <p className="mt-1 tabular-nums">
+                      {formatSubscriptionAmount(semiannual.montoFinal)} total
+                    </p>
+                    <p className="text-xs">
+                      {formatSubscriptionAmount(semiannual.precioMensualEquivalente)}/mes
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">
+                      Anual · {plan.descuentoAnualPorcentaje}% off
+                    </p>
+                    <p className="mt-1 tabular-nums">
+                      {formatSubscriptionAmount(yearly.montoFinal)} total
+                    </p>
+                    <p className="text-xs">
+                      {formatSubscriptionAmount(yearly.precioMensualEquivalente)}/mes
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <Link

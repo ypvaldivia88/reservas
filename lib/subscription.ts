@@ -142,7 +142,7 @@ export const DEFAULT_PLANS: Omit<SubscriptionPlan, "_id">[] = [
   {
     nombre: "Salón",
     descripcion: "Acceso completo a todas las funciones de la plataforma",
-    precioMensual: 15,
+    precioMensual: 10,
     descuentoSemestralPorcentaje: 10,
     descuentoAnualPorcentaje: 15,
     caracteristicas: [
