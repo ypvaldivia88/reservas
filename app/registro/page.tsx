@@ -32,7 +32,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="shrink-0 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition-colors"
+      className="shrink-0 min-h-10 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition-colors"
     >
       {copied ? "¡Copiado!" : "Copiar"}
     </button>
@@ -157,9 +157,9 @@ export default function RegistroPage() {
     const reservaUrl = `${origin}/reserva?slug=${success.slug}`;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+      <div id="main-content" className="min-h-screen bg-background py-12 px-4">
         <div className="max-w-lg mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700 text-center">
+          <div className="rounded-xl border border-border bg-card p-6 sm:p-8 text-center shadow-sm">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -217,31 +217,32 @@ export default function RegistroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+    <div id="main-content" className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-8">
-          <Link href="/" className="text-sm text-violet-600 hover:underline mb-4 inline-block">
+          <Link href="/" className="text-sm text-primary hover:underline mb-4 inline-block">
             ← Volver al inicio
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold tracking-tight">
             Registra tu salón
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             14 días de prueba gratis · Sin tarjeta de crédito
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 space-y-5 border border-gray-200 dark:border-gray-700"
+          className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5 shadow-sm"
         >
           <div>
-            <label className="text-sm font-medium block mb-1">Nombre del salón</label>
+            <label htmlFor="nombre" className="text-sm font-medium block mb-1">Nombre del salón</label>
             <input
+              id="nombre"
               required
               value={form.nombre}
               onChange={(e) => handleNombreChange(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="w-full min-h-11 px-4 py-3 rounded-lg border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Ej: Bella Nails Studio"
             />
           </div>
