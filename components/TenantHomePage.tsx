@@ -11,7 +11,7 @@ import ProcessSection from "@/components/ProcessSection";
 import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import TenantFooter from "@/components/TenantFooter";
 import { SalonPublicProfile } from "@/lib/types";
-import { getTemplateHeroUrl } from "@/lib/placeholder-images";
+import { getTemplateHeroUrl } from "@/lib/placeholder-config";
 
 interface TenantHomePageProps {
   profile: SalonPublicProfile;

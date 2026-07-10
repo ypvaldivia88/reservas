@@ -702,7 +702,6 @@ export default function ContenidoAdmin() {
       <PageHeader
         title="Contenido y galería"
         description="Sube imágenes, asígnalas a servicios y marca cuáles aparecen en tu landing."
-        className="mb-6"
       />
 
       {message && (

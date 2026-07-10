@@ -157,23 +157,25 @@ export default function CalendarPicker({
           <button
             type="button"
             onClick={handlePreviousMonth}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="min-h-12 min-w-12 rounded-xl p-3 transition-colors hover:bg-muted disabled:opacity-40"
             disabled={
               currentMonth.getFullYear() === today.getFullYear() &&
               currentMonth.getMonth() === today.getMonth()
             }
+            aria-label="Mes anterior"
           >
-            <span className="text-xl">←</span>
+            <span className="text-2xl">←</span>
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground sm:text-xl">
             {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
           </h3>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="min-h-12 min-w-12 rounded-xl p-3 transition-colors hover:bg-muted"
+            aria-label="Mes siguiente"
           >
-            <span className="text-xl">→</span>
+            <span className="text-2xl">→</span>
           </button>
         </div>
 
@@ -217,14 +219,14 @@ export default function CalendarPicker({
                   type="button"
                   onClick={() => handleDateClick(day)}
                   disabled={isPast || !hasAvailability}
-                  className={`aspect-square p-2 rounded-lg text-sm font-medium transition-all ${
-                    isSelected ? "bg-blue-600 text-white shadow-lg"
+                  className={`flex min-h-12 items-center justify-center rounded-xl p-2 text-base font-semibold transition-all sm:min-h-14 ${
+                    isSelected ? "bg-primary text-primary-foreground shadow-lg"
                     : isPast ?
-                      "text-gray-300 dark:text-gray-700 cursor-not-allowed"
+                      "cursor-not-allowed text-muted-foreground/40"
                     : hasAvailability ?
-                      "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 border-2 border-green-200 dark:border-green-800"
-                    : "bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                  } ${isToday ? "ring-2 ring-blue-400" : ""}`}
+                      "border-2 border-primary/30 bg-primary/5 text-foreground hover:border-primary/60 hover:bg-primary/10"
+                    : "cursor-not-allowed bg-muted text-muted-foreground"
+                  } ${isToday ? "ring-2 ring-primary/50" : ""}`}
                 >
                   {day}
                 </button>
@@ -249,7 +251,7 @@ export default function CalendarPicker({
           {(
             selectedDateAvailability.slots.filter((s) => s.available).length > 0
           ) ?
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {selectedDateAvailability.slots
                 .filter((slot) => slot.available)
                 .map((slot) => (
@@ -257,13 +259,13 @@ export default function CalendarPicker({
                     key={slot.time}
                     type="button"
                     onClick={() => onTimeSelect(slot.time)}
-                    className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    className={`min-h-12 rounded-xl border-2 px-3 py-3 text-center text-base font-semibold transition-all ${
                       selectedTime === slot.time ?
-                        "border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                      : "border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-25 dark:hover:bg-blue-900/10 text-gray-900 dark:text-white"
+                        "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-foreground hover:border-primary/40"
                     }`}
                   >
-                    <div className="font-semibold">{slot.time}</div>
+                    {slot.time}
                   </button>
                 ))}
             </div>

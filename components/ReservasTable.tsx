@@ -447,7 +447,7 @@ export default function ReservasTable({
       </div>
 
       {/* Buscador y Filtro de Estados */}
-      <div className="flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-1.5 sm:p-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 glass-panel rounded-xl p-2 sm:p-2.5">
         {/* Botón de búsqueda / Input expandible */}
         <div
           className="flex-1 flex items-center gap-1.5 sm:gap-2 cursor-pointer min-w-0"
@@ -474,12 +474,13 @@ export default function ReservasTable({
                 Buscar...
               </span>
             </>
-          : <div className="flex-1 flex items-center gap-1.5 sm:gap-2 min-w-0">
+          : <div className="flex min-w-0 flex-1 items-center gap-3 pl-1">
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 flex-shrink-0"
+                className="size-5 shrink-0 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden
               >
                 <path
                   strokeLinecap="round"
@@ -489,12 +490,12 @@ export default function ReservasTable({
                 />
               </svg>
               <input
-                type="text"
+                type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar..."
+                placeholder="Buscar reservas..."
                 autoFocus
-                className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs sm:text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="min-w-0 flex-1 border-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
               <button
                 onClick={() => {
@@ -677,7 +678,7 @@ export default function ReservasTable({
       {viewMode === "month" && (
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Calendario */}
-          <div className="bg-white dark:bg-gray-800/30 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-4 w-full lg:w-auto lg:flex-shrink-0">
+          <div className="glass-panel w-full rounded-xl p-4 lg:w-auto lg:shrink-0">
             {/* Header del calendario */}
             <div className="flex items-center justify-between mb-4">
               <button
@@ -854,7 +855,7 @@ export default function ReservasTable({
                   {getFilteredReservas().map((reserva) => (
                     <div
                       key={reserva._id}
-                      className="group bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
+                      className="group glass-panel rounded-xl transition-all duration-200 hover:border-primary/40 overflow-hidden"
                     >
                       <div className="flex items-center">
                         {/* Indicador de estado (línea vertical) */}
@@ -1143,7 +1144,7 @@ export default function ReservasTable({
                   {reservasDelDia.map((reserva) => (
                     <div
                       key={reserva._id}
-                      className="group bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
+                      className="group glass-panel rounded-xl transition-all duration-200 hover:border-primary/40 overflow-hidden"
                     >
                       <div className="flex items-center">
                         {/* Indicador de estado (línea vertical) */}

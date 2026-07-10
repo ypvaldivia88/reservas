@@ -42,7 +42,7 @@ export default function AdminRoleGuard({
     if (isPlatform && !isPlatformRoute && !isSharedRoute) {
       router.replace("/admin/platform");
     } else if (!isPlatform && isPlatformRoute) {
-      router.replace("/admin/calendario");
+      router.replace("/admin/dashboard");
     }
   }, [loading, session, pathname, router]);
 

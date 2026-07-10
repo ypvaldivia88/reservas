@@ -48,46 +48,16 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 sm:mb-8">
             <span className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:mb-4 sm:px-4 sm:py-2 sm:text-sm">
-              Paso 1: Reserva tu cita
+              Reserva en pocos pasos
             </span>
-            <h1 className="mb-4 text-2xl font-bold leading-tight sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
+            <h1 className="mb-4 text-2xl font-bold leading-tight sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl">
               Reserva tu
-              <span className="block text-primary">Cita Perfecta</span>
+              <span className="block text-primary">cita</span>
             </h1>
-            <p className="mx-auto max-w-2xl px-2 text-base text-muted-foreground sm:text-lg md:text-xl">
-              Completa el formulario y agenda tu cita con nuestras
-              profesionales. Te contactaremos para confirmar la fecha y hora.
+            <p className="mx-auto max-w-2xl px-2 text-base text-muted-foreground sm:text-lg">
+              Solo necesitamos lo esencial. Los colores y la decoración son
+              opcionales — puedes decidirlo después con tu manicurista.
             </p>
-          </div>
-
-          <div className="mb-8 flex flex-col items-center justify-center space-y-3 sm:mb-12 sm:flex-row sm:space-x-4 sm:space-y-0">
-            {[
-              { step: 1, label: "Reserva", active: true },
-              { step: 2, label: "Confirmación", active: false },
-              { step: 3, label: "¡Disfruta!", active: false },
-            ].map((item, index) => (
-              <div key={item.step} className="flex items-center">
-                {index > 0 && (
-                  <div className="mx-1 hidden h-0.5 w-8 bg-border sm:mx-2 sm:block sm:w-12" />
-                )}
-                <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8 sm:text-sm ${
-                    item.active
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {item.step}
-                </div>
-                <span
-                  className={`ml-2 text-sm sm:text-base ${
-                    item.active ? "font-semibold text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </section>

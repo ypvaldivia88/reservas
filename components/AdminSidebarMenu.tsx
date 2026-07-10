@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import MobileNavDrawer from "./MobileNavDrawer";
 import { Button } from "@/components/ui/Button";
 import { LogoutIcon } from "@/components/ui/Icons";
-import { adminMediaNavItem } from "./AdminNav";
+import { adminMediaNavItem, adminServiciosNavItem } from "./AdminNav";
 
 interface AdminSidebarMenuProps {
   isOpen: boolean;
@@ -58,6 +58,7 @@ function SidebarLink({
 function getSalonSidebarItems(profileHref: string): SidebarItem[] {
   return [
     adminMediaNavItem,
+    adminServiciosNavItem,
     {
       href: "/admin/sitio",
       label: "Sitio",

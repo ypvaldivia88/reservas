@@ -1,4 +1,4 @@
-import { getTemplateHeroUrl } from "@/lib/placeholder-images";
+import { getTemplateHeroUrl } from "@/lib/placeholder-config";
 import {
   BusinessTemplate,
   SalonBranding,

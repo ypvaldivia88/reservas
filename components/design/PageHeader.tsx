@@ -14,7 +14,7 @@ export default function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        "mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between",
         className
       )}
     >
@@ -26,7 +26,7 @@ export default function PageHeader({
           </p>
         )}
       </div>
-      {actions ? <div className="shrink-0">{actions}</div> : null}
+      {actions ? <div className="shrink-0 sm:pt-1">{actions}</div> : null}
     </div>
   );
 }

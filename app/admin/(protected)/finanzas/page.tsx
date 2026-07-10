@@ -15,11 +15,6 @@ import {
   getPaymentMethodMeta,
   PAYMENT_METHOD_OPTIONS,
 } from "@/lib/paymentMethods";
-import { ArrowDownLeft, ArrowUpRight, Scale, Wallet } from "lucide-react";
-import {
-  CompactMetricRow,
-  MetricDashboardCard,
-} from "@/components/design/dashboard";
 
 const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
 
@@ -388,84 +383,6 @@ export default function FinanzasPage() {
         <FinanzasSkeleton />
       ) : (
         <>
-      {/* Resumen */}
-      {report && (
-        <div className="space-y-3">
-          <MetricDashboardCard
-            icon={ArrowUpRight}
-            title="Ingresos totales"
-            badge={{ label: "Período", variant: "success" }}
-            value={formatTransactionAmount(report.resumen.ingresos)}
-            valueLabel="CUP en el rango seleccionado"
-            progress={
-              report.resumen.ingresos > 0
-                ? Math.min(
-                    100,
-                    Math.round(
-                      (report.ingresosPorReservas / report.resumen.ingresos) *
-                        100
-                    )
-                  )
-                : 0
-            }
-            details={[
-              {
-                label: "Reservas",
-                value: formatTransactionAmount(report.ingresosPorReservas),
-              },
-              {
-                label: "Manual",
-                value: formatTransactionAmount(report.ingresosManuales),
-              },
-              {
-                label: "Gastos",
-                value: formatTransactionAmount(report.resumen.gastos),
-              },
-              {
-                label: "Balance",
-                value: formatTransactionAmount(report.resumen.balance),
-              },
-            ]}
-            footer="Ingresos por reservas vs. registros manuales"
-          />
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {ingresosPorMetodoPago.map((item) => (
-              <CompactMetricRow
-                key={item.metodo}
-                icon={Wallet}
-                title={item.label}
-                subtitle="Ingresos por forma de cobro"
-                value={formatTransactionAmount(item.total)}
-                badge={{ label: "Ingreso", variant: "success" }}
-              />
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <CompactMetricRow
-              icon={ArrowDownLeft}
-              title="Gastos"
-              subtitle="Salidas del período"
-              value={formatTransactionAmount(report.resumen.gastos)}
-              badge={{ label: "Egreso", variant: "warning" }}
-            />
-            <CompactMetricRow
-              icon={Scale}
-              title="Balance (CUP)"
-              subtitle={
-                report.resumen.balance >= 0 ? "Resultado positivo" : "Déficit"
-              }
-              value={formatTransactionAmount(report.resumen.balance)}
-              badge={{
-                label: report.resumen.balance >= 0 ? "Saludable" : "Revisar",
-                variant: report.resumen.balance >= 0 ? "success" : "warning",
-              }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Reportes por categoría y forma de cobro */}
       {report && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

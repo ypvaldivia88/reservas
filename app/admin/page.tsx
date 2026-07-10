@@ -30,7 +30,7 @@ export default function AdminLogin() {
       if (data.success) {
         const role = data.data?.user?.role;
         router.push(
-          role === "platform_admin" ? "/admin/platform" : "/admin/calendario"
+          role === "platform_admin" ? "/admin/platform" : "/admin/dashboard"
         );
       } else {
         setError(data.error || "Error al iniciar sesión");
