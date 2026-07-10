@@ -2,16 +2,25 @@ import { Db } from "mongodb";
 import { BusinessTemplate } from "@/lib/types";
 import { Collections } from "@/lib/db/collections";
 import { getBusinessTemplate } from "@/lib/business-templates";
-import { getTenantPlaceholders } from "@/lib/tenant-placeholders";
+import {
+  resolvePlaceholderPack,
+  type ResolvedPlaceholderPack,
+} from "@/lib/placeholder-images";
 import { tenantQuery } from "@/lib/tenant";
 
 export async function seedTenantMedia(
   db: Db,
   salonId: string,
   template: BusinessTemplate,
+  pack?: ResolvedPlaceholderPack,
   now = new Date()
-): Promise<{ heroImageUrl: string; serviceCount: number; imageCount: number }> {
-  const placeholders = getTenantPlaceholders(template);
+): Promise<{
+  heroImageUrl: string;
+  serviceCount: number;
+  imageCount: number;
+  source: "unsplash" | "local";
+}> {
+  const placeholders = pack ?? (await resolvePlaceholderPack(template));
   const services = getBusinessTemplate(template).defaultServices;
 
   const imageDocs = placeholders.serviceImages.map((asset, index) => ({
@@ -51,6 +60,7 @@ export async function seedTenantMedia(
     heroImageUrl: placeholders.heroImageUrl,
     serviceCount: services.length,
     imageCount: imageIds.length,
+    source: placeholders.source,
   };
 }
 
@@ -59,12 +69,18 @@ export async function reseedTenantMedia(
   db: Db,
   salonId: string,
   template: BusinessTemplate
-): Promise<{ heroImageUrl: string; serviceCount: number; imageCount: number }> {
+): Promise<{
+  heroImageUrl: string;
+  serviceCount: number;
+  imageCount: number;
+  source: "unsplash" | "local";
+}> {
   const scope = tenantQuery(salonId);
   const now = new Date();
 
   await db.collection(Collections.SERVICIOS).deleteMany(scope);
   await db.collection(Collections.IMAGENES).deleteMany(scope);
 
-  return seedTenantMedia(db, salonId, template, now);
+  const pack = await resolvePlaceholderPack(template);
+  return seedTenantMedia(db, salonId, template, pack, now);
 }

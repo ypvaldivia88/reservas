@@ -6,7 +6,6 @@ import "./load-env";
 import { getDb } from "../lib/mongodb";
 import { salonRepository } from "../lib/repositories/salon.repository";
 import { reseedTenantMedia } from "../lib/services/tenant-seed.service";
-import { getTenantPlaceholders } from "../lib/tenant-placeholders";
 import { BusinessTemplate } from "../lib/types";
 
 async function reseedSlug(slug: string) {
@@ -18,14 +17,13 @@ async function reseedSlug(slug: string) {
 
   const template = (salon.businessTemplate || "generic") as BusinessTemplate;
   const db = await getDb();
-  const placeholders = getTenantPlaceholders(template);
 
   const result = await reseedTenantMedia(db, salon.salonId, template);
 
   await salonRepository.updateBySalonId(salon.salonId, {
     branding: {
       ...salon.branding,
-      heroImageUrl: placeholders.heroImageUrl,
+      heroImageUrl: result.heroImageUrl,
       logoUrl: undefined,
       logoSmallUrl: undefined,
     },
@@ -33,7 +31,7 @@ async function reseedSlug(slug: string) {
   });
 
   console.log(
-    `Reseeded ${slug} (${salon.salonId}): ${result.serviceCount} services, ${result.imageCount} images`
+    `Reseeded ${slug} (${salon.salonId}): ${result.serviceCount} services, ${result.imageCount} images [${result.source}]`
   );
   return true;
 }
