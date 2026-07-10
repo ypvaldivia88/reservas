@@ -227,3 +227,22 @@
 .admin-dock {
   @apply fixed inset-x-3 bottom-3 z-40 mx-auto max-w-lg rounded-2xl border border-border/80 bg-card/85 shadow-lg backdrop-blur-xl sm:inset-x-4;
 }
+
+.tenant-footer {
+  background: oklch(0.16 0.018 260);
+  color: oklch(0.96 0.004 90);
+}
+
+.tenant-footer-accent {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--primary) 70%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+.footer-heading {
+  @apply text-xs font-semibold uppercase tracking-[0.14em] text-white/45;
+}

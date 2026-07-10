@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { Suspense } from "react";
 import Header from "@/components/Header";
 import TenantHeader from "@/components/TenantHeader";
 import TenantBrandingProvider from "@/components/TenantBrandingProvider";
+import TenantFooter from "@/components/TenantFooter";
 import ReservaForm from "@/components/ReservaForm";
 import SurfaceCard from "@/components/design/SurfaceCard";
 import { salonCmsService } from "@/lib/services/salon-cms.service";
@@ -41,7 +41,6 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
   );
   const displayPhone =
     profile?.contact?.phone || profile?.whatsappNumber || salonWhatsapp;
-  const salonName = profile?.nombre ?? "Oh`Diosa Salón";
 
   const pageContent = (
     <div className="min-h-screen bg-background transition-colors duration-200">
@@ -197,24 +196,21 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
         </div>
       </section>
 
-      <footer className="bg-foreground py-8 text-background sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mb-3 flex items-center justify-center space-x-2 sm:mb-4">
-            <Image
-              src={profile?.branding?.logoUrl || "/logo.png"}
-              alt={`${salonName} Logo`}
-              height={72}
-              width={72}
-            />
+      {profile ? (
+        <TenantFooter profile={profile} reservaPath={`/reserva?slug=${profile.slug}`} />
+      ) : (
+        <footer className="tenant-footer">
+          <div className="tenant-footer-accent" aria-hidden />
+          <div className="mx-auto max-w-7xl px-5 py-10 text-center sm:px-6 lg:px-8">
+            <p className="text-sm text-white/70">
+              Tu salón de confianza para el cuidado profesional de uñas
+            </p>
+            <p className="mt-3 text-xs text-white/45">
+              &copy; {new Date().getFullYear()} ReservaSalón
+            </p>
           </div>
-          <p className="mb-3 text-sm text-background/70 sm:mb-4 sm:text-base">
-            Tu salón de confianza para el cuidado profesional de uñas
-          </p>
-          <p className="text-xs text-background/50 sm:text-sm">
-            &copy; {new Date().getFullYear()} {salonName}. Todos los derechos reservados.
-          </p>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 
