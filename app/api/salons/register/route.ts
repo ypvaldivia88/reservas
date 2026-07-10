@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { publicHandler } from "@/lib/api/handlers";
+import { statelessPublicHandler } from "@/lib/api/handlers";
 import { created } from "@/lib/api/responses";
 import { salonService } from "@/lib/services/salon.service";
 import { authService } from "@/lib/services/auth.service";
 import { SalonRegistrationRequest } from "@/lib/types";
 
-export const POST = publicHandler(async ({ request }) => {
+export const POST = statelessPublicHandler(async ({ request }) => {
   const body: SalonRegistrationRequest = await request.json();
   const result = await salonService.register(body);
 

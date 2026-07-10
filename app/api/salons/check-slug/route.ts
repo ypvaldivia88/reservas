@@ -1,8 +1,8 @@
-import { publicHandler } from "@/lib/api/handlers";
+import { statelessPublicHandler } from "@/lib/api/handlers";
 import { ok } from "@/lib/api/responses";
 import { salonService } from "@/lib/services/salon.service";
 
-export const GET = publicHandler(async ({ request }) => {
+export const GET = statelessPublicHandler(async ({ request }) => {
   const slug = request.nextUrl.searchParams.get("slug") || "";
   const available = await salonService.isSlugAvailable(slug);
   const normalized = salonService.normalizeSlug(slug);

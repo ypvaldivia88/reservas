@@ -50,6 +50,19 @@ export function publicHandler(handler: HandlerFn) {
 }
 
 /**
+ * Handler público sin resolver tenant desde ?slug=.
+ * Usar en registro y validación de slug, donde el parámetro no identifica un salón existente.
+ */
+export function statelessPublicHandler(handler: HandlerFn) {
+  return wrapHandler(handler, async (request, params) => ({
+    request,
+    params,
+    tenant: { salonId: "" },
+    salonId: "",
+  }));
+}
+
+/**
  * GET híbrido: admin autenticado usa salonId de sesión;
  * visitantes públicos usan ?slug= (o salón default).
  */

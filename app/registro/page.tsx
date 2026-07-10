@@ -94,6 +94,10 @@ export default function RegistroPage() {
     setSlugStatus("checking");
     const res = await fetch(`/api/salons/check-slug?slug=${encodeURIComponent(slug)}`);
     const data = await res.json();
+    if (!res.ok || !data.success) {
+      setSlugStatus("idle");
+      return;
+    }
     setSlugStatus(data.data?.available ? "ok" : "taken");
   }, []);
 
