@@ -20,6 +20,34 @@ import {
   MetricDashboardCard,
 } from "@/components/design/dashboard";
 
+function getReservaServicioIds(reserva: Reserva): string[] {
+  if (reserva.servicioIds && reserva.servicioIds.length > 0) {
+    return reserva.servicioIds;
+  }
+  return reserva.servicioId ? [reserva.servicioId] : [];
+}
+
+function normalizeReservaForEdit(reserva: Reserva): Reserva {
+  const base: Reserva = {
+    ...reserva,
+    servicioIds: getReservaServicioIds(reserva),
+    servicioId: getReservaServicioIds(reserva)[0],
+  };
+
+  if (
+    reserva.costo != null &&
+    reserva.cobroEfectivo == null &&
+    reserva.cobroTransferencia == null
+  ) {
+    if (reserva.metodoPago === "transferencia") {
+      return { ...base, cobroTransferencia: reserva.costo };
+    }
+    return { ...base, cobroEfectivo: reserva.costo };
+  }
+
+  return base;
+}
+
 // Componente interno que usa useSearchParams
 function DashboardContent() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
@@ -57,40 +85,12 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const getReservaServicioIds = (reserva: Reserva): string[] => {
-    if (reserva.servicioIds && reserva.servicioIds.length > 0) {
-      return reserva.servicioIds;
-    }
-    return reserva.servicioId ? [reserva.servicioId] : [];
-  };
-
   const getCobroTotal = (reserva: Reserva): number => {
     const efectivo = Number(reserva.cobroEfectivo) || 0;
     const transferencia = Number(reserva.cobroTransferencia) || 0;
     const fromCobro = efectivo + transferencia;
     if (fromCobro > 0) return fromCobro;
     return Number(reserva.costo) || 0;
-  };
-
-  const normalizeReservaForEdit = (reserva: Reserva): Reserva => {
-    const base: Reserva = {
-      ...reserva,
-      servicioIds: getReservaServicioIds(reserva),
-      servicioId: getReservaServicioIds(reserva)[0],
-    };
-
-    if (
-      reserva.costo != null &&
-      reserva.cobroEfectivo == null &&
-      reserva.cobroTransferencia == null
-    ) {
-      if (reserva.metodoPago === "transferencia") {
-        return { ...base, cobroTransferencia: reserva.costo };
-      }
-      return { ...base, cobroEfectivo: reserva.costo };
-    }
-
-    return base;
   };
 
   const buildReservaForSave = (reserva: Reserva): Reserva => {

@@ -46,37 +46,47 @@ export default function DynamicInspirationGallery({ slug }: { slug?: string }) {
   const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
 
   useEffect(() => {
-    loadData();
-  }, [slugQuery]);
+    let cancelled = false;
 
-  const loadData = async () => {
-    try {
-      const [imagenesRes, categoriasRes] = await Promise.all([
-        fetch(`/api/imagenes${slugQuery}`),
-        fetch(`/api/categorias${slugQuery}`),
-      ]);
+    async function loadData() {
+      try {
+        const [imagenesRes, categoriasRes] = await Promise.all([
+          fetch(`/api/imagenes${slugQuery}`),
+          fetch(`/api/categorias${slugQuery}`),
+        ]);
 
-      if (imagenesRes.ok && categoriasRes.ok) {
-        const imagenesData = await imagenesRes.json();
-        const categoriasData = await categoriasRes.json();
+        if (cancelled) return;
 
-        if (imagenesData.success && categoriasData.success) {
-          const imagenes: ImageData[] = imagenesData.data;
-          const cats: Categoria[] = categoriasData.data;
+        if (imagenesRes.ok && categoriasRes.ok) {
+          const imagenesData = await imagenesRes.json();
+          const categoriasData = await categoriasRes.json();
 
-          // Filter images that are marked for inspiration gallery
-          const inspirationImages = imagenes.filter(img => img.enGaleriaInspiracion);
+          if (imagenesData.success && categoriasData.success) {
+            const imagenes: ImageData[] = imagenesData.data;
+            const cats: Categoria[] = categoriasData.data;
 
-          setGalleryImages(inspirationImages);
-          setCategorias(cats.filter((cat) => cat.activo));
+            const inspirationImages = imagenes.filter(
+              (img) => img.enGaleriaInspiracion
+            );
+
+            setGalleryImages(inspirationImages);
+            setCategorias(cats.filter((cat) => cat.activo));
+          }
         }
+      } catch (error) {
+        console.error("Error loading gallery data:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading gallery data:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    setLoading(true);
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slugQuery]);
 
   if (loading) {
     return (

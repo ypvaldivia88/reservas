@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CreditCard, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import PlatformNav from "@/components/PlatformNav";
@@ -37,17 +37,17 @@ export default function PlatformPaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<PaymentFilter>("pending");
 
-  const loadPayments = async () => {
+  const loadPayments = useCallback(async () => {
     setLoading(true);
     const res = await fetch(`/api/platform/payments?status=${filter}`);
     const data = await res.json();
     if (data.success) setPayments(data.data);
     setLoading(false);
-  };
+  }, [filter]);
 
   useEffect(() => {
     loadPayments();
-  }, [filter]);
+  }, [loadPayments]);
 
   const handleAction = async (paymentId: string, action: "approve" | "reject") => {
     const res = await fetch("/api/platform/payments", {
