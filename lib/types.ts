@@ -348,6 +348,12 @@ export interface AdminUserUpdateRequest {
   nombre?: string;
   username?: string;
   newPassword?: string;
+  salonId?: string;
+}
+
+export interface PlatformUserListItem extends User {
+  reservasTotal?: number;
+  reservasActivas?: number;
 }
 
 export interface UserProfile {
