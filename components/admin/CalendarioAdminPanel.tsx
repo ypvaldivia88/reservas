@@ -1,11 +1,15 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Reserva, Servicio } from "@/lib/types";
+import { BusinessTemplate, Reserva, Servicio } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/Button";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import ReservasTable from "@/components/ReservasTable";
+import {
+  getReservaTemplateConfig,
+  isManicureReservation,
+} from "@/lib/reserva-template-config";
 import {
   EditIcon,
   TrashIcon,
@@ -62,7 +66,12 @@ function CalendarioAdminPanel() {
   >("todos");
 
   const [actionMessage, setActionMessage] = useState("");
+  const [businessTemplate, setBusinessTemplate] = useState<BusinessTemplate | null>(
+    null
+  );
   const searchParams = useSearchParams();
+  const isManicure = isManicureReservation(businessTemplate);
+  const templateConfig = getReservaTemplateConfig(businessTemplate);
 
   const getCobroTotal = (reserva: Reserva): number => {
     const efectivo = Number(reserva.cobroEfectivo) || 0;
@@ -186,6 +195,19 @@ function CalendarioAdminPanel() {
           setServicios(dataServicios.data);
         }
       }
+
+      const resSalon = await fetch("/api/salons/current");
+      if (resSalon.ok) {
+        const salonData = await resSalon.json();
+        if (salonData.success) {
+          const template =
+            salonData.data?.cms?.businessTemplate ??
+            salonData.data?.businessTemplate;
+          if (template) {
+            setBusinessTemplate(template);
+          }
+        }
+      }
     } catch (error) {
       console.error("Error cargando datos:", error);
     } finally {
@@ -207,8 +229,9 @@ function CalendarioAdminPanel() {
         body: JSON.stringify({
           nombre: payload.nombre,
           telefono: payload.telefono,
-          forma: payload.forma,
-          largo: payload.largo,
+          ...(isManicure
+            ? { forma: payload.forma, largo: payload.largo }
+            : {}),
           decoracion: payload.decoracion,
           fechaCita: payload.fechaCita,
           horaCita: payload.horaCita,
@@ -232,15 +255,19 @@ function CalendarioAdminPanel() {
         if (openWhatsApp) {
           setTimeout(() => {
             if (reserva.estado === "confirmada") {
-              openConfirmationWhatsApp(reserva.telefono, {
-                nombre: reserva.nombre,
-                telefono: reserva.telefono,
-                fechaCita: reserva.fechaCita,
-                horaCita: reserva.horaCita,
-                forma: reserva.forma,
-                largo: reserva.largo,
-                decoracion: reserva.decoracion,
-              });
+              openConfirmationWhatsApp(
+                reserva.telefono,
+                {
+                  nombre: reserva.nombre,
+                  telefono: reserva.telefono,
+                  fechaCita: reserva.fechaCita,
+                  horaCita: reserva.horaCita,
+                  forma: reserva.forma,
+                  largo: reserva.largo,
+                  decoracion: reserva.decoracion,
+                },
+                businessTemplate
+              );
             } else if (reserva.estado === "cancelada") {
               openCancellationWhatsApp(reserva.telefono, {
                 nombre: reserva.nombre,
@@ -328,6 +355,7 @@ function CalendarioAdminPanel() {
         <ReservasTable
           reservas={reservas}
           saving={saving}
+          businessTemplate={businessTemplate}
           onEdit={(reserva) => setEditingReserva(normalizeReservaForEdit(reserva))}
           onDelete={setDeletingReserva}
           onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
@@ -408,49 +436,53 @@ function CalendarioAdminPanel() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Forma
-                    </label>
-                    <select
-                      value={editingReserva.forma}
-                      onChange={(e) =>
-                        setEditingReserva({
-                          ...editingReserva,
-                          forma: e.target.value as
-                            | "coffin"
-                            | "almond"
-                            | "stiletto"
-                            | "square",
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
-                    >
-                      <option value="coffin">Coffin</option>
-                      <option value="almond">Almond</option>
-                      <option value="stiletto">Stiletto</option>
-                      <option value="square">Square</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Largo
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="8"
-                      value={editingReserva.largo}
-                      onChange={(e) =>
-                        setEditingReserva({
-                          ...editingReserva,
-                          largo: parseInt(e.target.value),
-                        })
-                      }
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                      required
-                    />
-                  </div>
+                  {isManicure && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Forma
+                        </label>
+                        <select
+                          value={editingReserva.forma}
+                          onChange={(e) =>
+                            setEditingReserva({
+                              ...editingReserva,
+                              forma: e.target.value as
+                                | "coffin"
+                                | "almond"
+                                | "stiletto"
+                                | "square",
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white"
+                        >
+                          <option value="coffin">Coffin</option>
+                          <option value="almond">Almond</option>
+                          <option value="stiletto">Stiletto</option>
+                          <option value="square">Square</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Largo
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="8"
+                          value={editingReserva.largo}
+                          onChange={(e) =>
+                            setEditingReserva({
+                              ...editingReserva,
+                              largo: parseInt(e.target.value),
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Fecha Cita
@@ -511,7 +543,9 @@ function CalendarioAdminPanel() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Decoración
+                      {isManicure
+                        ? "Decoración"
+                        : templateConfig.reservation.summaryDetailsLabel}
                     </label>
                     <textarea
                       value={editingReserva.decoracion || ""}

@@ -152,9 +152,14 @@ export function generateConfirmationWhatsAppLink(
  */
 export function openConfirmationWhatsApp(
   clientPhone: string,
-  reserva: ReservaDetails
+  reserva: ReservaDetails,
+  businessTemplate?: BusinessTemplate | null
 ): void {
-  const whatsappLink = generateConfirmationWhatsAppLink(clientPhone, reserva);
+  const whatsappLink = generateConfirmationWhatsAppLink(
+    clientPhone,
+    reserva,
+    businessTemplate
+  );
   
   if (typeof window !== 'undefined') {
     window.open(whatsappLink, '_blank');

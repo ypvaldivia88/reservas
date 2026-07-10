@@ -19,9 +19,11 @@ import { phoneUtils } from "@/lib/utils";
 import { FORMA_LABELS } from "@/lib/nail-form-labels";
 import { isValidHexColor, normalizeHexColor } from "@/lib/color-utils";
 import ReservaServiceDetailsStep from "@/components/reserva/ReservaServiceDetailsStep";
-import ReservaGenericDetailsStep, {
-  applyGenericDefaults,
-} from "@/components/reserva/ReservaGenericDetailsStep";
+import {
+  applyTemplateFormDefaults,
+  buildReservaCreatePayloadFromForm,
+} from "@/lib/reserva-payload";
+import ReservaGenericDetailsStep from "@/components/reserva/ReservaGenericDetailsStep";
 import ReservaOptionalPreferences from "@/components/reserva/ReservaOptionalPreferences";
 import {
   getReservaTemplateConfig,
@@ -366,19 +368,7 @@ export default function ReservaForm({
             isValid = false;
           }
           break;
-        case 3: // Forma y largo (manicure)
-          if (isManicure) {
-            ["forma", "largo"].forEach((field) => {
-              const error = validateField(
-                field as keyof ReservaFormData,
-                form[field as keyof ReservaFormData]
-              );
-              if (error) {
-                newErrors[field as keyof FormErrors] = error;
-                isValid = false;
-              }
-            });
-          }
+        case 3: // Forma y largo (manicure) — optional; defaults on submit
           break;
         case 4: // Confirmar
           break;
@@ -391,15 +381,20 @@ export default function ReservaForm({
   );
 
   const handleNext = useCallback(() => {
-    if (!validateStep(currentStep)) return;
+    const steppedForm =
+      currentStep === 3
+        ? applyTemplateFormDefaults(form, businessTemplate)
+        : form;
 
-    if (currentStep === 3 && !isManicure) {
-      setForm((prev) => applyGenericDefaults(prev, templateConfig));
+    if (currentStep === 3) {
+      setForm(steppedForm);
     }
+
+    if (!validateStep(currentStep)) return;
 
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     window.scrollTo({ top: 400, behavior: "smooth" });
-  }, [currentStep, validateStep, isManicure, templateConfig]);
+  }, [currentStep, validateStep, businessTemplate, form]);
 
   const handlePrevious = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -433,10 +428,7 @@ export default function ReservaForm({
     setMensaje("");
 
     try {
-      let submitForm = form;
-      if (!isManicure) {
-        submitForm = applyGenericDefaults(form, templateConfig);
-      }
+      const payload = buildReservaCreatePayloadFromForm(form, businessTemplate);
 
       for (let step = 1; step <= 3; step++) {
         if (!validateStep(step)) {
@@ -445,18 +437,6 @@ export default function ReservaForm({
           return;
         }
       }
-
-      const decoracionParts: string[] = [];
-      if (submitForm.decoracion?.trim()) {
-        decoracionParts.push(submitForm.decoracion.trim());
-      }
-      if (submitForm.colores?.trim()) {
-        decoracionParts.push(`Colores: ${submitForm.colores.trim()}`);
-      }
-      const payload = {
-        ...submitForm,
-        decoracion: decoracionParts.join("; "),
-      };
 
       const res = await fetch(`/api/reservas${tenantQueryString}`, {
         method: "POST",
@@ -481,12 +461,12 @@ export default function ReservaForm({
           setTimeout(() => {
             openWhatsAppNotification(
               {
-                nombre: submitForm.nombre,
-                telefono: submitForm.telefono,
-                fechaCita: submitForm.fechaCita,
-                horaCita: submitForm.horaCita,
-                forma: submitForm.forma,
-                largo: parseInt(submitForm.largo),
+                nombre: payload.nombre,
+                telefono: payload.telefono,
+                fechaCita: payload.fechaCita,
+                horaCita: payload.horaCita,
+                forma: payload.forma,
+                largo: payload.largo,
                 decoracion: payload.decoracion,
                 imagenReferencia: selectedImageUrl || undefined,
               },
@@ -504,8 +484,8 @@ export default function ReservaForm({
         setForm({
           nombre: savedNombre,
           telefono: savedTelefono,
-          forma: isManicure ? "square" : "",
-          largo: isManicure ? "3" : "3",
+          forma: "square",
+          largo: "3",
           colores: "",
           decoracion: "",
           fechaCita: "",

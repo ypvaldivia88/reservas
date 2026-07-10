@@ -1,12 +1,14 @@
 import { adminHandler, publicHandler } from "@/lib/api/handlers";
 import { ok } from "@/lib/api/responses";
 import { reservaService } from "@/lib/services/reserva.service";
-import { FORMAS_UNAS, Reserva, PaymentMethod } from "@/lib/types";
+import { Reserva, PaymentMethod } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
 import { AppError } from "@/lib/api/errors";
 import { isMongoDuplicateKeyError } from "@/lib/reservaValidation";
 import { clientDayConflictMessage } from "@/lib/reservaValidation";
 import { isPaymentMethod } from "@/lib/paymentMethods";
+import { salonRepository } from "@/lib/repositories/salon.repository";
+import { applyReservaPatchFields } from "@/lib/reserva-payload";
 
 export const GET = publicHandler(async ({ salonId, params }) => {
   const data = await reservaService.getById(salonId, params.id);
@@ -16,6 +18,7 @@ export const GET = publicHandler(async ({ salonId, params }) => {
 export const PATCH = adminHandler(async ({ salonId, params, request }) => {
   const data = await request.json();
   const updateData: Partial<Reserva> = {};
+  const salon = await salonRepository.findBySalonId(salonId);
 
   if (data.estado) {
     if (!["pendiente", "confirmada", "cancelada", "completada"].includes(data.estado)) {
@@ -37,15 +40,23 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
       throw new AppError("Formato de teléfono inválido", 400);
     }
   }
-  if (data.forma && FORMAS_UNAS.includes(data.forma)) {
-    updateData.forma = data.forma;
+  const templateFields = applyReservaPatchFields(
+    {
+      forma: data.forma,
+      largo: data.largo,
+      decoracion: data.decoracion,
+      colores: data.colores,
+    },
+    salon?.businessTemplate
+  );
+  if (templateFields.forma !== undefined) {
+    updateData.forma = templateFields.forma;
   }
-  if (data.largo !== undefined) {
-    const largo = Number(data.largo);
-    if (largo >= 1 && largo <= 8) updateData.largo = largo;
+  if (templateFields.largo !== undefined) {
+    updateData.largo = templateFields.largo;
   }
-  if (data.decoracion !== undefined) {
-    updateData.decoracion = data.decoracion.trim();
+  if (templateFields.decoracion !== undefined) {
+    updateData.decoracion = templateFields.decoracion;
   }
   if (data.costo !== undefined) {
     const costo = Number(data.costo);

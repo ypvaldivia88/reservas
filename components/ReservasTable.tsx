@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Reserva } from "@/lib/types";
+import { BusinessTemplate, Reserva } from "@/lib/types";
+import { isManicureReservation } from "@/lib/reserva-template-config";
 import { Button } from "@/components/ui/Button";
 import {
   CheckIcon,
@@ -13,6 +14,7 @@ import {
 interface ReservasTableProps {
   reservas: Reserva[];
   saving: boolean;
+  businessTemplate?: BusinessTemplate | null;
   onEdit: (reserva: Reserva) => void;
   onDelete: (reserva: Reserva) => void;
   onUpdateStatus: (
@@ -30,6 +32,7 @@ type ViewMode = "month" | "agenda";
 export default function ReservasTable({
   reservas,
   saving,
+  businessTemplate,
   onEdit,
   onDelete,
   onUpdateStatus,
@@ -37,6 +40,8 @@ export default function ReservasTable({
   externalEstadoFilter,
   onViewModeChange,
 }: ReservasTableProps) {
+  const isManicure = isManicureReservation(businessTemplate);
+
   // Función para obtener el próximo turno
   const getProximoTurnoFecha = () => {
     const now = new Date();
@@ -203,7 +208,8 @@ export default function ReservasTable({
         reserva.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
         reserva.telefono?.includes(searchQuery) ||
         reserva.decoracion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        reserva.forma.toLowerCase().includes(searchQuery.toLowerCase());
+        (isManicure &&
+          reserva.forma.toLowerCase().includes(searchQuery.toLowerCase()));
 
       // Filtro de estado
       const matchesEstado =
@@ -896,11 +902,19 @@ export default function ReservasTable({
                                   </span>
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                                  <span className="capitalize">
-                                    {reserva.forma}
-                                  </span>
-                                  {" • "}
-                                  <span>Largo {reserva.largo}</span>
+                                  {isManicure ? (
+                                    <>
+                                      <span className="capitalize">
+                                        {reserva.forma}
+                                      </span>
+                                      {" • "}
+                                      <span>Largo {reserva.largo}</span>
+                                    </>
+                                  ) : (
+                                    <span>
+                                      {reserva.decoracion || "Detalles a confirmar"}
+                                    </span>
+                                  )}
                                   {reserva.telefono && (
                                     <>
                                       {" • "}
@@ -910,7 +924,7 @@ export default function ReservasTable({
                                     </>
                                   )}
                                 </div>
-                                {reserva.decoracion && (
+                                {isManicure && reserva.decoracion && (
                                   <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-1">
                                     {reserva.decoracion}
                                   </div>
@@ -1185,11 +1199,19 @@ export default function ReservasTable({
                                   </span>
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                                  <span className="capitalize">
-                                    {reserva.forma}
-                                  </span>
-                                  {" • "}
-                                  <span>Largo {reserva.largo}</span>
+                                  {isManicure ? (
+                                    <>
+                                      <span className="capitalize">
+                                        {reserva.forma}
+                                      </span>
+                                      {" • "}
+                                      <span>Largo {reserva.largo}</span>
+                                    </>
+                                  ) : (
+                                    <span>
+                                      {reserva.decoracion || "Detalles a confirmar"}
+                                    </span>
+                                  )}
                                   {reserva.telefono && (
                                     <>
                                       {" • "}
@@ -1199,7 +1221,7 @@ export default function ReservasTable({
                                     </>
                                   )}
                                 </div>
-                                {reserva.decoracion && (
+                                {isManicure && reserva.decoracion && (
                                   <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-1">
                                     {reserva.decoracion}
                                   </div>

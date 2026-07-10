@@ -19,6 +19,7 @@ import { salonRepository } from "@/lib/repositories/salon.repository";
 import { salonCmsService } from "@/lib/services/salon-cms.service";
 import { resolveSalonWhatsapp } from "@/lib/whatsapp";
 import { DEFAULT_SALON_ID, tenantQuery } from "@/lib/tenant";
+import { buildReservaCreatePayload, toReservaInput } from "@/lib/reserva-payload";
 
 export class ReservaService {
   private async getSalonWhatsappForNotifications(
@@ -44,18 +45,25 @@ export class ReservaService {
   }
 
   async create(salonId: string, data: Record<string, unknown>) {
-    const validacion = validateReservaInput(data as never);
+    const salon = await salonRepository.findBySalonId(salonId);
+    const prepared = buildReservaCreatePayload(
+      data as never,
+      salon?.businessTemplate
+    );
+    const validacion = validateReservaInput(toReservaInput(prepared));
     if (!validacion.isValid) {
       throw new AppError(validacion.errors.join(", "), 400);
     }
+
+    const payload = prepared;
 
     const db = await getDb();
     await ensureMultiTenantIndexes(db);
 
     const slotConflict = await findActiveSlotConflict(
       db,
-      data.fechaCita as string,
-      data.horaCita as string,
+      payload.fechaCita as string,
+      payload.horaCita as string,
       undefined,
       salonId
     );
@@ -68,12 +76,12 @@ export class ReservaService {
 
     let telefonoNormalizado: string;
     try {
-      telefonoNormalizado = phoneUtils.normalize(data.telefono as string);
+      telefonoNormalizado = phoneUtils.normalize(payload.telefono as string);
     } catch {
       throw new AppError("El número de teléfono ingresado no tiene un formato válido", 400);
     }
 
-    const nombreNormalizado = (data.nombre as string).trim();
+    const nombreNormalizado = (payload.nombre as string).trim();
     let cliente = await userRepository.findClienteByPhone(salonId, telefonoNormalizado);
 
     if (cliente) {
@@ -108,7 +116,7 @@ export class ReservaService {
 
     const clienteId = cliente._id?.toString();
 
-    const dayConflict = await findClientDayConflict(db, data.fechaCita as string, {
+    const dayConflict = await findClientDayConflict(db, payload.fechaCita as string, {
       clienteId,
       telefono: telefonoNormalizado,
       salonId,
@@ -122,12 +130,12 @@ export class ReservaService {
       clienteId,
       nombre: nombreNormalizado,
       telefono: telefonoNormalizado,
-      forma: data.forma as Reserva["forma"],
-      largo: Number(data.largo),
-      decoracion: (data.decoracion as string)?.trim() || "",
+      forma: payload.forma as Reserva["forma"],
+      largo: Number(payload.largo),
+      decoracion: (payload.decoracion as string)?.trim() || "",
       fechaCreacion: new Date(),
-      fechaCita: data.fechaCita as string,
-      horaCita: data.horaCita as string,
+      fechaCita: payload.fechaCita as string,
+      horaCita: payload.horaCita as string,
       estado: "pendiente",
     };
 

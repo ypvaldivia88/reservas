@@ -1,6 +1,5 @@
 "use client";
 
-import { ReservaFormData } from "@/lib/types";
 import { ReservaTemplateConfig } from "@/lib/reserva-template-config";
 
 interface ReservaGenericDetailsStepProps {
@@ -79,13 +78,8 @@ export default function ReservaGenericDetailsStep({
   );
 }
 
-export function applyGenericDefaults(
-  form: ReservaFormData,
-  config: ReservaTemplateConfig
-): ReservaFormData {
-  return {
-    ...form,
-    forma: config.reservation.genericDetails.defaultForma,
-    largo: "3",
-  };
-}
+export {
+  applyTemplateFormDefaults,
+  applyGenericDefaults,
+  applyManicureDefaults,
+} from "@/lib/reserva-payload";
