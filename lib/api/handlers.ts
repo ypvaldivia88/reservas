@@ -57,6 +57,11 @@ async function buildPublicOrSalonAdminContext(
   request: NextRequest,
   params: Record<string, string> = {}
 ): Promise<RequestContext> {
+  const slug = request.nextUrl.searchParams.get("slug");
+  if (slug) {
+    return buildPublicContext(request, params);
+  }
+
   const session = await getSession(request);
   if (session && isSalonAdminRole(session.role)) {
     const salonId = resolveAdminTenant(session);

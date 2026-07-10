@@ -11,6 +11,7 @@ import ProcessSection from "@/components/ProcessSection";
 import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import TenantFooter from "@/components/TenantFooter";
 import { SalonPublicProfile } from "@/lib/types";
+import { getTemplateHeroUrl } from "@/lib/tenant-placeholders";
 
 interface TenantHomePageProps {
   profile: SalonPublicProfile;
@@ -20,7 +21,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
   const { branding, content, contact, social } = profile;
   const primary = branding.primaryColor || "#2563eb";
   const secondary = branding.secondaryColor || "#7c3aed";
-  const heroImage = branding.heroImageUrl || "/main.avif";
+  const heroImage = branding.heroImageUrl || getTemplateHeroUrl(profile.businessTemplate);
   const reservaPath = `/reserva?slug=${profile.slug}`;
   const whatsapp =
     social.whatsapp || profile.whatsappNumber || contact.phone || "";

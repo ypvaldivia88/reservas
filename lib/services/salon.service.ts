@@ -23,6 +23,8 @@ import {
   getBusinessTemplate,
   isValidBusinessTemplate,
 } from "@/lib/business-templates";
+import { seedTenantMedia } from "@/lib/services/tenant-seed.service";
+import { getTenantPlaceholders } from "@/lib/tenant-placeholders";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const TRIAL_DAYS = 14;
@@ -85,6 +87,7 @@ export class SalonService {
         ? data.businessTemplate
         : "generic";
     const templateConfig = getBusinessTemplate(businessTemplate);
+    const placeholders = getTenantPlaceholders(businessTemplate);
 
     const db = await getDb();
 
@@ -97,7 +100,12 @@ export class SalonService {
       currency: "CUP",
       status: "active",
       businessTemplate,
-      branding: templateConfig.branding,
+      branding: {
+        ...templateConfig.branding,
+        heroImageUrl: placeholders.heroImageUrl,
+        logoUrl: undefined,
+        logoSmallUrl: undefined,
+      },
       content: {
         ...templateConfig.content,
         heroTitle: nombre,
@@ -136,17 +144,7 @@ export class SalonService {
       }))
     );
 
-    await db.collection(Collections.SERVICIOS).insertMany(
-      templateConfig.defaultServices.map((s, i) => ({
-        ...s,
-        salonId,
-        precio: 0,
-        activo: true,
-        orden: i + 1,
-        fechaCreacion: now,
-        fechaActualizacion: now,
-      }))
-    );
+    await seedTenantMedia(db, salonId, businessTemplate, now);
 
     const basicPlan = await db
       .collection(Collections.SUBSCRIPTION_PLANS)
