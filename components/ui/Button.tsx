@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export type ButtonVariant = 
   | 'primary' 
@@ -25,23 +26,23 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg',
-  secondary: 'bg-gray-600 hover:bg-gray-700 text-white border-2 border-gray-600 hover:border-gray-700 shadow-md hover:shadow-lg',
-  success: 'bg-green-600 hover:bg-green-700 text-white border-2 border-green-600 hover:border-green-700 shadow-md hover:shadow-lg',
-  danger: 'bg-red-600 hover:bg-red-700 text-white border-2 border-red-600 hover:border-red-700 shadow-md hover:shadow-lg',
-  warning: 'bg-yellow-600 hover:bg-yellow-700 text-white border-2 border-yellow-600 hover:border-yellow-700 shadow-md hover:shadow-lg',
-  'outlined-primary': 'bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-2 border-blue-500 hover:border-blue-600 dark:border-blue-400 dark:hover:border-blue-300',
-  'outlined-secondary': 'bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-400 hover:border-gray-500 dark:border-gray-500 dark:hover:border-gray-400',
-  'outlined-success': 'bg-transparent hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-400 border-2 border-green-500 hover:border-green-600 dark:border-green-400 dark:hover:border-green-300',
-  'outlined-danger': 'bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-400 border-2 border-red-500 hover:border-red-600 dark:border-red-400 dark:hover:border-red-300',
-  'outlined-warning': 'bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-2 border-yellow-500 hover:border-yellow-600 dark:border-yellow-400 dark:hover:border-yellow-300',
-  ghost: 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-transparent',
+  primary: 'bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-sm',
+  secondary: 'bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border shadow-sm',
+  success: 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 shadow-sm',
+  danger: 'bg-destructive hover:bg-destructive/90 text-white border border-destructive shadow-sm',
+  warning: 'bg-amber-500 hover:bg-amber-600 text-white border border-amber-500 shadow-sm',
+  'outlined-primary': 'bg-transparent hover:bg-primary/10 text-primary border border-primary/40 hover:border-primary',
+  'outlined-secondary': 'bg-transparent hover:bg-muted text-foreground border border-border hover:border-foreground/20',
+  'outlined-success': 'bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40',
+  'outlined-danger': 'bg-transparent hover:bg-destructive/10 text-destructive border border-destructive/40',
+  'outlined-warning': 'bg-transparent hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-500/40',
+  ghost: 'bg-transparent hover:bg-muted text-foreground border border-transparent',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs',
-  md: 'px-4 py-2.5 text-sm',
-  lg: 'px-6 py-3 text-base',
+  sm: 'min-h-9 px-3 py-1.5 text-xs',
+  md: 'min-h-10 px-4 py-2.5 text-sm',
+  lg: 'min-h-11 px-6 py-3 text-base',
 };
 
 const iconSizeClasses: Record<ButtonSize, string> = {
@@ -66,28 +67,28 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-manipulation';
+    const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation';
     
-    const classes = `
-      ${baseClasses}
-      ${variantClasses[variant]}
-      ${sizeClasses[size]}
-      ${fullWidth ? 'w-full' : ''}
-      ${!disabled && !loading ? 'hover:-translate-y-0.5 active:translate-y-0' : ''}
-      ${className}
-    `.trim().replace(/\s+/g, ' ');
+    const classes = cn(
+      baseClasses,
+      variantClasses[variant],
+      sizeClasses[size],
+      fullWidth && 'w-full',
+      className
+    );
 
     const iconElement = icon && (
-      <span className={`${iconSizeClasses[size]} flex-shrink-0`}>
+      <span className={cn(iconSizeClasses[size], 'flex-shrink-0')}>
         {icon}
       </span>
     );
 
     const loadingSpinner = (
       <svg
-        className={`${iconSizeClasses[size]} animate-spin flex-shrink-0`}
+        className={cn(iconSizeClasses[size], 'animate-spin flex-shrink-0')}
         fill="none"
         viewBox="0 0 24 24"
+        aria-hidden
       >
         <circle
           className="opacity-25"

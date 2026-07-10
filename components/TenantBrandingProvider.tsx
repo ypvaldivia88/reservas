@@ -46,6 +46,8 @@ export default function TenantBrandingProvider({
     "--tenant-primary": primary,
     "--tenant-secondary": secondary,
     "--tenant-primary-rgb": hexToRgb(primary) || "37, 99, 235",
+    "--primary": primary,
+    "--ring": primary,
   } as React.CSSProperties;
 
   return (

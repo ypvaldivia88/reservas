@@ -1,6 +1,8 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export const adminMediaNavItem = {
   href: "/admin/contenido",
@@ -8,10 +10,11 @@ export const adminMediaNavItem = {
   label: "Media",
   icon: (
     <svg
-      className="w-5 h-5 sm:w-6 sm:h-6"
+      className="h-5 w-5"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
+      aria-hidden
     >
       <path
         strokeLinecap="round"
@@ -29,18 +32,8 @@ const bottomNavItems = [
     matchPaths: ["/admin/calendario", "/admin/dashboard"],
     label: "Calendario",
     icon: (
-      <svg
-        className="w-5 h-5 sm:w-6 sm:h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     ),
   },
@@ -49,18 +42,8 @@ const bottomNavItems = [
     matchPaths: ["/admin/schedule"],
     label: "Horarios",
     icon: (
-      <svg
-        className="w-5 h-5 sm:w-6 sm:h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
@@ -69,18 +52,8 @@ const bottomNavItems = [
     matchPaths: ["/admin/servicios"],
     label: "Servicios",
     icon: (
-      <svg
-        className="w-5 h-5 sm:w-6 sm:h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-        />
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
       </svg>
     ),
   },
@@ -89,18 +62,8 @@ const bottomNavItems = [
     matchPaths: ["/admin/finanzas"],
     label: "Finanzas",
     icon: (
-      <svg
-        className="w-5 h-5 sm:w-6 sm:h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
@@ -110,36 +73,29 @@ export default function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 md:static bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t md:border-t-0 md:border-b border-gray-200 dark:border-white/10 md:mb-6 pb-[env(safe-area-inset-bottom,0px)]">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        <div className="grid grid-cols-4 gap-0.5 sm:gap-1 py-2 sm:py-3 md:py-4 md:max-w-2xl md:mx-auto">
-          {bottomNavItems.map((item) => {
-            const isActive = item.matchPaths.some((p) => pathname.startsWith(p));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-2 sm:py-2.5 rounded-xl transition-all duration-200 font-semibold min-h-[56px] ${
-                  isActive
-                    ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-              >
-                <span
-                  className={`transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
-                >
-                  {item.icon}
-                </span>
-                <span className="text-[10px] sm:text-xs leading-tight text-center truncate w-full">
-                  {item.label}
-                </span>
-                {isActive && (
-                  <span className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-blue-500 dark:bg-blue-400 md:hidden" />
-                )}
-              </Link>
-            );
-          })}
-        </div>
+    <nav className="admin-dock md:static md:max-w-none md:rounded-none md:border-x-0 md:border-b md:border-t md:bg-card/80 md:shadow-none md:backdrop-blur-md md:mb-6">
+      <div className="grid grid-cols-4 gap-1 p-1.5 sm:p-2 md:max-w-2xl md:mx-auto">
+        {bottomNavItems.map((item) => {
+          const isActive = item.matchPaths.some((p) => pathname.startsWith(p));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold transition-colors sm:text-xs",
+                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <span className={cn("transition-transform", isActive && "scale-110")}>
+                {item.icon}
+              </span>
+              <span className="truncate">{item.label}</span>
+              {isActive && (
+                <span className="absolute top-1 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary md:hidden" />
+              )}
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

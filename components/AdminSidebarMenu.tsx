@@ -37,15 +37,15 @@ function SidebarLink({
       onClick={onClose}
       className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-200 active:scale-[0.98] ${
         isActive
-          ? "bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-          : "text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/25 hover:text-blue-700 dark:hover:text-blue-300"
+          ? "bg-primary/10 text-primary"
+          : "text-foreground hover:bg-muted hover:text-primary"
       }`}
     >
       <span
         className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
           isActive
-            ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-            : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50"
+            ? "bg-primary/15 text-primary"
+            : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
         }`}
       >
         {item.icon}
@@ -152,7 +152,7 @@ export default function AdminSidebarMenu({
         ))}
       </div>
 
-      <div className="mt-6 pt-4 border-t border-gray-200/60 dark:border-white/10">
+      <div className="mt-6 pt-4 border-t border-border/60">
         <Button
           onClick={() => {
             onLogout();

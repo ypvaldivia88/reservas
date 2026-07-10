@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CreditCard, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import PlatformNav from "@/components/PlatformNav";
+import SurfaceCard from "@/components/design/SurfaceCard";
+import {
+  CompactMetricRow,
+  MetricDashboardCard,
+  SegmentedControl,
+} from "@/components/design/dashboard";
 import { getBillingCycleLabel, formatSubscriptionAmount } from "@/lib/subscription";
 
 interface PaymentItem {
@@ -17,10 +24,18 @@ interface PaymentItem {
   fechaCreacion: string;
 }
 
+type PaymentFilter = "pending" | "approved" | "rejected";
+
+const FILTER_OPTIONS = [
+  { value: "pending" as const, label: "Pendientes" },
+  { value: "approved" as const, label: "Aprobados" },
+  { value: "rejected" as const, label: "Rechazados" },
+];
+
 export default function PlatformPaymentsPage() {
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"pending" | "approved" | "rejected">("pending");
+  const [filter, setFilter] = useState<PaymentFilter>("pending");
 
   const loadPayments = async () => {
     setLoading(true);
@@ -44,67 +59,82 @@ export default function PlatformPaymentsPage() {
     if (data.success) loadPayments();
   };
 
+  const totalAmount = payments.reduce((sum, p) => sum + p.montoFinal, 0);
+
   return (
     <>
       <PlatformNav />
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Gestión de pagos
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+          <h2 className="text-2xl font-bold tracking-tight">Gestión de pagos</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Aprueba o rechaza pagos de suscripción recibidos por WhatsApp
           </p>
         </div>
 
-        <div className="flex gap-2">
-          {(["pending", "approved", "rejected"] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                filter === s
-                  ? "bg-violet-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              {s === "pending" ? "Pendientes" : s === "approved" ? "Aprobados" : "Rechazados"}
-            </button>
-          ))}
-        </div>
+        <MetricDashboardCard
+          icon={CreditCard}
+          title="Pagos de suscripción"
+          badge={{
+            label:
+              filter === "pending"
+                ? "Por revisar"
+                : filter === "approved"
+                  ? "Aprobados"
+                  : "Rechazados",
+            variant:
+              filter === "pending"
+                ? "warning"
+                : filter === "approved"
+                  ? "success"
+                  : "muted",
+          }}
+          value={String(payments.length)}
+          valueLabel="En la vista actual"
+          progress={
+            payments.length > 0 && filter === "approved" ? 100 : payments.length > 0 ? 50 : 0
+          }
+          details={[
+            { label: "Monto total", value: formatSubscriptionAmount(totalAmount) },
+            { label: "Vista", value: FILTER_OPTIONS.find((o) => o.value === filter)?.label ?? "" },
+            { label: "Estado", value: filter },
+            { label: "Cargando", value: loading ? "Sí" : "No" },
+          ]}
+        />
+
+        <SegmentedControl value={filter} options={FILTER_OPTIONS} onChange={setFilter} />
 
         {loading ? (
-          <p className="text-gray-500">Cargando...</p>
+          <p className="text-muted-foreground">Cargando...</p>
         ) : payments.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
-            <p className="text-gray-500">No hay pagos {filter === "pending" ? "pendientes" : ""}</p>
-          </div>
+          <SurfaceCard padding="lg" className="text-center">
+            <p className="text-muted-foreground">
+              No hay pagos {filter === "pending" ? "pendientes" : ""}
+            </p>
+          </SurfaceCard>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {payments.map((p) => (
-              <div
-                key={p._id}
-                className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">
+              <SurfaceCard key={p._id} padding="default">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-semibold">
                       {p.salonNombre ?? "Salón"} — {p.planNombre ?? "Plan"}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {getBillingCycleLabel(p.ciclo as "monthly" | "semiannual" | "yearly")} ·{" "}
                       <span className="font-mono">{p.codigoReferencia}</span>
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {new Date(p.fechaCreacion).toLocaleString("es")}
                     </p>
                   </div>
-                  <p className="text-xl font-bold text-violet-600">
+                  <p className="text-xl font-bold text-primary tabular-nums">
                     {formatSubscriptionAmount(p.montoFinal)}
                   </p>
                 </div>
                 {filter === "pending" && (
-                  <div className="flex gap-3 mt-4">
+                  <div className="mt-4 flex gap-3">
                     <Button
                       variant="primary"
                       size="sm"
@@ -121,9 +151,19 @@ export default function PlatformPaymentsPage() {
                     </Button>
                   </div>
                 )}
-              </div>
+              </SurfaceCard>
             ))}
           </div>
+        )}
+
+        {!loading && payments.length > 0 && (
+          <CompactMetricRow
+            icon={Clock3}
+            title="Última actualización"
+            subtitle="Lista sincronizada con la API"
+            value={new Date().toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
+            badge={{ label: "En vivo", variant: "success" }}
+          />
         )}
       </div>
     </>

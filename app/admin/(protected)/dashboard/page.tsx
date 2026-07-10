@@ -14,6 +14,11 @@ import {
   SaveIcon,
   CloseIcon,
 } from "@/components/ui/Icons";
+import { Calendar, Clock3, Users } from "lucide-react";
+import {
+  CompactMetricRow,
+  MetricDashboardCard,
+} from "@/components/design/dashboard";
 
 // Componente interno que usa useSearchParams
 function DashboardContent() {
@@ -459,8 +464,47 @@ function DashboardContent() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-6 mb-8">
-        <button
+      <div className="mb-8 space-y-3">
+        <MetricDashboardCard
+          icon={Calendar}
+          title="Reservas del salón"
+          badge={{ label: "Vista general", variant: "muted" }}
+          value={String(reservas.length)}
+          valueLabel="Total registradas"
+          progress={
+            reservas.length > 0
+              ? Math.round(
+                  (reservas.filter((r) => r.estado === "completada").length /
+                    reservas.length) *
+                    100
+                )
+              : 0
+          }
+          details={[
+            {
+              label: "Pendientes",
+              value: String(
+                reservas.filter((r) => r.estado === "pendiente").length
+              ),
+            },
+            {
+              label: "Confirmadas",
+              value: String(
+                reservas.filter((r) => r.estado === "confirmada").length
+              ),
+            },
+            {
+              label: "Completadas",
+              value: String(
+                reservas.filter((r) => r.estado === "completada").length
+              ),
+            },
+            {
+              label: "Clientes",
+              value: String(clientes.length),
+            },
+          ]}
+          footer="Toca para ir al calendario de reservas"
           onClick={() => {
             setReservasViewMode("month");
             setReservasEstadoFilter("todos");
@@ -468,104 +512,53 @@ function DashboardContent() {
               .querySelector("#reservas-section")
               ?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          className="group bg-white dark:bg-gray-800/50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl p-2 sm:p-3 md:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-1 sm:mb-2 md:mb-3 opacity-80 group-hover:scale-110 transition-transform">
-              <svg
-                className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <p className="text-gray-600 dark:text-blue-200 text-[9px] sm:text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-0.5 sm:mb-1 md:mb-2">
-              Reservas
-            </p>
-            <p className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              {reservas.length}
-            </p>
-          </div>
-        </button>
-        <button
-          onClick={() => {
-            document
-              .querySelector("#clientes-section")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-          className="group bg-white dark:bg-gray-800/50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl p-2 sm:p-3 md:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-1 sm:mb-2 md:mb-3 opacity-80 group-hover:scale-110 transition-transform">
-              <svg
-                className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <p className="text-gray-600 dark:text-blue-200 text-[9px] sm:text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-0.5 sm:mb-1 md:mb-2">
-              Clientes
-            </p>
-            <p className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              {clientes.length}
-            </p>
-          </div>
-        </button>
-        <button
-          onClick={() => {
-            setReservasViewMode("agenda");
-            setReservasEstadoFilter("pendiente");
-            document
-              .querySelector("#reservas-section")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-          className="group bg-white dark:bg-gray-800/50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl p-2 sm:p-3 md:p-6 border border-gray-200 dark:border-white/20 hover:scale-105 transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-1 sm:mb-2 md:mb-3 opacity-80 group-hover:scale-110 transition-transform">
-              <svg
-                className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <p className="text-gray-600 dark:text-blue-200 text-[9px] sm:text-[10px] md:text-sm font-semibold uppercase tracking-wide mb-0.5 sm:mb-1 md:mb-2">
-              Pendientes
-            </p>
-            <p className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              {reservas.filter((r) => r.estado === "pendiente").length}
-            </p>
-          </div>
-        </button>
+        />
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <CompactMetricRow
+            icon={Users}
+            title="Base de clientes"
+            subtitle="Contactos registrados"
+            value={String(clientes.length)}
+            badge={{ label: "Activos", variant: "success" }}
+            onClick={() => {
+              document
+                .querySelector("#clientes-section")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
+          <CompactMetricRow
+            icon={Clock3}
+            title="Citas pendientes"
+            subtitle="Requieren confirmación"
+            value={String(
+              reservas.filter((r) => r.estado === "pendiente").length
+            )}
+            badge={{
+              label:
+                reservas.filter((r) => r.estado === "pendiente").length > 0
+                  ? "Revisar"
+                  : "Al día",
+              variant:
+                reservas.filter((r) => r.estado === "pendiente").length > 0
+                  ? "warning"
+                  : "success",
+            }}
+            onClick={() => {
+              setReservasViewMode("agenda");
+              setReservasEstadoFilter("pendiente");
+              document
+                .querySelector("#reservas-section")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
+        </div>
       </div>
 
       {/* Reservas / Calendario */}
       <div
         id="reservas-section"
-        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mb-8 border border-gray-200 dark:border-white/20"
+        className="dashboard-card mb-8 p-4 sm:p-6 md:p-8"
       >
         <ReservasTable
           reservas={reservas}
@@ -584,7 +577,7 @@ function DashboardContent() {
       {/* Clientes Table */}
       <div
         id="clientes-section"
-        className="bg-white dark:bg-gray-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 dark:border-white/20"
+        className="dashboard-card p-6 sm:p-8"
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -614,7 +607,7 @@ function DashboardContent() {
                     setClientesSearch(e.target.value);
                     setClientesPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                  className="input-field pl-10"
                 />
                 <svg
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"

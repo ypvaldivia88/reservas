@@ -29,7 +29,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
 
   return (
     <TenantBrandingProvider branding={branding}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+      <div className="min-h-screen bg-background transition-colors duration-200">
         {/* Hero */}
         <section
           className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-center bg-cover bg-no-repeat"
@@ -82,14 +82,14 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
 
         {/* Features */}
         {content.features && content.features.length > 0 && (
-          <section className="py-12 sm:py-16 md:py-20 bg-white/50 dark:bg-gray-800/30">
+          <section className="py-12 sm:py-16 md:py-20 bg-muted/30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-8 sm:mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
                   {content.featuresTitle || "¿Por qué elegirnos?"}
                 </h2>
                 {content.featuresSubtitle && (
-                  <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                  <p className="text-sm sm:text-base text-muted-foreground">
                     {content.featuresSubtitle}
                   </p>
                 )}
@@ -105,10 +105,10 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                    <p className="text-sm sm:text-base text-muted-foreground">
                       {feature.description}
                     </p>
                   </div>
@@ -122,7 +122,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
 
         <section
           id="galeria"
-          className="py-12 sm:py-16 md:py-20 bg-gradient-to-r from-blue-100 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/30"
+          className="py-12 sm:py-16 md:py-20 bg-muted/40"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8 sm:mb-12 md:mb-16">
@@ -155,11 +155,11 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
         />
 
         {/* Contact */}
-        <section id="contacto" className="py-12 sm:py-16 md:py-20 bg-white dark:bg-gray-900">
+        <section id="contacto" className="py-12 sm:py-16 md:py-20 bg-card">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
               <div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
                   Visítanos
                 </h2>
                 <div className="space-y-4 sm:space-y-6">
@@ -170,13 +170,13 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Dirección</p>
+                        <p className="font-semibold">Dirección</p>
                         {contact.addressUrl ? (
-                          <a href={contact.addressUrl} target="_blank" rel="noopener noreferrer" className="text-gray-700 dark:text-gray-300">
+                          <a href={contact.addressUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
                             {contact.address}
                           </a>
                         ) : (
-                          <p className="text-gray-700 dark:text-gray-300">{contact.address}</p>
+                          <p className="text-muted-foreground">{contact.address}</p>
                         )}
                       </div>
                     </div>
@@ -187,8 +187,8 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Teléfono</p>
-                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="text-gray-700 dark:text-gray-300">
+                        <p className="font-semibold">Teléfono</p>
+                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
                           {contact.phone || whatsapp}
                         </a>
                       </div>
@@ -200,16 +200,15 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Horarios</p>
-                        <p className="text-gray-700 dark:text-gray-300">{contact.hours}</p>
+                        <p className="font-semibold">Horarios</p>
+                        <p className="text-muted-foreground">{contact.hours}</p>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
               <div
-                className="p-6 sm:p-8 rounded-2xl text-white shadow-2xl"
-                style={{ background: `linear-gradient(to bottom right, ${primary}, ${secondary})` }}
+                className="rounded-2xl bg-primary p-6 sm:p-8 text-primary-foreground shadow-xl"
               >
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
                   {content.ctaTitle || "Reserva tu cita"}
@@ -228,7 +227,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
         </section>
 
         {/* Footer */}
-        <footer className="bg-gray-800 dark:bg-gray-950 text-white py-8 sm:py-12">
+        <footer className="bg-foreground text-background py-8 sm:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
               <div>
@@ -242,9 +241,9 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
               </div>
               <div>
                 <h4 className="font-semibold mb-3">Enlaces</h4>
-                <ul className="space-y-1 text-gray-300 text-sm">
-                  <li><Link href={`${profile.slug ? `/${profile.slug}` : "/"}#servicios`} className="hover:text-white">Servicios</Link></li>
-                  <li><Link href={reservaPath} className="hover:text-white">Reservas</Link></li>
+                <ul className="space-y-1 text-background/70 text-sm">
+                  <li><Link href={`${profile.slug ? `/${profile.slug}` : "/"}#servicios`} className="hover:text-background">Servicios</Link></li>
+                  <li><Link href={reservaPath} className="hover:text-background">Reservas</Link></li>
                 </ul>
               </div>
               <div>
@@ -268,7 +267,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-700 mt-6 pt-6 text-center text-gray-300 text-xs sm:text-sm">
+            <div className="border-t border-background/20 mt-6 pt-6 text-center text-background/70 text-xs sm:text-sm">
               <p>&copy; {new Date().getFullYear()} {profile.nombre}. Todos los derechos reservados.</p>
             </div>
           </div>

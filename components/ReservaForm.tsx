@@ -750,9 +750,9 @@ export default function ReservaForm({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden transition-colors duration-200">
+    <div className="overflow-hidden rounded-2xl bg-card shadow-xl transition-colors duration-200 sm:rounded-3xl">
       {/* Progress Steps Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 text-white">
+      <div className="bg-primary px-4 py-4 text-primary-foreground sm:px-6 sm:py-5 md:px-8 md:py-6">
         <div className="flex items-center justify-between mb-4">
           {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
             <div key={step} className="flex items-center flex-1">
@@ -760,9 +760,9 @@ export default function ReservaForm({
                 <div
                   className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
                     step === currentStep ?
-                      "bg-white text-blue-600 dark:text-blue-500 shadow-lg"
-                    : step < currentStep ? "bg-blue-400 text-white"
-                    : "bg-blue-800/30 text-white/50"
+                      "bg-card text-primary shadow-lg"
+                    : step < currentStep ? "bg-primary/70 text-primary-foreground"
+                    : "bg-primary-foreground/20 text-primary-foreground/50"
                   }`}
                 >
                   {step < currentStep ?
@@ -783,9 +783,9 @@ export default function ReservaForm({
                 </div>
                 <span
                   className={`text-xs mt-1 font-medium hidden sm:block ${
-                    step === currentStep ? "text-white"
-                    : step < currentStep ? "text-blue-200"
-                    : "text-white/50"
+                    step === currentStep ? "text-primary-foreground"
+                    : step < currentStep ? "text-primary-foreground/80"
+                    : "text-primary-foreground/50"
                   }`}
                 >
                   {stepTitles[step - 1].split(" ")[0]}
@@ -794,7 +794,7 @@ export default function ReservaForm({
               {step < totalSteps && (
                 <div
                   className={`h-1 flex-1 mx-1 sm:mx-2 rounded transition-all ${
-                    step < currentStep ? "bg-blue-400" : "bg-blue-800/30"
+                    step < currentStep ? "bg-primary/70" : "bg-primary-foreground/20"
                   }`}
                 />
               )}
@@ -821,7 +821,7 @@ export default function ReservaForm({
                 <div>
                   <label
                     htmlFor="telefono"
-                    className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                    className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2"
                   >
                     Teléfono de Contacto *
                   </label>
@@ -833,14 +833,14 @@ export default function ReservaForm({
                       placeholder="Ej: 55551234 o +53 5555 1234"
                       value={form.telefono}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base ${
+                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base ${
                         errors.telefono ?
                           "border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
-                        : "border-gray-200 dark:border-gray-600 focus:border-blue-300 dark:focus:border-blue-500"
+                        : "border-gray-200 dark:border-gray-600 focus:border-primary"
                       }`}
                       required
                     />
-                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-blue-600 dark:text-blue-400">
+                    <span className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-primary">
                       <svg
                         className="w-4 h-4 sm:w-5 sm:h-5"
                         fill="none"
@@ -857,7 +857,7 @@ export default function ReservaForm({
                     </span>
                     {isCheckingPhone && (
                       <span className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
                       </span>
                     )}
                   </div>
@@ -869,7 +869,7 @@ export default function ReservaForm({
                   {!errors.telefono &&
                     !isCheckingPhone &&
                     form.telefono.length >= 8 && (
-                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 flex items-center">
+                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-primary flex items-center">
                         <svg
                           className="w-4 h-4 mr-1 flex-shrink-0"
                           fill="none"
@@ -910,7 +910,7 @@ export default function ReservaForm({
                 <div>
                   <label
                     htmlFor="nombre"
-                    className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 sm:mb-2"
+                    className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2"
                   >
                     Nombre Completo *
                   </label>
@@ -928,14 +928,14 @@ export default function ReservaForm({
                       value={form.nombre}
                       onChange={handleChange}
                       disabled={!isNameEnabled && !clientInfo}
-                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white text-sm sm:text-base ${
+                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 pl-9 sm:pl-12 border-2 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white text-sm sm:text-base ${
                         !isNameEnabled && !clientInfo ?
                           "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60"
                         : errors.nombre ?
                           "border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-600"
                         : clientInfo ?
                           "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600"
-                        : "border-gray-200 dark:border-gray-600 focus:border-blue-300 dark:focus:border-blue-500 bg-white dark:bg-gray-700"
+                        : "border-gray-200 dark:border-gray-600 focus:border-primary bg-white dark:bg-gray-700"
                       }`}
                       required
                     />
@@ -976,7 +976,7 @@ export default function ReservaForm({
                     </p>
                   )}
                   {!isNameEnabled && !clientInfo && !isCheckingPhone && (
-                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 flex items-center">
+                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-primary flex items-center">
                       <svg
                         className="w-4 h-4 mr-1 flex-shrink-0"
                         fill="none"
@@ -1016,10 +1016,10 @@ export default function ReservaForm({
 
               {/* Client info display */}
               {showClientInfo && clientInfo && (
-                <div className="mt-3 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="mt-3 p-3 sm:p-4 bg-primary/10 border-2 border-primary/30 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="text-sm sm:text-base font-medium text-blue-900 dark:text-blue-200 mb-2 flex items-center">
+                      <p className="text-sm sm:text-base font-medium text-foreground mb-2 flex items-center">
                         <svg
                           className="w-5 h-5 mr-2 flex-shrink-0"
                           fill="none"
@@ -1037,7 +1037,7 @@ export default function ReservaForm({
                       </p>
                       {clientInfo.reservasActivas.length > 0 ?
                         <div>
-                          <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 mb-2 flex items-center">
+                          <p className="text-xs sm:text-sm text-foreground mb-2 flex items-center">
                             <svg
                               className="w-4 h-4 mr-1 flex-shrink-0"
                               fill="none"
@@ -1062,7 +1062,7 @@ export default function ReservaForm({
                             {clientInfo.reservasActivas.map((reserva) => (
                               <div
                                 key={reserva._id}
-                                className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-3 rounded border border-blue-200 dark:border-blue-700"
+                                className="text-xs sm:text-sm bg-white dark:bg-gray-800 p-3 rounded border border-primary/30"
                               >
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                   <div className="flex-1">
@@ -1147,7 +1147,7 @@ export default function ReservaForm({
                             ))}
                           </div>
                         </div>
-                      : <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300">
+                      : <p className="text-xs sm:text-sm text-foreground">
                           No tienes reservas activas en este momento.
                         </p>
                       }
@@ -1155,7 +1155,7 @@ export default function ReservaForm({
                     <button
                       type="button"
                       onClick={() => setShowClientInfo(false)}
-                      className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                      className="ml-2 text-primary hover:text-foreground"
                     >
                       ✕
                     </button>
@@ -1204,7 +1204,7 @@ export default function ReservaForm({
           {currentStep === 3 && (
             <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                <label className="block text-xs sm:text-sm font-medium mb-3 sm:mb-4">
                   Forma de Uñas *
                 </label>
 
@@ -1224,8 +1224,8 @@ export default function ReservaForm({
                       key={forma}
                       className={`relative flex flex-col items-center justify-start p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 min-h-[140px] ${
                         form.forma === forma ?
-                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 shadow-md"
-                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-500"
+                          "border-primary bg-primary/10 shadow-md"
+                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-primary/50"
                       }`}
                     >
                       <input
@@ -1272,7 +1272,7 @@ export default function ReservaForm({
                       <span
                         className={`text-sm font-semibold text-center mb-2 ${
                           form.forma === forma ?
-                            "text-blue-700 dark:text-blue-300"
+                            "text-foreground"
                           : "text-gray-700 dark:text-gray-300"
                         }`}
                       >
@@ -1282,7 +1282,7 @@ export default function ReservaForm({
                       <p
                         className={`text-xs text-center px-2 ${
                           form.forma === forma ?
-                            "text-blue-600 dark:text-blue-400"
+                            "text-primary"
                           : "text-gray-500 dark:text-gray-400"
                         }`}
                       >
@@ -1294,7 +1294,7 @@ export default function ReservaForm({
                       </p>
 
                       {form.forma === forma && (
-                        <span className="absolute top-2 right-2 text-blue-600 dark:text-blue-400 text-lg">
+                        <span className="absolute top-2 right-2 text-primary text-lg">
                           ✓
                         </span>
                       )}
@@ -1343,8 +1343,8 @@ export default function ReservaForm({
                       }
                       className={`text-xs font-semibold transition-all ${
                         form.largo === n.toString() ?
-                          "text-blue-600 dark:text-blue-400 scale-125"
-                        : "text-gray-500 dark:text-gray-400 hover:text-blue-500"
+                          "text-primary scale-125"
+                        : "text-gray-500 dark:text-gray-400 hover:text-primary"
                       }`}
                     >
                       {n}
@@ -1363,12 +1363,12 @@ export default function ReservaForm({
                       target: { name: "largo", value: e.target.value },
                     } as any)
                   }
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500"
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
                 />
 
                 {form.largo && (
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
+                  <div className="mt-3 p-3 bg-primary/10 rounded-lg border border-primary/30">
+                    <p className="text-sm text-foreground flex items-center">
                       <svg
                         className="w-4 h-4 mr-2 flex-shrink-0"
                         fill="none"
@@ -1408,7 +1408,7 @@ export default function ReservaForm({
           {currentStep === 5 && (
             <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                <label className="block text-xs sm:text-sm font-medium mb-2">
                   Colores Preferidos
                 </label>
 
@@ -1420,8 +1420,8 @@ export default function ReservaForm({
                       onClick={() => toggleColor(colorOption.name)}
                       className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                         selectedColors.includes(colorOption.name) ?
-                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500"
+                          "border-primary bg-primary/10 text-foreground"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary/50"
                       }`}
                     >
                       <span
@@ -1468,7 +1468,7 @@ export default function ReservaForm({
                       onChange={(e) => setCustomColor(e.target.value)}
                       placeholder="#000000"
                       maxLength={7}
-                      className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                      className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     />
                     <button
                       type="button"
@@ -1485,7 +1485,7 @@ export default function ReservaForm({
                         }
                       }}
                       disabled={!customColor.trim()}
-                      className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
+                      className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm whitespace-nowrap"
                     >
                       + Agregar
                     </button>
@@ -1493,8 +1493,8 @@ export default function ReservaForm({
                 </div>
 
                 {selectedColors.length > 0 && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">
+                  <div className="p-3 bg-primary/10 rounded-lg border border-primary/30">
+                    <p className="text-xs sm:text-sm text-foreground font-medium mb-2">
                       Colores seleccionados:
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -1507,7 +1507,7 @@ export default function ReservaForm({
                         return (
                           <div
                             key={color}
-                            className="flex items-center gap-2 px-2 py-1 bg-white dark:bg-gray-800 rounded-full border border-blue-200 dark:border-blue-700"
+                            className="flex items-center gap-2 px-2 py-1 bg-white dark:bg-gray-800 rounded-full border border-primary/30"
                           >
                             <span
                               className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
@@ -1544,7 +1544,7 @@ export default function ReservaForm({
           {currentStep === 6 && (
             <div className="space-y-3 sm:space-y-4 animate-fadeIn">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                <label className="block text-xs sm:text-sm font-medium mb-2">
                   Decoración Especial (Opcional)
                 </label>
 
@@ -1556,8 +1556,8 @@ export default function ReservaForm({
                       onClick={() => toggleDecoration(decoration)}
                       className={`px-3 py-1.5 rounded-full border-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
                         selectedDecorations.includes(decoration) ?
-                          "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-500"
+                          "border-primary bg-primary/10 text-foreground"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary/50"
                       }`}
                     >
                       {decoration}
@@ -1574,9 +1574,9 @@ export default function ReservaForm({
                     value={customDecoration}
                     onChange={(e) => setCustomDecoration(e.target.value)}
                     placeholder="O describe tu diseño personalizado aquí..."
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 pl-8 sm:pl-12 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 resize-none transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 pl-8 sm:pl-12 border-2 border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none transition-colors placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 text-sm sm:text-base"
                   />
-                  <span className="absolute left-2 sm:left-4 top-2 sm:top-3 text-blue-600 dark:text-blue-400">
+                  <span className="absolute left-2 sm:left-4 top-2 sm:top-3 text-primary">
                     <svg
                       className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="none"
@@ -1627,7 +1627,7 @@ export default function ReservaForm({
                 <Suspense
                   fallback={
                     <div className="flex justify-center items-center py-12">
-                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
                       <span className="ml-3 text-gray-600 dark:text-gray-400">
                         Cargando galería...
                       </span>
@@ -1653,10 +1653,10 @@ export default function ReservaForm({
           {/* Step 7: Confirmar Reserva */}
           {currentStep === 7 && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-700">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 rounded-xl border-2 border-primary/30">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
                   <svg
-                    className="w-5 h-5 mr-2 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                    className="w-5 h-5 mr-2 flex-shrink-0 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1730,10 +1730,10 @@ export default function ReservaForm({
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800">
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-primary/30">
                 <div className="flex items-start space-x-2 sm:space-x-3">
                   <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-0.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1856,7 +1856,7 @@ export default function ReservaForm({
       {/* Cancellation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+          <div className="animate-fadeIn rounded-2xl bg-card shadow-2xl max-w-md w-full p-6">
             <div className="flex items-start mb-4">
               <span className="text-4xl mr-3">⚠️</span>
               <div>

@@ -3,6 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import SurfaceCard from "@/components/design/SurfaceCard";
+import { LockKeyhole } from "lucide-react";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -42,86 +44,75 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full mb-4">
-            <span className="text-4xl">🔐</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Acceso Administrador
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Ingresa tus credenciales para continuar
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Usuario
-            </label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Ingresa tu usuario"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Ingresa tu contraseña"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border-2 border-red-200 dark:border-red-700">
-              <div className="flex items-center">
-                <span className="text-xl mr-2">⚠️</span>
-                <p className="text-sm">{error}</p>
-              </div>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-md">
+        <SurfaceCard padding="lg" className="shadow-md">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <LockKeyhole className="size-6" aria-hidden />
             </div>
-          )}
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Acceso administrador
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Ingresa tus credenciales para continuar
+            </p>
+          </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="primary"
-            loading={loading}
-            fullWidth
-            size="lg"
-          >
-            Iniciar Sesión
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="username" className="mb-1.5 block text-sm font-medium">
+                Usuario
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-field"
+                placeholder="Tu usuario"
+                autoComplete="username"
+                required
+              />
+            </div>
 
-        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 space-y-3">
-          <p>
+            <div>
+              <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
+                Contraseña
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field"
+                placeholder="Tu contraseña"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+
+            {error && (
+              <div
+                className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <Button type="submit" disabled={loading} variant="primary" loading={loading} fullWidth size="lg">
+              Iniciar sesión
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             ¿Nuevo salón?{" "}
-            <Link href="/registro" className="text-violet-600 hover:underline font-medium">
+            <Link href="/registro" className="font-medium text-primary hover:underline">
               Regístrate gratis
             </Link>
           </p>
-        </div>
+        </SurfaceCard>
       </div>
     </div>
   );

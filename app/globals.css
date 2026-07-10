@@ -180,3 +180,50 @@
 .safe-area-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
+
+/* Shared form + surface utilities */
+.input-field {
+  @apply w-full min-h-11 rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base;
+}
+
+.input-field-error {
+  @apply border-destructive focus-visible:ring-destructive/30;
+}
+
+.glass-panel {
+  background: var(--card);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--border);
+}
+
+.glass-strong {
+  background: color-mix(in oklch, var(--card) 92%, transparent);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid var(--border);
+}
+
+.nav-pill-active {
+  @apply bg-primary/10 text-primary;
+}
+
+.nav-pill {
+  @apply text-muted-foreground transition-colors hover:bg-muted hover:text-foreground;
+}
+
+.section-eyebrow {
+  @apply text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm;
+}
+
+.dashboard-card {
+  background: color-mix(in oklch, var(--card) 96%, var(--background));
+}
+
+.dark .dashboard-card {
+  background: color-mix(in oklch, var(--card) 88%, var(--background));
+}
+
+.admin-dock {
+  @apply fixed inset-x-3 bottom-3 z-40 mx-auto max-w-lg rounded-2xl border border-border/80 bg-card/85 shadow-lg backdrop-blur-xl sm:inset-x-4;
+}

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
@@ -32,42 +33,30 @@ export default function AdminProtectedLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-gray-100 dark:from-gray-950 dark:via-blue-950 dark:to-gray-950">
-      {/* Header común */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-200 dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-5 lg:px-8">
-          <div className="flex justify-between items-center gap-2">
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 sm:p-3 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                  />
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
               </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">
+              <div className="min-w-0">
+                <h1 className="truncate text-lg font-bold tracking-tight sm:text-2xl">
                   Administración
                 </h1>
-                <p className="text-blue-600 dark:text-blue-300 text-xs sm:text-sm truncate">
-                  {isPlatformRoute ? "Panel de Plataforma" : "Gestión del Salón de Belleza"}
+                <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                  {isPlatformRoute ? "Panel de plataforma" : "Gestión del salón"}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <div className="hidden md:flex">
                 <ThemeToggle />
               </div>
-
               <Button
                 onClick={() => router.push("/")}
                 variant="ghost"
@@ -75,13 +64,11 @@ export default function AdminProtectedLayout({
                 icon={<HomeIcon />}
                 aria-label="Ir a la vista del cliente"
                 title="Ir a la vista del cliente"
-                className="rounded-full p-2"
+                className="rounded-lg p-2"
               />
-
               <div className="md:hidden">
                 <ThemeToggle />
               </div>
-
               <HamburgerButton
                 isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -100,11 +87,9 @@ export default function AdminProtectedLayout({
         isPlatformRoute={isPlatformRoute}
       />
 
-      {/* Navegación (solo salones, no plataforma) */}
       {!isPlatformRoute && <AdminNav />}
 
-      {/* Contenido de cada página */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 md:pb-8 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 py-6 pb-28 sm:px-4 sm:py-8 md:pb-8 lg:px-8">
         <AdminRoleGuard>{children}</AdminRoleGuard>
       </div>
     </div>
