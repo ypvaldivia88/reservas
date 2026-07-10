@@ -28,14 +28,12 @@ interface TestimonialCarouselProps {
   testimonials?: SalonTestimonial[];
   title?: string;
   subtitle?: string;
-  primaryColor?: string;
 }
 
 export default function TestimonialCarousel({
   testimonials = DEFAULT_TESTIMONIALS,
   title = "Lo que dicen nuestras clientes",
   subtitle = "Testimonios reales de clientas satisfechas",
-  primaryColor,
 }: TestimonialCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -50,7 +48,6 @@ export default function TestimonialCarousel({
   if (testimonials.length === 0) return null;
 
   const current = testimonials[currentIndex];
-  const dotColor = primaryColor || undefined;
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/20 dark:to-violet-900/20">
@@ -82,8 +79,8 @@ export default function TestimonialCarousel({
 
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white mb-3 sm:mb-4 ${!primaryColor ? "bg-gradient-to-r from-blue-500 to-violet-500" : ""}`}
-                style={primaryColor ? { background: primaryColor } : undefined}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-primary-foreground mb-3 sm:mb-4"
+                style={{ background: "var(--primary)" }}
               >
                 <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -93,7 +90,7 @@ export default function TestimonialCarousel({
                 {current.name}
               </cite>
               {current.service && (
-                <p className="text-xs sm:text-sm mt-1" style={dotColor ? { color: dotColor } : undefined}>
+                <p className="text-xs sm:text-sm mt-1 text-primary">
                   Servicio: {current.service}
                 </p>
               )}
@@ -108,10 +105,9 @@ export default function TestimonialCarousel({
                   onClick={() => setCurrentIndex(index)}
                   className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
                     index === currentIndex
-                      ? primaryColor ? "" : "bg-blue-600 dark:bg-blue-500"
-                      : "bg-blue-300 dark:bg-blue-600 hover:bg-blue-400"
+                      ? "bg-primary"
+                      : "bg-primary/30 hover:bg-primary/50"
                   }`}
-                  style={index === currentIndex && primaryColor ? { background: primaryColor } : undefined}
                 />
               ))}
             </div>

@@ -184,16 +184,15 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
     </div>
   );
 
-  return (
+  return profile ? (
+    <TenantBrandingProvider branding={profile.branding}>
+      {header}
+      {pageContent}
+    </TenantBrandingProvider>
+  ) : (
     <>
       {header}
-      {profile ? (
-        <TenantBrandingProvider branding={profile.branding}>
-          {pageContent}
-        </TenantBrandingProvider>
-      ) : (
-        pageContent
-      )}
+      {pageContent}
     </>
   );
 }

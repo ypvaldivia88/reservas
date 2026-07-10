@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import DynamicGalleryCarousel from "@/components/DynamicGalleryCarousel";
 import DynamicServicesSection from "@/components/DynamicServicesSection";
 import StatsSection from "@/components/StatsSection";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import ProcessSection from "@/components/ProcessSection";
-import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import TenantFooter from "@/components/TenantFooter";
 import { SalonPublicProfile } from "@/lib/types";
+import { getContrastingForeground, getAccessibleBrandPrimary, normalizeHexColor } from "@/lib/color-utils";
+import { useTheme } from "@/contexts/ThemeContext";
 import { getTemplateHeroUrl } from "@/lib/placeholder-config";
 
 interface TenantHomePageProps {
@@ -18,9 +18,20 @@ interface TenantHomePageProps {
 }
 
 export default function TenantHomePage({ profile }: TenantHomePageProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const { branding, content, contact, social } = profile;
-  const primary = branding.primaryColor || "#2563eb";
-  const secondary = branding.secondaryColor || "#7c3aed";
+  const brandPrimary = normalizeHexColor(branding.primaryColor || "", "#2563eb");
+  const brandSecondary = normalizeHexColor(branding.secondaryColor || "", "#7c3aed");
+  const accent = normalizeHexColor(branding.accentColor || "", "#93c5fd");
+  const actionPrimary = getAccessibleBrandPrimary(
+    brandPrimary,
+    brandSecondary,
+    accent,
+    isDark
+  );
+  const actionForeground = getContrastingForeground(actionPrimary);
+  const ctaForeground = getContrastingForeground(brandPrimary);
   const heroImage = branding.heroImageUrl || getTemplateHeroUrl(profile.businessTemplate);
   const reservaPath = `/reserva?slug=${profile.slug}`;
   const whatsapp =
@@ -30,8 +41,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
     : "#";
 
   return (
-    <TenantBrandingProvider branding={branding}>
-      <div className="min-h-screen bg-background transition-colors duration-200">
+    <div className="min-h-screen bg-background transition-colors duration-200">
         {/* Hero */}
         <section
           className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-center bg-cover bg-no-repeat"
@@ -40,7 +50,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(to bottom right, ${primary}cc, ${secondary}cc)`,
+              background: `linear-gradient(to bottom right, ${brandPrimary}cc, ${brandSecondary}cc)`,
             }}
             aria-hidden
           />
@@ -101,7 +111,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                   <div key={index} className="text-center p-4">
                     <div
                       className="flex justify-center mb-3 sm:mb-4"
-                      style={{ color: primary }}
+                      style={{ color: actionPrimary }}
                     >
                       <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -120,7 +130,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           </section>
         )}
 
-        <StatsSection stats={content.stats} primaryColor={primary} />
+        <StatsSection stats={content.stats} />
 
         <section
           id="galeria"
@@ -145,7 +155,6 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           testimonials={content.testimonials}
           title={content.testimonialsTitle}
           subtitle={content.testimonialsSubtitle}
-          primaryColor={primary}
         />
         <ProcessSection
           steps={content.processSteps}
@@ -153,7 +162,6 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           subtitle={content.processSubtitle}
           cta={content.processCta}
           reservaPath={reservaPath}
-          primaryColor={primary}
         />
 
         {/* Contact */}
@@ -167,7 +175,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                 <div className="space-y-4 sm:space-y-6">
                   {contact.address && (
                     <div className="flex items-start space-x-3">
-                      <svg className="w-6 h-6 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 flex-shrink-0" style={{ color: actionPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -185,7 +193,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                   )}
                   {(contact.phone || whatsapp) && (
                     <div className="flex items-start space-x-3">
-                      <svg className="w-6 h-6 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 flex-shrink-0" style={{ color: actionPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                       <div>
@@ -198,7 +206,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                   )}
                   {contact.hours && (
                     <div className="flex items-start space-x-3">
-                      <svg className="w-6 h-6 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 flex-shrink-0" style={{ color: actionPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div>
@@ -210,16 +218,25 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
                 </div>
               </div>
               <div
-                className="rounded-2xl bg-primary p-6 sm:p-8 text-primary-foreground shadow-xl"
+                className="rounded-2xl p-6 sm:p-8 shadow-xl"
+                style={{
+                  background: brandPrimary,
+                  color: ctaForeground,
+                }}
               >
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
                   {content.ctaTitle || "Reserva tu cita"}
                 </h3>
-                <p className="text-sm sm:text-base mb-4 sm:mb-6 text-white/90">
+                <p className="text-sm sm:text-base mb-4 sm:mb-6 opacity-90">
                   {content.ctaSubtitle}
                 </p>
                 <Link href={reservaPath}>
-                  <Button variant="outlined-primary" size="lg" className="bg-white border-white hover:bg-white/90" style={{ color: primary }}>
+                  <Button
+                    variant="outlined-primary"
+                    size="lg"
+                    className="border-current bg-background/95 hover:bg-background"
+                    style={{ color: actionPrimary, borderColor: actionPrimary }}
+                  >
                     Reservar Ahora
                   </Button>
                 </Link>
@@ -234,6 +251,5 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
           tagline={content.heroSubtitle}
         />
       </div>
-    </TenantBrandingProvider>
   );
 }

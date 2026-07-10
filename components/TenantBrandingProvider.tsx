@@ -1,6 +1,11 @@
 "use client";
 
-import { normalizeHexColor } from "@/lib/color-utils";
+import {
+  getAccessibleBrandPrimary,
+  getContrastingForeground,
+  normalizeHexColor,
+} from "@/lib/color-utils";
+import { useTheme } from "@/contexts/ThemeContext";
 import { SalonBranding } from "@/lib/types";
 
 interface TenantBrandingProviderProps {
@@ -26,29 +31,43 @@ export default function TenantBrandingProvider({
   branding,
   children,
 }: TenantBrandingProviderProps) {
-  const primary = normalizeHexColor(branding.primaryColor || "", "#2563eb");
-  const secondary = normalizeHexColor(branding.secondaryColor || "", "#7c3aed");
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const brandPrimary = normalizeHexColor(branding.primaryColor || "", "#2563eb");
+  const brandSecondary = normalizeHexColor(branding.secondaryColor || "", "#7c3aed");
   const accent = normalizeHexColor(branding.accentColor || "", "#93c5fd");
 
+  const actionPrimary = getAccessibleBrandPrimary(
+    brandPrimary,
+    brandSecondary,
+    accent,
+    isDark
+  );
+  const actionForeground = getContrastingForeground(actionPrimary);
+
   const style = {
-    "--color-primary-dark": primary,
-    "--color-primary": primary,
-    "--color-primary-light": lighten(primary, 30),
-    "--color-primary-lighter": lighten(primary, 60),
-    "--color-secondary-dark": secondary,
-    "--color-secondary": secondary,
-    "--color-secondary-light": lighten(secondary, 30),
+    "--color-primary-dark": brandPrimary,
+    "--color-primary": actionPrimary,
+    "--color-primary-light": lighten(actionPrimary, 30),
+    "--color-primary-lighter": lighten(actionPrimary, 60),
+    "--color-secondary-dark": brandSecondary,
+    "--color-secondary": brandSecondary,
+    "--color-secondary-light": lighten(brandSecondary, 30),
     "--color-accent": accent,
     "--color-accent-light": lighten(accent, 40),
     "--color-accent-lighter": lighten(accent, 80),
-    "--gradient-primary": `linear-gradient(135deg, ${primary} 0%, ${lighten(primary, 40)} 100%)`,
-    "--gradient-secondary": `linear-gradient(135deg, ${secondary} 0%, ${lighten(secondary, 40)} 100%)`,
-    "--gradient-accent": `linear-gradient(135deg, ${primary} 0%, ${accent} 100%)`,
-    "--tenant-primary": primary,
-    "--tenant-secondary": secondary,
-    "--tenant-primary-rgb": hexToRgb(primary) || "37, 99, 235",
-    "--primary": primary,
-    "--ring": primary,
+    "--gradient-primary": `linear-gradient(135deg, ${brandPrimary} 0%, ${lighten(brandPrimary, 40)} 100%)`,
+    "--gradient-secondary": `linear-gradient(135deg, ${brandSecondary} 0%, ${lighten(brandSecondary, 40)} 100%)`,
+    "--gradient-accent": `linear-gradient(135deg, ${brandPrimary} 0%, ${accent} 100%)`,
+    "--tenant-brand": brandPrimary,
+    "--tenant-brand-secondary": brandSecondary,
+    "--tenant-primary": actionPrimary,
+    "--tenant-secondary": brandSecondary,
+    "--tenant-primary-rgb": hexToRgb(actionPrimary) || "37, 99, 235",
+    "--primary": actionPrimary,
+    "--primary-foreground": actionForeground,
+    "--ring": actionPrimary,
   } as React.CSSProperties;
 
   return (

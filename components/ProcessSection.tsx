@@ -24,12 +24,11 @@ export default function ProcessSection({
   subtitle = "Un proceso simple y relajante diseñado para brindarte la mejor experiencia",
   cta = "¿Lista para comenzar?",
   reservaPath = "/reserva",
-  primaryColor,
 }: ProcessSectionProps) {
-  const iconColor = primaryColor ? { color: primaryColor } : undefined;
-  const badgeStyle = primaryColor
-    ? { background: `linear-gradient(to right, ${primaryColor}, ${primaryColor}cc)` }
-    : undefined;
+  const badgeStyle = {
+    background: "linear-gradient(to right, var(--primary), color-mix(in srgb, var(--primary) 80%, transparent))",
+  };
+  const iconStyle = { color: "var(--primary)" };
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20">
@@ -50,15 +49,15 @@ export default function ProcessSection({
             <div key={index} className="relative">
               <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center relative border border-gray-100 dark:border-gray-700">
                 <div
-                  className={`absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm ${!primaryColor ? "bg-gradient-to-r from-blue-600 to-violet-600" : ""}`}
+                  className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-primary-foreground font-bold text-xs sm:text-sm"
                   style={badgeStyle}
                 >
                   {String(index + 1).padStart(2, "0")}
                 </div>
                 <div className="mb-3 sm:mb-4 mt-3 sm:mt-4 flex justify-center">
                   <svg
-                    className={`w-8 h-8 sm:w-10 sm:h-10 ${!primaryColor ? "text-blue-600 dark:text-blue-400" : ""}`}
-                    style={iconColor}
+                    className="w-8 h-8 sm:w-10 sm:h-10"
+                    style={iconStyle}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

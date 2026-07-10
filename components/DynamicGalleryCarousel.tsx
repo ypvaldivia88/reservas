@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ImageData } from "@/lib/types";
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/image-url";
 
 interface DynamicGalleryCarouselProps {
   slug?: string;
@@ -194,6 +195,7 @@ export default function DynamicGalleryCarousel({
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
                       onDragStart={(e) => e.preventDefault()} // prevent image drag interfering with carousel drag
                       fill
+                      unoptimized={shouldUnoptimizeImage(imagen.blobUrl)}
                     />
                     {/* overlay CTA visible on hover */}
                     <div className="absolute inset-0 flex items-end justify-center p-3 pointer-events-none">
@@ -246,6 +248,7 @@ export default function DynamicGalleryCarousel({
                 sizes="100vw"
                 quality={100}
                 priority
+                unoptimized={shouldUnoptimizeImage(selected)}
               />
             </div>
           </div>

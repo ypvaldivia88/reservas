@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import TenantHeader from "@/components/TenantHeader";
+import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import { salonCmsService } from "@/lib/services/salon-cms.service";
 
 const RESERVED_SLUGS = new Set([
@@ -24,10 +25,10 @@ export default async function SalonLayout({ children, params }: LayoutProps) {
   try {
     const profile = await salonCmsService.getPublicBySlug(slug);
     return (
-      <>
+      <TenantBrandingProvider branding={profile.branding}>
         <TenantHeader profile={profile} isHomePage />
         {children}
-      </>
+      </TenantBrandingProvider>
     );
   } catch {
     notFound();

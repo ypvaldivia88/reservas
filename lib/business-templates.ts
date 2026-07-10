@@ -268,8 +268,8 @@ const barberiaTemplate: BusinessTemplateConfig = {
   icon: "💈",
   branding: {
     primaryColor: "#1e293b",
-    secondaryColor: "#b45309",
-    accentColor: "#d97706",
+    secondaryColor: "#d97706",
+    accentColor: "#fbbf24",
     heroImageUrl: getTemplateHeroUrl("barberia"),
   },
   content: {

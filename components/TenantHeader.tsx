@@ -71,7 +71,7 @@ export default function TenantHeader({
   }));
 
   const logoUrl = profile.branding.logoSmallUrl || profile.branding.logoUrl;
-  const primary = profile.branding.primaryColor || "#2563eb";
+  const brandPrimary = profile.branding.primaryColor || "#2563eb";
 
   return (
     <>
@@ -95,7 +95,7 @@ export default function TenantHeader({
             ) : (
               <div
                 className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-                style={{ background: primary }}
+                style={{ background: "var(--tenant-brand, var(--primary))" }}
               >
                 {profile.nombre.charAt(0).toUpperCase()}
               </div>
@@ -140,13 +140,12 @@ export default function TenantHeader({
       onClose={() => setIsMobileMenuOpen(false)}
       links={mobileLinks}
       title={profile.nombre}
-      accentColor={primary}
+      accentColor={brandPrimary}
       cta={{
         href: reservaPath,
         label: "Reservar Cita",
-        style: { background: primary },
         className:
-          "flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full text-primary-foreground font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]",
+          "flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full bg-primary text-primary-foreground font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]",
       }}
     />
   </>
