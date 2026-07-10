@@ -89,7 +89,7 @@ function wizardSteps(
     },
     step2: {
       title: "Fecha y hora",
-      hint: "Elige el día y la franja que mejor te venga",
+      hint: "Elige el día y la hora que te venga bien",
       shortLabel: "Fecha",
     },
     step3: {
@@ -549,27 +549,28 @@ const CONFIG_BY_TEMPLATE: Record<BusinessTemplate, ReservaTemplateConfig> = {
   generic: genericConfig,
 };
 
+const NON_MANICURE_TEMPLATES = new Set<BusinessTemplate>([
+  "peluqueria",
+  "barberia",
+  "tatuajes",
+  "generic",
+]);
+
 export function getReservaTemplateConfig(
-  template?: BusinessTemplate | null,
-  options?: { pendingSlug?: boolean }
+  template?: BusinessTemplate | null
 ): ReservaTemplateConfig {
-  if (template) {
-    return CONFIG_BY_TEMPLATE[template] ?? genericConfig;
+  if (template && CONFIG_BY_TEMPLATE[template]) {
+    return CONFIG_BY_TEMPLATE[template];
   }
-  if (options?.pendingSlug) {
-    return genericConfig;
-  }
+  // Legacy / no slug / template not set — original wizard was always manicure
   return manicureConfig;
 }
 
 export function isManicureReservation(
-  template?: BusinessTemplate | null,
-  options?: { pendingSlug?: boolean }
+  template?: BusinessTemplate | null
 ): boolean {
-  return (
-    getReservaTemplateConfig(template, options).reservation.detailsMode ===
-    "manicure"
-  );
+  if (!template) return true;
+  return !NON_MANICURE_TEMPLATES.has(template);
 }
 
 export function formatActiveReservationDetail(
