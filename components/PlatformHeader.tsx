@@ -7,10 +7,10 @@ import HamburgerButton from "./HamburgerButton";
 import MobileNavDrawer, { MobileNavLink } from "./MobileNavDrawer";
 
 const navLinks = [
-  { href: "#salones", label: "Salones" },
-  { href: "#funciones", label: "Funciones" },
-  { href: "#como-funciona", label: "Cómo funciona" },
-  { href: "#precios", label: "Precios" },
+  { href: "/#salones", label: "Salones" },
+  { href: "/#funciones", label: "Funciones" },
+  { href: "/#como-funciona", label: "Cómo funciona" },
+  { href: "/#precios", label: "Precios" },
   { href: "/admin", label: "Iniciar sesión" },
 ];
 

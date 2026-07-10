@@ -15,6 +15,15 @@ function slugify(text: string): string {
     .slice(0, 48);
 }
 
+function publicHostFromOrigin(origin: string): string {
+  if (!origin) return "";
+  try {
+    return new URL(origin).host;
+  } catch {
+    return origin.replace(/^https?:\/\//, "").split("/")[0];
+  }
+}
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -104,7 +113,9 @@ export default function RegistroPage() {
     }));
   };
 
-  const publicUrl = form.slug && origin ? `${origin}/${form.slug}` : "";
+  const publicHost = publicHostFromOrigin(origin);
+  const shortPublicUrl =
+    form.slug && publicHost ? `${publicHost}/${form.slug}` : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,26 +259,36 @@ export default function RegistroPage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">
+            <label htmlFor="slug" className="mb-1 block text-sm font-medium">
               URL de tu salón
             </label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 shrink-0 hidden sm:inline">
-                {origin || "…"}/
-              </span>
+            <div className="overflow-hidden rounded-lg border border-input bg-background">
+              {origin && (
+                <div
+                  className="truncate border-b border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground"
+                  title={`${origin}/`}
+                >
+                  {origin}/
+                </div>
+              )}
               <input
+                id="slug"
                 required
                 value={form.slug}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, slug: slugify(e.target.value) }))
                 }
                 pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                className="w-full min-h-11 border-0 bg-transparent px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                placeholder="mi-salon"
+                autoComplete="off"
+                spellCheck={false}
               />
             </div>
-            {publicUrl && slugStatus === "ok" && (
-              <p className="text-xs text-gray-500 mt-2 font-mono break-all">
-                Tu página: <span className="text-violet-600 dark:text-violet-400">{publicUrl}</span>
+            {shortPublicUrl && slugStatus === "ok" && (
+              <p className="mt-2 break-all text-xs text-muted-foreground">
+                Tu página:{" "}
+                <span className="font-medium text-primary">{shortPublicUrl}</span>
               </p>
             )}
             {slugStatus === "checking" && (
