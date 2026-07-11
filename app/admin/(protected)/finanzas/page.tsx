@@ -10,31 +10,11 @@ import {
   TransactionType,
   PaymentMethod,
 } from "@/lib/types";
-import {
-  formatTransactionAmount,
-  getPaymentMethodMeta,
-  PAYMENT_METHOD_OPTIONS,
-} from "@/lib/paymentMethods";
-import { FinanceMetricsSection } from "@/components/admin/TenantMetricSections";
+import FinanzasOverview from "@/components/admin/finanzas/FinanzasOverview";
+import FinanzasTransactionsPanel from "@/components/admin/finanzas/FinanzasTransactionsPanel";
+import { DatePreset } from "@/components/admin/finanzas/FinanzasPeriodFilter";
 
 const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
-
-type DatePreset =
-  | "today"
-  | "this_week"
-  | "this_month"
-  | "last_month"
-  | "this_year"
-  | "last_year";
-
-const DATE_PRESETS: { id: DatePreset; label: string }[] = [
-  { id: "today", label: "Hoy" },
-  { id: "this_week", label: "Esta semana" },
-  { id: "this_month", label: "Mes actual" },
-  { id: "last_month", label: "Mes anterior" },
-  { id: "this_year", label: "Año actual" },
-  { id: "last_year", label: "Año anterior" },
-];
 
 function formatLocalDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -235,42 +215,16 @@ export default function FinanzasPage() {
     await fetchDashboard();
   };
 
-  const handleManualSync = async () => {
-    await runSync();
-  };
-
   const incomeCategories = categories.filter((c) => c.tipo === "income");
   const expenseCategories = categories.filter((c) => c.tipo === "expense");
-  const ingresosPorMetodoPago = PAYMENT_METHOD_OPTIONS.map((option) => {
-    const found = report?.ingresosPorMetodoPago.find(
-      (item) => item.metodo === option.value
-    );
-    return {
-      metodo: option.value,
-      label: option.label,
-      total: found?.total ?? 0,
-    };
-  });
-  const gastosPorMetodoPago = PAYMENT_METHOD_OPTIONS.map((option) => {
-    const found = report?.gastosPorMetodoPago?.find(
-      (item) => item.metodo === option.value
-    );
-    return {
-      metodo: option.value,
-      label: option.label,
-      total: found?.total ?? 0,
-    };
-  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Finanzas
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-            Ingresos por servicio del salón, gastos y reportes
+          <h2 className="text-2xl font-bold tracking-tight">Finanzas</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ingresos, gastos y balance del salón
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -279,7 +233,7 @@ export default function FinanzasPage() {
           </Button>
           <Button
             variant="outlined-secondary"
-            onClick={handleManualSync}
+            onClick={() => void runSync()}
             loading={syncing}
           >
             Sincronizar reservas
@@ -288,295 +242,61 @@ export default function FinanzasPage() {
       </div>
 
       {syncing && !loading && (
-        <p className="text-sm text-blue-600 dark:text-blue-400">
-          Sincronizando ingresos de reservas...
-        </p>
+        <p className="text-sm text-primary">Sincronizando ingresos de reservas...</p>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-300">
+        <div
+          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {error}
         </div>
       )}
-
-      {/* Filtros */}
-      <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-        <div>
-          <p className="text-xs text-gray-500 mb-2">Período rápido</p>
-          <div className="flex flex-wrap gap-2">
-            {DATE_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => applyDatePreset(preset.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeDatePreset === preset.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3 items-end">
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">Desde</label>
-          <input
-            type="date"
-            value={desde}
-            onChange={(e) => {
-              setDesde(e.target.value);
-              setActiveDatePreset(null);
-            }}
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">Hasta</label>
-          <input
-            type="date"
-            value={hasta}
-            onChange={(e) => {
-              setHasta(e.target.value);
-              setActiveDatePreset(null);
-            }}
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">Tipo</label>
-          <select
-            value={filterTipo}
-            onChange={(e) =>
-              setFilterTipo(e.target.value as "" | TransactionType)
-            }
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-          >
-            <option value="">Todos</option>
-            <option value="income">Ingresos</option>
-            <option value="expense">Gastos</option>
-          </select>
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">Método de pago</label>
-          <select
-            value={filterMetodoPago}
-            onChange={(e) =>
-              setFilterMetodoPago(e.target.value as "" | PaymentMethod)
-            }
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-          >
-            <option value="">Todos</option>
-            {PAYMENT_METHOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        </div>
-      </div>
 
       {loading ? (
         <FinanzasSkeleton />
       ) : (
         <>
-      {report && <FinanceMetricsSection report={report} />}
+          {report && (
+            <FinanzasOverview
+              report={report}
+              activeDatePreset={activeDatePreset}
+              desde={desde}
+              hasta={hasta}
+              filterTipo={filterTipo}
+              filterMetodoPago={filterMetodoPago}
+              onPreset={applyDatePreset}
+              onDesdeChange={setDesde}
+              onHastaChange={setHasta}
+              onFilterTipoChange={setFilterTipo}
+              onFilterMetodoChange={setFilterMetodoPago}
+              onCustomRange={() => setActiveDatePreset(null)}
+            />
+          )}
 
-      {/* Reportes por categoría y forma de cobro */}
-      {report && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Ingresos por forma de cobro
-            </h3>
-            <ul className="space-y-2">
-              {ingresosPorMetodoPago.map((item) => (
-                <li
-                  key={item.metodo}
-                  className="flex justify-between text-sm"
-                >
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {item.label}
-                  </span>
-                  <span className="font-medium text-green-600">
-                    {formatTransactionAmount(item.total)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Gastos por método de pago
-            </h3>
-            <ul className="space-y-2">
-              {gastosPorMetodoPago.map((item) => (
-                <li
-                  key={item.metodo}
-                  className="flex justify-between text-sm"
-                >
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {item.label}
-                  </span>
-                  <span className="font-medium text-red-600">
-                    {formatTransactionAmount(item.total)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Ingresos por categoría
-            </h3>
-            {report.ingresosPorCategoria.length === 0 ? (
-              <p className="text-sm text-gray-500">Sin datos en el período</p>
-            ) : (
-              <ul className="space-y-2">
-                {report.ingresosPorCategoria.map((item) => (
-                  <li
-                    key={item.categoria}
-                    className="flex justify-between text-sm"
-                  >
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {item.categoria}
-                    </span>
-                    <span className="font-medium text-green-600">
-                      {formatTransactionAmount(item.total)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Gastos por categoría
-            </h3>
-            {report.gastosPorCategoria.length === 0 ? (
-              <p className="text-sm text-gray-500">Sin datos en el período</p>
-            ) : (
-              <ul className="space-y-2">
-                {report.gastosPorCategoria.map((item) => (
-                  <li
-                    key={item.categoria}
-                    className="flex justify-between text-sm"
-                  >
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {item.categoria}
-                    </span>
-                    <span className="font-medium text-red-600">
-                      {formatTransactionAmount(item.total)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Lista de transacciones */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-white">
-            Transacciones
-          </h3>
-        </div>
-        {transactions.length === 0 ? (
-          <p className="p-5 text-gray-500">No hay transacciones en el período</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-900/50">
-                <tr>
-                  <th className="px-4 py-3 text-left">Fecha</th>
-                  <th className="px-4 py-3 text-left">Tipo</th>
-                  <th className="px-4 py-3 text-left">Descripción</th>
-                  <th className="px-4 py-3 text-left">Categoría</th>
-                  <th className="px-4 py-3 text-left">Método de pago</th>
-                  <th className="px-4 py-3 text-right">Monto</th>
-                  <th className="px-4 py-3 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {transactions.map((tx) => (
-                  <tr key={tx._id}>
-                    <td className="px-4 py-3">{tx.fecha}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          tx.tipo === "income"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
-                      >
-                        {tx.tipo === "income" ? "Ingreso" : "Gasto"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{tx.descripcion}</td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {tx.categoriaNombre || "—"}
-                      {tx.fuente === "reserva" && (
-                        <span className="ml-1 text-xs text-blue-500">
-                          (reserva)
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {getPaymentMethodMeta(tx.metodoPago).label}
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-right font-medium ${
-                        tx.tipo === "income" ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {tx.tipo === "income" ? "+" : "-"}
-                      {formatTransactionAmount(
-                        tx.monto,
-                        tx.metodoPago,
-                        tx.moneda
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {tx.fuente === "manual" && (
-                        <button
-                          onClick={() => handleDelete(tx._id!)}
-                          className="text-red-500 hover:text-red-700 text-xs"
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+          <FinanzasTransactionsPanel
+            transactions={transactions}
+            onDelete={handleDelete}
+          />
         </>
       )}
 
-      {/* Modal nueva transacción */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Nueva transacción
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-bold">Nueva transacción</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+                <div
+                  className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                  role="alert"
+                >
                   {formError}
                 </div>
               )}
               <div>
-                <label className="text-sm font-medium block mb-1">Tipo</label>
+                <label className="mb-1 block text-sm font-medium">Tipo</label>
                 <select
                   value={form.tipo}
                   onChange={(e) =>
@@ -586,20 +306,20 @@ export default function FinanzasPage() {
                       categoriaId: "",
                     })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-full"
                 >
                   <option value="income">Ingreso</option>
                   <option value="expense">Gasto</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">Categoría</label>
+                <label className="mb-1 block text-sm font-medium">Categoría</label>
                 <select
                   value={form.categoriaId}
                   onChange={(e) =>
                     setForm({ ...form, categoriaId: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-full"
                 >
                   <option value="">Sin categoría</option>
                   {(form.tipo === "income"
@@ -613,7 +333,7 @@ export default function FinanzasPage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">
+                <label className="mb-1 block text-sm font-medium">
                   {form.tipo === "expense"
                     ? "Pago en efectivo (CUP)"
                     : "Cobro en efectivo (CUP)"}
@@ -626,12 +346,12 @@ export default function FinanzasPage() {
                   onChange={(e) =>
                     setForm({ ...form, cobroEfectivo: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-full"
                   placeholder="0.00"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">
+                <label className="mb-1 block text-sm font-medium">
                   {form.tipo === "expense"
                     ? "Pago por transferencia (CUP)"
                     : "Cobro por transferencia (CUP)"}
@@ -644,40 +364,30 @@ export default function FinanzasPage() {
                   onChange={(e) =>
                     setForm({ ...form, cobroTransferencia: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-full"
                   placeholder="0.00"
                 />
               </div>
               {getFormCobroTotal() > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Total:{" "}
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-foreground">
                     {getFormCobroTotal().toFixed(2)} CUP
                   </span>
-                  {form.cobroEfectivo &&
-                    form.cobroTransferencia &&
-                    parseFloat(form.cobroEfectivo) > 0 &&
-                    parseFloat(form.cobroTransferencia) > 0 && (
-                      <span className="block text-xs mt-1">
-                        Puedes dividir el pago entre efectivo y transferencia.
-                      </span>
-                    )}
                 </p>
               )}
               <div>
-                <label className="text-sm font-medium block mb-1">Fecha</label>
+                <label className="mb-1 block text-sm font-medium">Fecha</label>
                 <input
                   type="date"
                   required
                   value={form.fecha}
                   onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-full"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">
-                  Descripción
-                </label>
+                <label className="mb-1 block text-sm font-medium">Descripción</label>
                 <input
                   type="text"
                   required
@@ -685,10 +395,10 @@ export default function FinanzasPage() {
                   onChange={(e) =>
                     setForm({ ...form, descripcion: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="input-field w-full"
                 />
               </div>
-              <div className="flex gap-3 justify-end pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outlined-secondary"
