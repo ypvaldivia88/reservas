@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 export interface MetricDetail {
   label: string;
   value: string;
+  highlightOnMobile?: boolean;
+  onClick?: () => void;
 }
 
 export default function MetricDashboardCard({
@@ -62,17 +64,34 @@ export default function MetricDashboardCard({
 
       {details && details.length > 0 && (
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {details.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5"
-            >
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                {item.label}
-              </p>
-              <p className="mt-0.5 text-sm font-medium tabular-nums">{item.value}</p>
-            </div>
-          ))}
+          {details.map((item) => {
+            const DetailTag = item.onClick ? "button" : "div";
+            return (
+              <DetailTag
+                key={item.label}
+                type={item.onClick ? "button" : undefined}
+                onClick={
+                  item.onClick
+                    ? (e) => {
+                        e.stopPropagation();
+                        item.onClick?.();
+                      }
+                    : undefined
+                }
+                className={cn(
+                  "rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5 text-left",
+                  item.highlightOnMobile && "col-span-2 sm:col-span-1",
+                  item.onClick &&
+                    "cursor-pointer transition-colors hover:border-primary/40 hover:bg-muted/50 active:scale-[0.99]"
+                )}
+              >
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {item.label}
+                </p>
+                <p className="mt-0.5 text-sm font-medium tabular-nums">{item.value}</p>
+              </DetailTag>
+            );
+          })}
         </div>
       )}
 

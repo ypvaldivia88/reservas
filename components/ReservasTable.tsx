@@ -29,6 +29,10 @@ interface ReservasTableProps {
 
 type ViewMode = "month" | "agenda";
 
+function hasMobileStatusActions(estado: Reserva["estado"]) {
+  return estado === "pendiente" || estado === "confirmada";
+}
+
 export default function ReservasTable({
   reservas,
   saving,
@@ -1021,12 +1025,13 @@ export default function ReservasTable({
                       </div>
 
                       {/* Acciones móviles - Botones de estado con texto */}
-                      <div
-                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 py-2.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          {reserva.estado === "pendiente" && (
+                      {hasMobileStatusActions(reserva.estado) && (
+                        <div
+                          className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 py-2.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            {reserva.estado === "pendiente" && (
                             <>
                               <button
                                 onClick={() =>
@@ -1074,6 +1079,7 @@ export default function ReservasTable({
                           )}
                         </div>
                       </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1318,12 +1324,13 @@ export default function ReservasTable({
                       </div>
 
                       {/* Acciones móviles - Botones de estado con texto */}
-                      <div
-                        className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 py-2.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          {reserva.estado === "pendiente" && (
+                      {hasMobileStatusActions(reserva.estado) && (
+                        <div
+                          className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 px-3 py-2.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            {reserva.estado === "pendiente" && (
                             <>
                               <button
                                 onClick={() =>
@@ -1371,6 +1378,7 @@ export default function ReservasTable({
                           )}
                         </div>
                       </div>
+                      )}
                     </div>
                   ))}
                 </div>

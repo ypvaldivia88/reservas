@@ -14,7 +14,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Calendar,
-  Clock3,
   Scale,
   Users,
   Wallet,
@@ -31,7 +30,7 @@ export function ReservationMetricsSection({
   const pendingCount = reservas.filter((r) => r.estado === "pendiente").length;
 
   return (
-    <section className="mb-6 space-y-3">
+    <section className="-mx-3 mb-6 sm:mx-0">
       <MetricDashboardCard
         icon={Calendar}
         title="Reservas del salón"
@@ -50,9 +49,10 @@ export function ReservationMetricsSection({
         details={[
           {
             label: "Pendientes",
-            value: String(
-              reservas.filter((r) => r.estado === "pendiente").length
-            ),
+            value: String(pendingCount),
+            highlightOnMobile: true,
+            onClick: () =>
+              router.push("/admin/calendario?view=agenda&estado=pendiente"),
           },
           {
             label: "Confirmadas",
@@ -72,19 +72,7 @@ export function ReservationMetricsSection({
         ]}
         footer="Ver agenda de reservas"
         onClick={() => router.push("/admin/calendario?view=month")}
-      />
-      <CompactMetricRow
-        icon={Clock3}
-        title="Citas pendientes"
-        subtitle="Requieren confirmación"
-        value={String(pendingCount)}
-        badge={{
-          label: pendingCount > 0 ? "Revisar" : "Al día",
-          variant: pendingCount > 0 ? "warning" : "success",
-        }}
-        onClick={() =>
-          router.push("/admin/calendario?view=agenda&estado=pendiente")
-        }
+        className="w-full rounded-none border-x-0 sm:rounded-2xl sm:border-x"
       />
     </section>
   );
