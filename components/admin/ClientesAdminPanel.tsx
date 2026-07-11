@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { User } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import PageHeader from "@/components/design/PageHeader";
+import { ClientMetricsSection } from "@/components/admin/TenantMetricSections";
 import { SearchInput } from "@/components/design/IconInput";
 import {
   EditIcon,
@@ -203,6 +204,8 @@ export default function ClientesAdminPanel() {
           </p>
         </div>
       )}
+
+      <ClientMetricsSection clientesCount={clientes.length} />
 
       <div className="dashboard-card overflow-hidden rounded-2xl p-6 sm:p-8">
         <div className="mb-6 space-y-3">

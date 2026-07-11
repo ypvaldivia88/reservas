@@ -6,6 +6,7 @@ import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsa
 import { Button } from "@/components/ui/Button";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import ReservasTable from "@/components/ReservasTable";
+import { ReservationMetricsSection } from "@/components/admin/TenantMetricSections";
 import {
   getReservaTemplateConfig,
   isManicureReservation,
@@ -49,6 +50,7 @@ function normalizeReservaForEdit(reserva: Reserva): Reserva {
 // Componente interno que usa useSearchParams
 function CalendarioAdminPanel() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [clientesCount, setClientesCount] = useState(0);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -193,6 +195,14 @@ function CalendarioAdminPanel() {
         const dataServicios = await resServicios.json();
         if (dataServicios.success) {
           setServicios(dataServicios.data);
+        }
+      }
+
+      const resClientes = await fetch("/api/clientes");
+      if (resClientes.ok) {
+        const dataClientes = await resClientes.json();
+        if (dataClientes.success && Array.isArray(dataClientes.data)) {
+          setClientesCount(dataClientes.data.length);
         }
       }
 
@@ -346,6 +356,11 @@ function CalendarioAdminPanel() {
           </p>
         </div>
       )}
+
+      <ReservationMetricsSection
+        reservas={reservas}
+        clientesCount={clientesCount}
+      />
 
       {/* Reservas / Calendario */}
       <div

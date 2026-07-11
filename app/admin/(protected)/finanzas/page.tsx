@@ -15,6 +15,7 @@ import {
   getPaymentMethodMeta,
   PAYMENT_METHOD_OPTIONS,
 } from "@/lib/paymentMethods";
+import { FinanceMetricsSection } from "@/components/admin/TenantMetricSections";
 
 const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
 
@@ -383,6 +384,8 @@ export default function FinanzasPage() {
         <FinanzasSkeleton />
       ) : (
         <>
+      {report && <FinanceMetricsSection report={report} />}
+
       {/* Reportes por categoría y forma de cobro */}
       {report && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

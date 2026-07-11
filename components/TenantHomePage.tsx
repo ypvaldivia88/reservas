@@ -8,6 +8,7 @@ import StatsSection from "@/components/StatsSection";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import ProcessSection from "@/components/ProcessSection";
 import TenantFooter from "@/components/TenantFooter";
+import TenantSalonAdminLink from "@/components/TenantSalonAdminLink";
 import { SalonPublicProfile } from "@/lib/types";
 import { getContrastingForeground, getAccessibleBrandPrimary, normalizeHexColor } from "@/lib/color-utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -42,6 +43,7 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-200">
+        <TenantSalonAdminLink slug={profile.slug} />
         {/* Hero */}
         <section
           className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-center bg-cover bg-no-repeat"

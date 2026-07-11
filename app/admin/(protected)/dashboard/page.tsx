@@ -1,5 +1,5 @@
-import TenantAdminOverview from "@/components/admin/TenantAdminOverview";
+import { redirect } from "next/navigation";
 
 export default function AdminDashboardPage() {
-  return <TenantAdminOverview />;
+  redirect("/admin/calendario?view=month");
 }

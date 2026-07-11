@@ -7,8 +7,8 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  CircleHelp,
   ExternalLink,
-  LayoutTemplate,
   Sparkles,
   X,
 } from "lucide-react";
@@ -18,14 +18,17 @@ import {
   consumeWelcomePending,
   markStepVisited,
   markWelcomePending,
+  ONBOARDING_OPEN_EVENT,
   ONBOARDING_STEPS,
-  onboardingStorageKey,
   OnboardingState,
   OnboardingStep,
   OnboardingStepId,
   readOnboardingState,
   readVisitedSteps,
   resolveStepCompletion,
+  shouldShowOnboardingHelpFab,
+  shouldShowOnboardingPanel,
+  isOnboardingFinished,
   shouldShowWelcomeFromQuery,
   stepHref,
   writeOnboardingState,
@@ -87,12 +90,14 @@ function WelcomeModal({
   salonName,
   onStart,
   onExplore,
-  onDismiss,
+  onSkip,
+  onBackdropClose,
 }: {
   salonName: string;
   onStart: () => void;
   onExplore: () => void;
-  onDismiss: () => void;
+  onSkip: () => void;
+  onBackdropClose: () => void;
 }) {
   return (
     <div
@@ -100,12 +105,16 @@ function WelcomeModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-welcome-title"
+      onClick={onBackdropClose}
     >
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-300">
+      <div
+        className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/15 via-transparent to-transparent" />
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={onBackdropClose}
           className="absolute right-3 top-3 z-10 inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Cerrar bienvenida"
         >
@@ -173,7 +182,7 @@ function WelcomeModal({
           </div>
           <button
             type="button"
-            onClick={onDismiss}
+            onClick={onSkip}
             className="mt-4 w-full text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             No mostrar de nuevo
@@ -300,10 +309,19 @@ export default function SalonOnboardingGuide() {
     writeOnboardingState(salonId, next);
   }, []);
 
-  const dismiss = useCallback(() => {
+  const skipGuide = useCallback(() => {
     if (!salon) return;
     persistState(
-      { ...state, status: "dismissed", manualCompleted: state.manualCompleted },
+      { ...state, status: "skipped", manualCompleted: state.manualCompleted },
+      salon.salonId
+    );
+    setShowWelcome(false);
+  }, [persistState, salon, state]);
+
+  const completeGuide = useCallback(() => {
+    if (!salon) return;
+    persistState(
+      { ...state, status: "completed", manualCompleted: state.manualCompleted },
       salon.salonId
     );
     setShowWelcome(false);
@@ -382,7 +400,7 @@ export default function SalonOnboardingGuide() {
         const welcomeFromSession = consumeWelcomePending();
         const stored = readOnboardingState(snapshot.salonId);
         if (
-          stored.status !== "dismissed" &&
+          !isOnboardingFinished(stored.status) &&
           (welcomeFromQuery || welcomeFromSession)
         ) {
           setShowWelcome(true);
@@ -397,6 +415,18 @@ export default function SalonOnboardingGuide() {
       cancelled = true;
     };
   }, [searchParams]);
+
+  useEffect(() => {
+    const handleOpenGuide = () => {
+      if (!salon) return;
+      persistState({ ...state, status: "active" }, salon.salonId);
+      setExpanded(true);
+      setShowWelcome(false);
+    };
+
+    window.addEventListener(ONBOARDING_OPEN_EVENT, handleOpenGuide);
+    return () => window.removeEventListener(ONBOARDING_OPEN_EVENT, handleOpenGuide);
+  }, [persistState, salon, state]);
 
   useEffect(() => {
     if (!salon) return;
@@ -477,22 +507,34 @@ export default function SalonOnboardingGuide() {
   };
 
   useEffect(() => {
-    if (!salon || !allDone || state.status === "dismissed") return;
-    persistState({ ...state, status: "dismissed" }, salon.salonId);
-  }, [allDone, persistState, salon, state]);
+    if (!salon || !allDone || isOnboardingFinished(state.status)) return;
+    completeGuide();
+  }, [allDone, completeGuide, salon, state.status]);
 
-  if (!ready || !salon || state.status === "dismissed") {
-    return showWelcome && salon ? (
+  if (!ready || !salon) {
+    return null;
+  }
+
+  const finished = isOnboardingFinished(state.status);
+
+  if (finished) {
+    return showWelcome ? (
       <WelcomeModal
         salonName={salon.nombre}
         onStart={handleStart}
         onExplore={minimize}
-        onDismiss={dismiss}
+        onSkip={skipGuide}
+        onBackdropClose={minimize}
       />
     ) : null;
   }
 
-  if (allDone) return null;
+  if (allDone) {
+    return null;
+  }
+
+  const showPanel = shouldShowOnboardingPanel(state.status);
+  const showFab = shouldShowOnboardingHelpFab(state.status);
 
   return (
     <>
@@ -501,29 +543,24 @@ export default function SalonOnboardingGuide() {
           salonName={salon.nombre}
           onStart={handleStart}
           onExplore={minimize}
-          onDismiss={dismiss}
+          onSkip={skipGuide}
+          onBackdropClose={minimize}
         />
       )}
 
-      {state.status === "minimized" ? (
+      {showFab && (
         <button
           type="button"
           onClick={restore}
-          className="fixed bottom-24 right-3 z-[70] inline-flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-primary/25 bg-card px-4 py-2.5 text-left shadow-lg backdrop-blur-md transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6 md:right-6"
+          className="onboarding-help-fab-pulse fixed bottom-24 right-3 z-[70] inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-primary shadow-md transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6 md:right-6"
           aria-label="Abrir guía de configuración"
+          title="Guía de configuración"
         >
-          <LayoutTemplate className="size-4 shrink-0 text-primary" />
-          <span className="min-w-0">
-            <span className="block truncate text-xs font-semibold">
-              Configura tu sitio
-            </span>
-            <span className="block text-[10px] text-muted-foreground">
-              {completedCount}/{ONBOARDING_STEPS.length} pasos
-            </span>
-          </span>
-          <ProgressRing value={completedCount} total={ONBOARDING_STEPS.length} />
+          <CircleHelp className="size-4" strokeWidth={2.25} />
         </button>
-      ) : (
+      )}
+
+      {showPanel && (
         <section
           className="fixed bottom-24 left-3 right-3 z-[70] mx-auto max-w-md md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
           aria-label="Guía de configuración del salón"
@@ -589,7 +626,7 @@ export default function SalonOnboardingGuide() {
             <div className="flex items-center justify-between gap-2 border-t border-border/80 px-4 py-2.5">
               <button
                 type="button"
-                onClick={dismiss}
+                onClick={skipGuide}
                 className="text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Omitir guía

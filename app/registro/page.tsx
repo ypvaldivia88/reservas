@@ -223,7 +223,7 @@ export default function RegistroPage() {
                   Ver mi página
                 </Button>
               </Link>
-              <Link href="/admin/dashboard?bienvenida=1" className="flex-1">
+              <Link href="/admin/calendario?bienvenida=1" className="flex-1">
                 <Button variant="primary" fullWidth size="lg">
                   Configurar mi sitio
                 </Button>

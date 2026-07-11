@@ -5,7 +5,16 @@ export type OnboardingStepId =
   | "galeria"
   | "vista-previa";
 
-export type OnboardingStatus = "active" | "minimized" | "dismissed";
+/** @deprecated migrated to skipped */
+export type LegacyOnboardingStatus = "dismissed";
+
+export type OnboardingStatus =
+  | "active"
+  | "minimized"
+  | "skipped"
+  | "completed";
+
+export const ONBOARDING_OPEN_EVENT = "reservas:onboarding-open";
 
 export interface OnboardingStep {
   id: OnboardingStepId;
@@ -72,6 +81,37 @@ export function onboardingVisitsKey(salonId: string): string {
   return `${VISITS_PREFIX}:${salonId}`;
 }
 
+function normalizeOnboardingStatus(
+  status: string | undefined
+): OnboardingStatus {
+  if (status === "dismissed") return "skipped";
+  if (
+    status === "minimized" ||
+    status === "skipped" ||
+    status === "completed"
+  ) {
+    return status;
+  }
+  return "active";
+}
+
+export function isOnboardingFinished(status: OnboardingStatus): boolean {
+  return status === "skipped" || status === "completed";
+}
+
+export function shouldShowOnboardingPanel(status: OnboardingStatus): boolean {
+  return status === "active";
+}
+
+export function shouldShowOnboardingHelpFab(status: OnboardingStatus): boolean {
+  return status === "minimized";
+}
+
+export function dispatchOpenOnboardingGuide(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(ONBOARDING_OPEN_EVENT));
+}
+
 export function readOnboardingState(salonId: string): OnboardingState {
   if (typeof window === "undefined") {
     return { status: "active", manualCompleted: [] };
@@ -80,9 +120,11 @@ export function readOnboardingState(salonId: string): OnboardingState {
   try {
     const raw = localStorage.getItem(onboardingStorageKey(salonId));
     if (!raw) return { status: "active", manualCompleted: [] };
-    const parsed = JSON.parse(raw) as Partial<OnboardingState>;
+    const parsed = JSON.parse(raw) as Partial<OnboardingState> & {
+      status?: string;
+    };
     return {
-      status: parsed.status ?? "active",
+      status: normalizeOnboardingStatus(parsed.status),
       manualCompleted: Array.isArray(parsed.manualCompleted)
         ? parsed.manualCompleted
         : [],

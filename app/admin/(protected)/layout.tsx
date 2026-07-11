@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
 import AdminSidebarMenu from "@/components/AdminSidebarMenu";
@@ -17,11 +17,26 @@ export default function AdminProtectedLayout({
   children: React.ReactNode;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [tenantPublicHref, setTenantPublicHref] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const isPlatformRoute = pathname.startsWith("/admin/platform");
   const profileHref = isPlatformRoute ? "/admin/platform/perfil" : "/admin/perfil";
-  const homeHref = isPlatformRoute ? "/admin/platform" : "/admin/dashboard";
+  const homeHref = isPlatformRoute
+    ? "/admin/platform"
+    : tenantPublicHref ?? "/admin/calendario?view=month";
+
+  useEffect(() => {
+    if (isPlatformRoute) return;
+
+    fetch("/api/salons/current")
+      .then((r) => r.json())
+      .then((data) => {
+        const slug = data.success ? (data.data?.slug as string | undefined) : undefined;
+        if (slug) setTenantPublicHref(`/${slug}`);
+      })
+      .catch(() => {});
+  }, [isPlatformRoute, pathname]);
 
   const closeMenu = () => setIsMobileMenuOpen(false);
 
@@ -61,8 +76,8 @@ export default function AdminProtectedLayout({
                 variant="ghost"
                 size="sm"
                 icon={<HomeIcon />}
-                aria-label={isPlatformRoute ? "Ir al panel de plataforma" : "Ir al inicio del salón"}
-                title={isPlatformRoute ? "Panel de plataforma" : "Inicio"}
+                aria-label={isPlatformRoute ? "Ir al panel de plataforma" : "Ver sitio público del salón"}
+                title={isPlatformRoute ? "Panel de plataforma" : "Sitio público"}
                 className="size-9 rounded-lg p-0"
               />
               <ThemeToggle />

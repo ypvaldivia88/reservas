@@ -6,6 +6,12 @@ import MobileNavDrawer from "./MobileNavDrawer";
 import { Button } from "@/components/ui/Button";
 import { LogoutIcon } from "@/components/ui/Icons";
 import { adminMediaNavItem, adminServiciosNavItem } from "./AdminNav";
+import {
+  dispatchOpenOnboardingGuide,
+  isOnboardingFinished,
+  readOnboardingState,
+} from "@/lib/salon-onboarding";
+import { useEffect, useState } from "react";
 
 interface AdminSidebarMenuProps {
   isOpen: boolean;
@@ -115,6 +121,23 @@ export default function AdminSidebarMenu({
   isPlatformRoute = false,
 }: AdminSidebarMenuProps) {
   const pathname = usePathname();
+  const [showGuideInSidebar, setShowGuideInSidebar] = useState(false);
+
+  useEffect(() => {
+    if (isPlatformRoute) return;
+
+    fetch("/api/salons/current")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.success) return;
+        const salonId = data.data?.salonId as string | undefined;
+        if (!salonId) return;
+        const onboarding = readOnboardingState(salonId);
+        setShowGuideInSidebar(isOnboardingFinished(onboarding.status));
+      })
+      .catch(() => {});
+  }, [isPlatformRoute, pathname]);
+
   const items = isPlatformRoute
     ? [
         {
@@ -152,6 +175,31 @@ export default function AdminSidebarMenu({
           />
         ))}
       </div>
+
+      {!isPlatformRoute && showGuideInSidebar && (
+        <div className="mt-4 border-t border-border/60 pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              dispatchOpenOnboardingGuide();
+              onClose();
+            }}
+            className="group flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left font-medium text-foreground transition-all duration-200 hover:bg-muted hover:text-primary active:scale-[0.98]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </span>
+            <span className="text-base">Guía de configuración</span>
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 pt-4 border-t border-border/60">
         <Button
