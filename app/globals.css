@@ -172,8 +172,7 @@
   --ring: oklch(0.72 0.11 185);
   --glass-bg: oklch(0.28 0.02 260 / 0.45);
   --glass-border: oklch(0.55 0.02 260 / 0.28);
-  --admin-dock-bg: oklch(0.26 0.02 260 / 0.72);
-  --admin-dock-border: oklch(0.55 0.02 260 / 0.38);
+  --admin-dock-border: oklch(0.55 0.02 260 / 0.48);
 }
 
 /* Balanced: darker surfaces, same readable text as soft */
@@ -200,8 +199,7 @@
   --ring: oklch(0.74 0.11 185);
   --glass-bg: oklch(0.2 0.018 260 / 0.5);
   --glass-border: oklch(0.48 0.02 260 / 0.32);
-  --admin-dock-bg: oklch(0.19 0.018 260 / 0.78);
-  --admin-dock-border: oklch(0.48 0.02 260 / 0.4);
+  --admin-dock-border: oklch(0.48 0.02 260 / 0.5);
 }
 
 /* Deep: darkest surfaces, brightest text for max contrast */
@@ -228,8 +226,7 @@
   --ring: oklch(0.76 0.11 185);
   --glass-bg: oklch(0.16 0.02 260 / 0.58);
   --glass-border: oklch(0.42 0.02 260 / 0.38);
-  --admin-dock-bg: oklch(0.15 0.02 260 / 0.82);
-  --admin-dock-border: oklch(0.42 0.02 260 / 0.45);
+  --admin-dock-border: oklch(0.42 0.02 260 / 0.55);
 }
 
 @layer base {
@@ -380,25 +377,38 @@
 }
 
 .admin-dock {
-  @apply fixed inset-x-4 bottom-3 z-40 mx-auto max-w-lg rounded-2xl shadow-lg sm:inset-x-5;
+  @apply fixed inset-x-5 bottom-3 z-40 mx-auto max-w-lg rounded-2xl shadow-lg sm:inset-x-6;
   isolation: isolate;
-  background: var(--admin-dock-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--admin-dock-border);
+  background-color: color-mix(in oklch, var(--card) 90%, transparent);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--foreground) 6%, transparent),
+    transparent 42%
+  );
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
 }
 
 .dark .admin-dock {
+  background-color: color-mix(in oklch, var(--card) 97%, var(--background));
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--foreground) 7%, transparent),
+    transparent 40%
+  );
   box-shadow:
     var(--shadow-lg),
-    0 8px 32px color-mix(in oklch, var(--background) 40%, transparent);
+    0 10px 36px color-mix(in oklch, var(--background) 72%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--foreground) 10%, transparent);
 }
 
 @supports not (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
   .admin-dock {
-    background: color-mix(in oklch, var(--card) 92%, transparent);
+    background-color: var(--card);
+    background-image: none;
   }
 }
 

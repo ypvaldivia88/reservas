@@ -87,7 +87,7 @@ export default function AdminNav() {
 
   return (
     <nav className="admin-dock safe-area-bottom md:static md:inset-x-0 md:bottom-auto md:mb-6 md:max-w-none md:rounded-none md:border-x-0 md:border-b md:border-t md:shadow-none">
-      <div className="grid grid-cols-4 gap-1 p-1.5 sm:p-2 md:max-w-2xl md:mx-auto">
+      <div className="grid grid-cols-4 gap-1 px-1.5 py-1.5 sm:px-2 sm:py-2 md:max-w-2xl md:mx-auto">
         {bottomNavItems.map((item) => {
           const isActive = item.matchPaths.some((p) => pathname.startsWith(p));
           return (
