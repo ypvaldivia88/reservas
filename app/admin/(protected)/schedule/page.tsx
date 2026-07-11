@@ -28,7 +28,6 @@ export default function AdminSchedulePage() {
   const [editingSlotIndex, setEditingSlotIndex] = useState<number | null>(null);
   const [specialDays, setSpecialDays] = useState<AvailabilityOverride[]>([]);
   const [showSpecialDayModal, setShowSpecialDayModal] = useState(false);
-  const [showPastSpecialDays, setShowPastSpecialDays] = useState(false);
   const [editingSpecialDay, setEditingSpecialDay] =
     useState<EditingSpecialDayState>(EMPTY_EDITING_SPECIAL_DAY);
 
@@ -478,17 +477,6 @@ export default function AdminSchedulePage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const [year, month, day] = dateString.split("-").map(Number);
-    const date = new Date(year, month - 1, day);
-    return new Intl.DateTimeFormat("es-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  };
-
   const getTodayDateString = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -555,10 +543,7 @@ export default function AdminSchedulePage() {
       <SpecialDaysSection
         upcomingSpecialDays={upcomingSpecialDays}
         pastSpecialDays={pastSpecialDays}
-        showPastSpecialDays={showPastSpecialDays}
         saving={saving}
-        formatDate={formatDate}
-        onTogglePast={() => setShowPastSpecialDays((prev) => !prev)}
         onAdd={handleOpenSpecialDayModal}
         onEdit={handleEditSpecialDay}
         onDelete={handleDeleteSpecialDay}
