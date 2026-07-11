@@ -18,6 +18,7 @@ export interface BusinessTemplateConfig {
   nombre: string;
   descripcion: string;
   icon: string;
+  particularidades: string[];
   branding: SalonBranding;
   content: SalonContent;
   contact: Partial<SalonContact>;
@@ -30,6 +31,12 @@ const manicureTemplate: BusinessTemplateConfig = {
   nombre: "Manicure / Uñas",
   descripcion: "Salón de uñas, nail art y cuidado de manos",
   icon: "💅",
+  particularidades: [
+    "Formulario de reserva con forma de uña, largo y decoración",
+    "Landing y textos orientados a manicure y nail art",
+    "Mensajes de WhatsApp adaptados al salón de uñas",
+    "Servicios sugeridos de uñas al restablecer contenido",
+  ],
   branding: {
     primaryColor: "#2563eb",
     secondaryColor: "#7c3aed",
@@ -155,6 +162,12 @@ const peluqueriaTemplate: BusinessTemplateConfig = {
   nombre: "Peluquería",
   descripcion: "Cortes, coloración y tratamientos capilares",
   icon: "✂️",
+  particularidades: [
+    "Reserva con opciones de corte, coloración y tratamientos",
+    "Selector de tonos de referencia en preferencias opcionales",
+    "Textos de landing para salón capilar",
+    "Servicios sugeridos de peluquería al restablecer",
+  ],
   branding: {
     primaryColor: "#db2777",
     secondaryColor: "#9333ea",
@@ -266,6 +279,11 @@ const barberiaTemplate: BusinessTemplateConfig = {
   nombre: "Barbería",
   descripcion: "Cortes clásicos, barba y grooming masculino",
   icon: "💈",
+  particularidades: [
+    "Reserva enfocada en cortes, fades y arreglo de barba",
+    "Textos y estética orientados a barbería masculina",
+    "Servicios sugeridos de barbería al restablecer",
+  ],
   branding: {
     primaryColor: "#1e293b",
     secondaryColor: "#d97706",
@@ -377,6 +395,12 @@ const tatuajesTemplate: BusinessTemplateConfig = {
   nombre: "Tatuajes",
   descripcion: "Arte en la piel, diseños personalizados",
   icon: "🎨",
+  particularidades: [
+    "Paso de diseño con idea, estilo y zona del cuerpo",
+    "Galería pensada como portafolio e inspiración",
+    "Textos de estudio de tatuajes en landing y reservas",
+    "Servicios sugeridos de tatuaje al restablecer",
+  ],
   branding: {
     primaryColor: "#0f172a",
     secondaryColor: "#dc2626",
@@ -488,6 +512,11 @@ const genericTemplate: BusinessTemplateConfig = {
   nombre: "Negocio General",
   descripcion: "Plantilla adaptable para cualquier negocio de turnos",
   icon: "🏪",
+  particularidades: [
+    "Formulario flexible con notas libres y opciones generales",
+    "Textos neutros para cualquier negocio con turnos",
+    "Servicios genéricos sugeridos al restablecer",
+  ],
   branding: {
     primaryColor: "#0891b2",
     secondaryColor: "#0e7490",

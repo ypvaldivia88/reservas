@@ -8,6 +8,7 @@ export async function GET() {
     nombre: t.nombre,
     descripcion: t.descripcion,
     icon: t.icon,
+    particularidades: t.particularidades,
     branding: t.branding,
   }));
 

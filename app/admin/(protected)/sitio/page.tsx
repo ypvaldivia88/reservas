@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Info } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import PageHeader from "@/components/design/PageHeader";
 import SurfaceCard from "@/components/design/SurfaceCard";
@@ -27,14 +27,15 @@ interface TemplateOption {
   nombre: string;
   descripcion: string;
   icon: string;
+  particularidades: string[];
   branding: SalonBranding;
 }
 
 const TAB_OPTIONS: { value: Tab; label: string }[] = [
-  { value: "plantilla", label: "Plantilla" },
   { value: "marca", label: "Marca" },
   { value: "contenido", label: "Contenido" },
   { value: "contacto", label: "Contacto" },
+  { value: "plantilla", label: "Plantilla" },
 ];
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -78,7 +79,7 @@ function normalizeBranding(branding: SalonBranding): SalonBranding {
 }
 
 export default function SitioAdmin() {
-  const [activeTab, setActiveTab] = useState<Tab>("plantilla");
+  const [activeTab, setActiveTab] = useState<Tab>("marca");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -155,14 +156,25 @@ export default function SitioAdmin() {
   };
 
   const applyTemplate = async (template: BusinessTemplate, resetContent: boolean) => {
-    if (
-      resetContent &&
+    const templateName =
+      templates.find((t) => t.id === template)?.nombre ?? "esta plantilla";
+
+    if (resetContent) {
+      if (
+        !confirm(
+          `¿Restablecer todo el contenido con los valores de "${templateName}"? Se perderán tus textos personalizados y se actualizarán los colores del sitio.`
+        )
+      ) {
+        return;
+      }
+    } else if (
       !confirm(
-        "¿Restablecer todo el contenido con los valores de la plantilla? Se perderán tus textos personalizados."
+        `¿Aplicar la paleta de colores de "${templateName}"? Se reemplazarán los colores principal, secundario y acento de tu sitio.`
       )
     ) {
       return;
     }
+
     await save({
       businessTemplate: template,
       applyTemplate: true,
@@ -246,9 +258,32 @@ export default function SitioAdmin() {
 
       {activeTab === "plantilla" && (
         <div className="space-y-4">
+          <SurfaceCard className="border-primary/20 bg-primary/5">
+            <div className="flex gap-3">
+              <Info className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+              <div className="min-w-0 space-y-2 text-sm">
+                <p className="font-medium">Cada plantilla va más allá de los colores</p>
+                <p className="text-muted-foreground">
+                  Además de la paleta, define textos de tu landing, el formulario de reservas,
+                  mensajes de WhatsApp y servicios sugeridos. Revisa las particularidades de cada
+                  una antes de aplicar cambios.
+                </p>
+                <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+                  <li>
+                    <span className="font-medium text-foreground">Solo colores</span> — actualiza
+                    la paleta sin tocar tus textos.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Restablecer todo</span> — aplica
+                    textos, contacto y servicios sugeridos de la plantilla.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </SurfaceCard>
+
           <p className="text-sm text-muted-foreground">
-            Elige una plantilla según tu tipo de negocio. Puedes aplicar solo los colores o
-            restablecer todo el contenido.
+            Elige la plantilla que mejor encaje con tu negocio. La activa aparece resaltada.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {templates.map((t) => (
@@ -265,6 +300,19 @@ export default function SitioAdmin() {
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold">{t.nombre}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">{t.descripcion}</p>
+                    {t.particularidades.length > 0 && (
+                      <ul className="mt-2.5 space-y-1 border-t border-border/60 pt-2.5">
+                        {t.particularidades.map((item) => (
+                          <li
+                            key={item}
+                            className="flex gap-2 text-xs text-muted-foreground"
+                          >
+                            <span className="mt-1.5 size-1 shrink-0 rounded-full bg-primary/70" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <div className="mt-2 flex gap-1">
                       <div
                         className="size-5 rounded-full border border-border"
