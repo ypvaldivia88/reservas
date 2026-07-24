@@ -397,9 +397,15 @@ export default function ReservaWorkPhotosUpload({
               <p className="text-white text-sm font-medium truncate">
                 {previewItem.label}
               </p>
-              {previewItem.kind === "pending" && (
-                <p className="text-white/60 text-xs">Se subirá al guardar</p>
-              )}
+              {previewItem.kind === "pending" && (() => {
+                const photo = pendingPhotos.find((p) => p.id === previewItem.id);
+                return (
+                  <p className="text-white/60 text-xs">
+                    Se subirá al guardar
+                    {photo ? ` · ${formatFileSize(photo.file.size)}` : ""}
+                  </p>
+                );
+              })()}
             </div>
             <button
               type="button"
