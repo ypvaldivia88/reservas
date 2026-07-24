@@ -471,10 +471,10 @@ function CalendarioAdminPanel() {
               </h3>
               <Button
                 onClick={() => {
-            pendingWorkPhotosRef.current = [];
-            pendingCategoriaIdsRef.current = [];
-            setEditingReserva(null);
-          }}
+                  pendingWorkPhotosRef.current = [];
+                  pendingCategoriaIdsRef.current = [];
+                  setEditingReserva(null);
+                }}
                 variant="ghost"
                 size="sm"
                 icon={<CloseIcon className="w-6 h-6" />}
@@ -852,10 +852,10 @@ function CalendarioAdminPanel() {
                   <Button
                     type="button"
                     onClick={() => {
-            pendingWorkPhotosRef.current = [];
-            pendingCategoriaIdsRef.current = [];
-            setEditingReserva(null);
-          }}
+                      pendingWorkPhotosRef.current = [];
+                      pendingCategoriaIdsRef.current = [];
+                      setEditingReserva(null);
+                    }}
                     disabled={saving}
                     variant="outlined-secondary"
                   >
