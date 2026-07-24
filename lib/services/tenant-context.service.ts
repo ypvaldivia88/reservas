@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { ObjectId } from "mongodb";
 import { SessionData, UserRole } from "@/lib/types";
 import { getSession, requireSalonAdmin, requirePlatformAdmin, requireAdmin } from "@/lib/session";
 import {
@@ -7,7 +8,8 @@ import {
   TenantContext,
 } from "@/lib/tenant";
 import { AppError } from "@/lib/api/errors";
-import { userRepository } from "@/lib/repositories/user.repository";
+import { getDb } from "@/lib/mongodb";
+import { Collections } from "@/lib/db/collections";
 
 export interface RequestContext {
   request: NextRequest;
@@ -46,13 +48,17 @@ export async function resolveAdminTenant(session: SessionData): Promise<string> 
     return session.salonId;
   }
 
-  const user = await userRepository.findById(String(session.userId));
+  const db = await getDb();
+  const user = await db.collection(Collections.USERS).findOne({
+    _id: new ObjectId(String(session.userId)),
+  });
+
   if (!user) {
     throw AppError.unauthorized("Usuario de sesión no encontrado");
   }
 
   if (user.salonId) {
-    return user.salonId;
+    return user.salonId as string;
   }
 
   // Legacy oh-diosa admin (role admin sin salonId en el documento de usuario)
