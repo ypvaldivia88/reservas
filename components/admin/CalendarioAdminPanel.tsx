@@ -1,11 +1,13 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { BusinessTemplate, Reserva, Servicio } from "@/lib/types";
+import { BusinessTemplate, Categoria, Reserva, Servicio } from "@/lib/types";
 import { openConfirmationWhatsApp, openCancellationWhatsApp } from "@/lib/whatsapp";
+import { uploadReservaWorkPhotos } from "@/lib/reserva-work-photos";
 import { Button } from "@/components/ui/Button";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import ReservasTable from "@/components/ReservasTable";
+import ReservaWorkPhotosUpload from "@/components/admin/ReservaWorkPhotosUpload";
 import { ReservationMetricsSection } from "@/components/admin/TenantMetricSections";
 import {
   getReservaTemplateConfig,
@@ -52,8 +54,11 @@ function CalendarioAdminPanel() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [clientesCount, setClientesCount] = useState(0);
   const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const pendingWorkPhotosRef = useRef<File[]>([]);
+  const pendingCategoriaIdsRef = useRef<string[]>([]);
 
   // Modal states for Reservas
   const [editingReserva, setEditingReserva] = useState<Reserva | null>(null);
@@ -107,6 +112,42 @@ function CalendarioAdminPanel() {
       cobroTransferencia: safeTransferencia,
       costo: total > 0 ? total : reserva.costo,
     };
+  };
+
+  const handlePendingPhotosChange = useCallback((files: File[]) => {
+    pendingWorkPhotosRef.current = files;
+  }, []);
+
+  const handleCategoriaIdsChange = useCallback((ids: string[]) => {
+    pendingCategoriaIdsRef.current = ids;
+  }, []);
+
+  const uploadPendingWorkPhotos = async (
+    reserva: Reserva
+  ): Promise<string | null> => {
+    const files = pendingWorkPhotosRef.current;
+    if (files.length === 0 || !reserva._id) return null;
+
+    const result = await uploadReservaWorkPhotos(files, {
+      reservaId: reserva._id,
+      servicioIds: getReservaServicioIds(reserva),
+      categoriaIds: pendingCategoriaIdsRef.current,
+      clienteNombre: reserva.nombre,
+      fechaCita: reserva.fechaCita,
+    });
+
+    pendingWorkPhotosRef.current = [];
+
+    if (result.uploaded > 0 && result.failed === 0) {
+      return `${result.uploaded} foto(s) agregada(s) a Nuestros Trabajos`;
+    }
+    if (result.uploaded > 0 && result.failed > 0) {
+      return `${result.uploaded} foto(s) subida(s), ${result.failed} con error`;
+    }
+    if (result.failed > 0) {
+      return `Error al subir fotos: ${result.errors[0]}`;
+    }
+    return null;
   };
 
   const sumServiciosPrecio = (servicioIds: string[]): number =>
@@ -190,11 +231,20 @@ function CalendarioAdminPanel() {
       }
 
       // Cargar servicios (categorías de ingreso)
-      const resServicios = await fetch("/api/servicios");
+      const [resServicios, resCategorias] = await Promise.all([
+        fetch("/api/servicios"),
+        fetch("/api/categorias"),
+      ]);
       if (resServicios.ok) {
         const dataServicios = await resServicios.json();
         if (dataServicios.success) {
           setServicios(dataServicios.data);
+        }
+      }
+      if (resCategorias.ok) {
+        const dataCategorias = await resCategorias.json();
+        if (dataCategorias.success) {
+          setCategorias(dataCategorias.data);
         }
       }
 
@@ -257,8 +307,21 @@ function CalendarioAdminPanel() {
       const data = await res.json();
 
       if (data.success) {
-        setActionMessage("✅ Reserva actualizada exitosamente");
+        let message = "✅ Reserva actualizada exitosamente";
+
+        if (
+          payload.estado === "completada" &&
+          pendingWorkPhotosRef.current.length > 0
+        ) {
+          const photoMessage = await uploadPendingWorkPhotos(payload);
+          if (photoMessage) {
+            message += `. ${photoMessage}`;
+          }
+        }
+
+        setActionMessage(message);
         setEditingReserva(null);
+        pendingCategoriaIdsRef.current = [];
         loadData();
 
         // Open WhatsApp if requested (for confirm/cancel actions)
@@ -371,7 +434,11 @@ function CalendarioAdminPanel() {
           reservas={reservas}
           saving={saving}
           businessTemplate={businessTemplate}
-          onEdit={(reserva) => setEditingReserva(normalizeReservaForEdit(reserva))}
+          onEdit={(reserva) => {
+            pendingWorkPhotosRef.current = [];
+            pendingCategoriaIdsRef.current = [];
+            setEditingReserva(normalizeReservaForEdit(reserva));
+          }}
           onDelete={setDeletingReserva}
           onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
             handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
@@ -386,7 +453,11 @@ function CalendarioAdminPanel() {
       {editingReserva && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-          onClick={() => setEditingReserva(null)}
+          onClick={() => {
+            pendingWorkPhotosRef.current = [];
+            pendingCategoriaIdsRef.current = [];
+            setEditingReserva(null);
+          }}
         >
           <div
             className="bg-white dark:bg-gray-800 w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto"
@@ -399,7 +470,11 @@ function CalendarioAdminPanel() {
                 Editar Reserva
               </h3>
               <Button
-                onClick={() => setEditingReserva(null)}
+                onClick={() => {
+            pendingWorkPhotosRef.current = [];
+            pendingCategoriaIdsRef.current = [];
+            setEditingReserva(null);
+          }}
                 variant="ghost"
                 size="sm"
                 icon={<CloseIcon className="w-6 h-6" />}
@@ -662,6 +737,19 @@ function CalendarioAdminPanel() {
                       )}
                     </>
                   )}
+                  {(editingReserva.estado === "completada" ||
+                    editingReserva.estado === "confirmada") && (
+                    <ReservaWorkPhotosUpload
+                      key={editingReserva._id}
+                      reservaId={editingReserva._id}
+                      servicioIds={getReservaServicioIds(editingReserva)}
+                      servicios={servicios}
+                      categorias={categorias}
+                      disabled={saving}
+                      onPendingChange={handlePendingPhotosChange}
+                      onCategoriaIdsChange={handleCategoriaIdsChange}
+                    />
+                  )}
                 </div>
 
                 {/* Quick Action Buttons */}
@@ -763,7 +851,11 @@ function CalendarioAdminPanel() {
                 <div className="flex gap-3 justify-end pt-4">
                   <Button
                     type="button"
-                    onClick={() => setEditingReserva(null)}
+                    onClick={() => {
+            pendingWorkPhotosRef.current = [];
+            pendingCategoriaIdsRef.current = [];
+            setEditingReserva(null);
+          }}
                     disabled={saving}
                     variant="outlined-secondary"
                   >

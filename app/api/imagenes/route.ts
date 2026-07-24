@@ -22,6 +22,7 @@ function mapImage(img: Record<string, unknown>): ImageData {
     enGaleriaInspiracion: (img.enGaleriaInspiracion as boolean) || false,
     categoriaIds: (img.categoriaIds as string[]) || [],
     servicioIds: (img.servicioIds as string[]) || [],
+    reservaId: img.reservaId as string | undefined,
     fechaCreacion: img.fechaCreacion as Date,
     fechaActualizacion: img.fechaActualizacion as Date,
   };
@@ -30,6 +31,21 @@ function mapImage(img: Record<string, unknown>): ImageData {
 export const GET = publicOrSalonAdminHandler(async ({ salonId, request }) => {
   const db = await getDatabase();
   const id = request.nextUrl.searchParams.get("id");
+  const reservaId = request.nextUrl.searchParams.get("reservaId");
+
+  if (reservaId) {
+    const imagenes = await db
+      .collection("imagenes")
+      .find(withTenantScope({ reservaId }, salonId))
+      .sort({ fechaCreacion: -1 })
+      .toArray();
+
+    return ok(imagenes.map(mapImage), {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      },
+    });
+  }
 
   if (id) {
     const imagen = await db
@@ -73,6 +89,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     enGaleriaInspiracion,
     categoriaIds,
     servicioIds,
+    reservaId,
   } = body;
 
   if (!nombre || !base64Data || !mimeType) {
@@ -98,6 +115,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     enGaleriaInspiracion: enGaleriaInspiracion || false,
     categoriaIds: categoriaIds || [],
     servicioIds: servicioIds || [],
+    ...(reservaId ? { reservaId } : {}),
     fechaCreacion: now,
     fechaActualizacion: now,
   };

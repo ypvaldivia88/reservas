@@ -380,6 +380,7 @@ export interface ImageData {
   // Optional associations for filtering/organization
   categoriaIds?: string[]; // Referencias a Categorias
   servicioIds?: string[]; // Referencias a Servicios
+  reservaId?: string; // Reserva completada de la que proviene la foto
   fechaCreacion?: Date;
   fechaActualizacion?: Date;
 }
