@@ -7,6 +7,7 @@ import {
   TenantContext,
 } from "@/lib/tenant";
 import { AppError } from "@/lib/api/errors";
+import { userRepository } from "@/lib/repositories/user.repository";
 
 export interface RequestContext {
   request: NextRequest;
@@ -38,9 +39,30 @@ export async function resolvePublicTenant(
 
 /**
  * Resuelve tenant para rutas admin desde la sesión.
+ * Nunca asigna silenciosamente oh-diosa a admins de otros salones.
  */
-export function resolveAdminTenant(session: SessionData): string {
-  return session.salonId || DEFAULT_SALON_ID;
+export async function resolveAdminTenant(session: SessionData): Promise<string> {
+  if (session.salonId) {
+    return session.salonId;
+  }
+
+  const user = await userRepository.findById(String(session.userId));
+  if (!user) {
+    throw AppError.unauthorized("Usuario de sesión no encontrado");
+  }
+
+  if (user.salonId) {
+    return user.salonId;
+  }
+
+  // Legacy oh-diosa admin (role admin sin salonId en el documento de usuario)
+  if (user.role === "admin") {
+    return DEFAULT_SALON_ID;
+  }
+
+  throw AppError.forbidden(
+    "Sesión inválida: no se pudo determinar el salón. Cierra sesión e ingresa de nuevo."
+  );
 }
 
 export async function buildPublicContext(
@@ -58,7 +80,7 @@ export async function buildSalonAdminContext(
   const auth = await requireSalonAdmin(request);
   if ("error" in auth) throw AppError.unauthorized(auth.error);
 
-  const salonId = resolveAdminTenant(auth.session);
+  const salonId = await resolveAdminTenant(auth.session);
   return {
     request,
     params,

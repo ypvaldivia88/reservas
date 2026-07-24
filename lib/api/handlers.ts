@@ -77,7 +77,7 @@ async function buildPublicOrSalonAdminContext(
 
   const session = await getSession(request);
   if (session && isSalonAdminRole(session.role)) {
-    const salonId = resolveAdminTenant(session);
+    const salonId = await resolveAdminTenant(session);
     return {
       request,
       params,

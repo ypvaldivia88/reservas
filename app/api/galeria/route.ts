@@ -5,6 +5,7 @@ import { withTenantScope } from "@/lib/tenant";
 import { adminHandler, publicOrSalonAdminHandler } from "@/lib/api/handlers";
 import { ok, created } from "@/lib/api/responses";
 import { AppError } from "@/lib/api/errors";
+import { assertImagenBelongsToTenant } from "@/lib/image-ownership";
 
 function mapGaleriaItem(item: Record<string, unknown>): GaleriaItem {
   return {
@@ -40,6 +41,8 @@ export const POST = adminHandler(async ({ salonId, request }) => {
   if (!titulo || !imagenId) {
     throw new AppError("Faltan campos requeridos: titulo, imagenId", 400);
   }
+
+  await assertImagenBelongsToTenant(salonId, imagenId);
 
   const db = await getDatabase();
   const now = new Date();
@@ -92,7 +95,10 @@ export const PATCH = adminHandler(async ({ salonId, request }) => {
 
   if (titulo) updateData.titulo = titulo;
   if (descripcion !== undefined) updateData.descripcion = descripcion;
-  if (imagenId !== undefined) updateData.imagenId = imagenId;
+  if (imagenId !== undefined) {
+    await assertImagenBelongsToTenant(salonId, imagenId);
+    updateData.imagenId = imagenId;
+  }
   if (categoriaId !== undefined) updateData.categoriaId = categoriaId;
   if (servicioId !== undefined) updateData.servicioId = servicioId;
   if (destacado !== undefined) updateData.destacado = destacado;

@@ -4,6 +4,7 @@ import { servicioRepository } from "@/lib/repositories/servicio.repository";
 import { categoriaRepository } from "@/lib/repositories/categoria.repository";
 import { getDb } from "@/lib/mongodb";
 import { syncIncomeCategoriesFromServicios } from "@/lib/finances";
+import { assertImagenBelongsToTenant } from "@/lib/image-ownership";
 
 async function syncIncomeCategories(salonId: string) {
   const db = await getDb();
@@ -25,6 +26,8 @@ export class ServicioService {
     if (!nombre || !descripcion) {
       throw new AppError("Faltan campos requeridos: nombre, descripcion", 400);
     }
+
+    await assertImagenBelongsToTenant(salonId, imagenId as string | undefined);
 
     const servicio = await servicioRepository.create(salonId, {
       nombre: nombre as string,
@@ -50,7 +53,10 @@ export class ServicioService {
     if (descripcion !== undefined) updateData.descripcion = descripcion as string;
     if (precio !== undefined) updateData.precio = precio as number;
     if (duracion !== undefined) updateData.duracion = duracion as number;
-    if (imagenId !== undefined) updateData.imagenId = imagenId as string;
+    if (imagenId !== undefined) {
+      await assertImagenBelongsToTenant(salonId, imagenId as string | null);
+      updateData.imagenId = imagenId as string;
+    }
     if (activo !== undefined) updateData.activo = activo as boolean;
     if (orden !== undefined) updateData.orden = orden as number;
 
@@ -83,6 +89,8 @@ export class CategoriaService {
     const { nombre, descripcion, imagenId, activo, orden } = body;
     if (!nombre) throw new AppError("Campo requerido: nombre", 400);
 
+    await assertImagenBelongsToTenant(salonId, imagenId as string | undefined);
+
     return categoriaRepository.create(salonId, {
       nombre: nombre as string,
       descripcion: (descripcion as string) || "",
@@ -99,7 +107,10 @@ export class CategoriaService {
     const updateData: Partial<Categoria> = {};
     if (nombre) updateData.nombre = nombre as string;
     if (descripcion !== undefined) updateData.descripcion = descripcion as string;
-    if (imagenId !== undefined) updateData.imagenId = imagenId as string;
+    if (imagenId !== undefined) {
+      await assertImagenBelongsToTenant(salonId, imagenId as string | null);
+      updateData.imagenId = imagenId as string;
+    }
     if (activo !== undefined) updateData.activo = activo as boolean;
     if (orden !== undefined) updateData.orden = orden as number;
 

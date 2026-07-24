@@ -24,7 +24,7 @@ export default function PlatformSalonesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/salons")
+    fetch("/api/salons", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setSalons(data.data);

@@ -9,6 +9,26 @@ import { uploadBase64ToBlob, deleteImageFromBlob } from "@/lib/blobStorage";
 
 export const revalidate = 60;
 
+function imagenesCacheHeaders(
+  request: { nextUrl: URL },
+  isAuthenticated: boolean
+): Record<string, string> {
+  if (isAuthenticated) {
+    return { "Cache-Control": "private, no-store" };
+  }
+
+  const slug = request.nextUrl.searchParams.get("slug");
+  if (slug) {
+    return {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+    };
+  }
+
+  return {
+    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+  };
+}
+
 function mapImage(img: Record<string, unknown>): ImageData {
   return {
     _id: (img._id as ObjectId).toString(),
@@ -28,10 +48,11 @@ function mapImage(img: Record<string, unknown>): ImageData {
   };
 }
 
-export const GET = publicOrSalonAdminHandler(async ({ salonId, request }) => {
+export const GET = publicOrSalonAdminHandler(async ({ salonId, request, session }) => {
   const db = await getDatabase();
   const id = request.nextUrl.searchParams.get("id");
   const reservaId = request.nextUrl.searchParams.get("reservaId");
+  const cacheHeaders = imagenesCacheHeaders(request, Boolean(session));
 
   if (reservaId) {
     const imagenes = await db
@@ -40,11 +61,7 @@ export const GET = publicOrSalonAdminHandler(async ({ salonId, request }) => {
       .sort({ fechaCreacion: -1 })
       .toArray();
 
-    return ok(imagenes.map(mapImage), {
-      headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-      },
-    });
+    return ok(imagenes.map(mapImage), { headers: cacheHeaders });
   }
 
   if (id) {
@@ -56,11 +73,7 @@ export const GET = publicOrSalonAdminHandler(async ({ salonId, request }) => {
       throw AppError.notFound("Imagen no encontrada");
     }
 
-    return ok(mapImage(imagen), {
-      headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-      },
-    });
+    return ok(mapImage(imagen), { headers: cacheHeaders });
   }
 
   const imagenes = await db
@@ -69,14 +82,10 @@ export const GET = publicOrSalonAdminHandler(async ({ salonId, request }) => {
     .sort({ fechaCreacion: -1 })
     .toArray();
 
-  return ok(imagenes.map(mapImage), {
-    headers: {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-    },
-  });
+  return ok(imagenes.map(mapImage), { headers: cacheHeaders });
 });
 
-export const POST = adminHandler(async ({ salonId, request }) => {
+export const POST = adminHandler(async ({ salonId, request, session }) => {
   const body = await request.json();
   const {
     nombre,
@@ -116,6 +125,7 @@ export const POST = adminHandler(async ({ salonId, request }) => {
     categoriaIds: categoriaIds || [],
     servicioIds: servicioIds || [],
     ...(reservaId ? { reservaId } : {}),
+    ...(session?.userId ? { uploadedBy: String(session.userId) } : {}),
     fechaCreacion: now,
     fechaActualizacion: now,
   };

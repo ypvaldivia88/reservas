@@ -31,12 +31,26 @@ export class AuthService {
     const token = generateSessionToken();
     const db = await getDb();
 
+    let sessionSalonId: string | undefined;
+    if (user.role === "platform_admin") {
+      sessionSalonId = user.salonId;
+    } else if (user.role === "admin" && !user.salonId) {
+      sessionSalonId = DEFAULT_SALON_ID;
+    } else if (!user.salonId) {
+      throw new AppError(
+        "Usuario sin salón asignado. Contacta al administrador de la plataforma.",
+        403
+      );
+    } else {
+      sessionSalonId = user.salonId;
+    }
+
     await db.collection(Collections.SESSIONS).insertOne({
       token,
       userId: user._id,
       username: user.username,
       role: user.role,
-      salonId: user.salonId || DEFAULT_SALON_ID,
+      salonId: sessionSalonId,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
