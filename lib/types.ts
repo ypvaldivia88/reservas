@@ -14,6 +14,10 @@ export interface SalonBranding {
   secondaryColor?: string;
   accentColor?: string;
   heroImageUrl?: string;
+  /** 0–100: intensidad del degradado de marca sobre la foto del hero */
+  heroOverlayOpacity?: number;
+  /** Punto de enfoque al recortar la foto (útil para fotos de celular) */
+  heroImageFocus?: "top" | "center" | "bottom";
 }
 
 export interface SalonFeature {

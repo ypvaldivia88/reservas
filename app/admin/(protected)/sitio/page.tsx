@@ -11,6 +11,12 @@ import SegmentedControl from "@/components/design/dashboard/SegmentedControl";
 import ColorField from "@/components/design/ColorField";
 import { normalizeHexColor } from "@/lib/color-utils";
 import {
+  clampHeroOverlayOpacity,
+  DEFAULT_HERO_OVERLAY_OPACITY,
+  normalizeHeroImageFocus,
+} from "@/lib/hero-utils";
+import TenantHero from "@/components/TenantHero";
+import {
   BusinessTemplate,
   SalonBranding,
   SalonContent,
@@ -75,6 +81,8 @@ function normalizeBranding(branding: SalonBranding): SalonBranding {
     primaryColor: normalizeHexColor(branding.primaryColor || "", "#2563eb"),
     secondaryColor: normalizeHexColor(branding.secondaryColor || "", "#7c3aed"),
     accentColor: normalizeHexColor(branding.accentColor || "", "#f43f5e"),
+    heroOverlayOpacity: clampHeroOverlayOpacity(branding.heroOverlayOpacity),
+    heroImageFocus: normalizeHeroImageFocus(branding.heroImageFocus),
   };
 }
 
@@ -410,6 +418,96 @@ export default function SitioAdmin() {
                 onChange={(v) => setBranding({ ...branding, accentColor: v })}
                 fallback="#f43f5e"
               />
+            </div>
+          </SurfaceCard>
+
+          <SurfaceCard className="space-y-5">
+            <div>
+              <SectionTitle>Hero — overlay y encuadre</SectionTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ajusta cuánto se ve tu foto y cuánto color de marca cubre el texto.
+                El degradado sube desde abajo para no tapar toda la imagen.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="space-y-4">
+                <div>
+                  <FieldLabel>
+                    Opacidad del color sobre la foto (
+                    {branding.heroOverlayOpacity ?? DEFAULT_HERO_OVERLAY_OPACITY}%)
+                  </FieldLabel>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={branding.heroOverlayOpacity ?? DEFAULT_HERO_OVERLAY_OPACITY}
+                    onChange={(e) =>
+                      setBranding({
+                        ...branding,
+                        heroOverlayOpacity: Number(e.target.value),
+                      })
+                    }
+                    className="mt-2 w-full accent-primary"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={branding.heroOverlayOpacity ?? DEFAULT_HERO_OVERLAY_OPACITY}
+                  />
+                  <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+                    <span>0% — foto casi sin filtro</span>
+                    <span>100% — más color de marca</span>
+                  </div>
+                </div>
+
+                <div>
+                  <FieldLabel>Encuadre de la foto</FieldLabel>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    Si la foto es vertical o se corta mal, prueba &quot;Arriba&quot; o
+                    &quot;Abajo&quot; según lo importante de la imagen.
+                  </p>
+                  <select
+                    value={branding.heroImageFocus || "top"}
+                    onChange={(e) =>
+                      setBranding({
+                        ...branding,
+                        heroImageFocus: e.target.value as SalonBranding["heroImageFocus"],
+                      })
+                    }
+                    className="input-field"
+                  >
+                    <option value="top">Arriba (recomendado para fotos de celular)</option>
+                    <option value="center">Centro</option>
+                    <option value="bottom">Abajo</option>
+                  </select>
+                </div>
+              </div>
+
+              {branding.heroImageUrl ? (
+                <div className="overflow-hidden rounded-xl border border-border">
+                  <p className="border-b border-border bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground">
+                    Vista previa
+                  </p>
+                  <TenantHero
+                    heroImage={branding.heroImageUrl}
+                    branding={branding}
+                    compact
+                  >
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-white drop-shadow-sm">
+                        {content.heroTitle || "Tu salón"}
+                      </p>
+                      <p className="mt-1 text-sm text-white/90 drop-shadow-sm">
+                        Texto de ejemplo
+                      </p>
+                    </div>
+                  </TenantHero>
+                </div>
+              ) : (
+                <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center text-sm text-muted-foreground">
+                  Sube una imagen hero para ver la vista previa del overlay.
+                </div>
+              )}
             </div>
           </SurfaceCard>
 

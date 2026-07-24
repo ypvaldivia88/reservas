@@ -9,6 +9,7 @@ import TestimonialCarousel from "@/components/TestimonialCarousel";
 import ProcessSection from "@/components/ProcessSection";
 import TenantFooter from "@/components/TenantFooter";
 import TenantSalonAdminLink from "@/components/TenantSalonAdminLink";
+import TenantHero from "@/components/TenantHero";
 import { SalonPublicProfile } from "@/lib/types";
 import { getContrastingForeground, getAccessibleBrandPrimary, normalizeHexColor } from "@/lib/color-utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,53 +45,40 @@ export default function TenantHomePage({ profile }: TenantHomePageProps) {
   return (
     <div className="min-h-screen bg-background transition-colors duration-200">
         <TenantSalonAdminLink slug={profile.slug} />
-        {/* Hero */}
-        <section
-          className="relative py-12 px-4 sm:py-16 md:py-20 lg:py-24 bg-center bg-cover bg-no-repeat"
-          style={{ backgroundImage: `url('${heroImage}')` }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to bottom right, ${brandPrimary}cc, ${brandSecondary}cc)`,
-            }}
-            aria-hidden
-          />
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-                {content.heroTitle}
-                {content.heroHighlight && (
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80">
-                    {content.heroHighlight}
-                  </span>
-                )}
-              </h1>
-              <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-10 md:mb-12 max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-2">
-                {content.heroSubtitle}
-              </p>
-              <div className="flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 md:space-x-4 justify-center items-center px-4">
-                <Link href={reservaPath} className="w-full sm:w-72">
-                  <Button variant="primary" size="lg" fullWidth className="text-base sm:text-lg">
-                    Reservar Cita
+        <TenantHero heroImage={heroImage} branding={branding}>
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight drop-shadow-sm">
+              {content.heroTitle}
+              {content.heroHighlight && (
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80">
+                  {content.heroHighlight}
+                </span>
+              )}
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-10 md:mb-12 max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto px-2 drop-shadow-sm">
+              {content.heroSubtitle}
+            </p>
+            <div className="flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 md:space-x-4 justify-center items-center px-4">
+              <Link href={reservaPath} className="w-full sm:w-72">
+                <Button variant="primary" size="lg" fullWidth className="text-base sm:text-lg">
+                  Reservar Cita
+                </Button>
+              </Link>
+              {whatsapp && (
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-72">
+                  <Button
+                    variant="outlined-primary"
+                    size="lg"
+                    fullWidth
+                    className="text-base sm:text-lg border-2 border-white/80 text-white hover:bg-white/20"
+                  >
+                    Llamar / WhatsApp
                   </Button>
-                </Link>
-                {whatsapp && (
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-72">
-                    <Button
-                      variant="outlined-primary"
-                      size="lg"
-                      fullWidth
-                      className="text-base sm:text-lg border-2 border-white/80 text-white hover:bg-white/20"
-                    >
-                      Llamar / WhatsApp
-                    </Button>
-                  </a>
-                )}
-              </div>
+                </a>
+              )}
             </div>
           </div>
-        </section>
+        </TenantHero>
 
         <DynamicServicesSection
           slug={profile.slug}
