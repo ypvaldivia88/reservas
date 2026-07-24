@@ -38,9 +38,17 @@ export default function DynamicGalleryCarousel({
           if (imagenesData.success) {
             const imagenes: ImageData[] = imagenesData.data;
 
-            const dashboardImages = imagenes.filter(
-              (img) => img.enGaleriaDashboard
-            );
+            const dashboardImages = imagenes
+              .filter((img) => img.enGaleriaDashboard)
+              .sort((a, b) => {
+                const dateA = a.fechaCreacion
+                  ? new Date(a.fechaCreacion).getTime()
+                  : 0;
+                const dateB = b.fechaCreacion
+                  ? new Date(b.fechaCreacion).getTime()
+                  : 0;
+                return dateB - dateA;
+              });
 
             setGalleryImages(dashboardImages);
           }
