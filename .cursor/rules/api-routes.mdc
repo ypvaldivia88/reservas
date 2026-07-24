@@ -1,0 +1,52 @@
+---
+description: Convenciones para API routes de Next.js en este proyecto
+globs: app/api/**/*.ts
+alwaysApply: false
+---
+
+# API Routes
+
+## Estructura
+
+```ts
+// ✅ Patrón estándar
+import { salonAdminHandler } from "@/lib/api/handlers";
+import { ok, badRequest } from "@/lib/api/responses";
+
+export const GET = salonAdminHandler(async (req, ctx) => {
+  const data = await someService.list(ctx.salonId);
+  return ok(data);
+});
+```
+
+- Handlers inyectan `ctx` con `salonId`, `slug`, `session` según el wrapper
+- Respuestas vía `lib/api/responses.ts` (`ok`, `created`, `badRequest`, etc.)
+- Errores de dominio con `lib/api/errors.ts` (`ApiError`, códigos HTTP)
+
+## Mutaciones
+
+- Validar input con Zod o validación explícita en el service
+- Revalidar rutas afectadas: `revalidatePath` / `revalidateTag` cuando cambia contenido público
+- No exponer datos de otros tenants aunque el ID sea adivinable
+
+## Auth
+
+- Sesión: cookie `session-token` → colección `sessions` (24h)
+- Roles: `platform_admin`, `salon_admin`, `admin` (legacy), `cliente`
+- `requireSalonAdmin` / `requirePlatformAdmin` en `lib/session.ts`
+
+## Cache
+
+- Datos tenant-específicos para admin: `Cache-Control: private, no-store`
+- Datos públicos cacheables: `s-maxage` + `stale-while-revalidate`
+- Documentar `export const revalidate = N` cuando aplique ISR
+
+## Endpoints frecuentes
+
+| Ruta | Notas |
+|------|-------|
+| `POST /api/auth/init` | Seed admin local |
+| `GET/PUT /api/salons/current` | CMS del salón autenticado |
+| `GET /api/salons/public?slug=` | Perfil público |
+| `GET /api/imagenes` | Tenant isolation + cache headers |
+| `POST /api/reservas` | Crear reserva; incluir `?slug=` en cliente |

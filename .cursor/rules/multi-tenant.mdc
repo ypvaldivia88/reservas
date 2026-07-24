@@ -1,0 +1,48 @@
+---
+description: Modelo multi-tenant, resolución de salonId/slug y aislamiento de datos
+globs: lib/services/**/*.ts,lib/api/**/*.ts,lib/tenant.ts,lib/image-ownership.ts,app/api/**/*.ts,middleware.ts
+alwaysApply: false
+---
+
+# Multi-tenant
+
+## Identificadores
+
+- **`salonId`** — clave de tenant en documentos MongoDB
+- **`slug`** — identificador público en URL (`/[slug]`, `?slug=`)
+- **`DEFAULT_SALON_ID`** = `"default"` (salón legacy oh-diosa)
+
+## Resolución de tenant
+
+Usar `lib/services/tenant-context.service.ts` (no `lib/tenant.ts`, deprecated).
+
+| Contexto | Función | Origen del tenant |
+|----------|---------|-------------------|
+| Público | `resolvePublicTenant` | `?slug=` → lookup `salons`; sin slug → `default` |
+| Admin salón | `resolveAdminTenant` | `session.salonId` → `user.salonId`; legacy `admin` → `default` |
+| Platform | `buildPlatformContext` | Sin scope de salón |
+
+**Reglas críticas:**
+- `salon_admin` sin `salonId` → 403 (no fallback silencioso a default)
+- Solo `?slug=` para tenant público; no headers spoofables
+- `withTenantScope(filter, salonId)` para queries; no omitir en writes
+
+## API handlers (`lib/api/handlers.ts`)
+
+| Wrapper | Uso |
+|---------|-----|
+| `publicHandler` | Lecturas públicas con `?slug=` o default |
+| `salonAdminHandler` | Mutaciones admin de salón (excluye `platform_admin`) |
+| `platformHandler` | Super-admin plataforma |
+| `publicOrSalonAdminHandler` | GET imágenes: admin sin slug usa su tenant; público requiere `?slug=` |
+
+## Imágenes y galería
+
+- Aislamiento por `salonId` en `imagenes` y `galeria`
+- Antes de vincular: `assertImagenBelongsToTenant(salonId, imagenId)`
+- Blob (Vercel) es compartido; el boundary es el campo `salonId` en BD
+- Cache GET `/api/imagenes`: `private, no-store` si autenticado; `public, s-maxage=60` si público
+
+## Slugs reservados
+
+`admin`, `api`, `reserva`, `registro`, `_next`, `favicon.ico` — no usar como slug de salón.

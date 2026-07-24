@@ -1,0 +1,37 @@
+---
+description: Frontend Next.js 15 — componentes, Tailwind, rendimiento y accesibilidad
+globs: app/**/page.tsx,app/**/layout.tsx,components/**/*.tsx,contexts/**/*.tsx,next.config.ts
+alwaysApply: false
+---
+
+# Frontend (Next.js 15 + React 19)
+
+## Server vs Client
+
+- `app/` → Server Components por defecto
+- `"use client"` solo para estado, hooks, eventos, browser APIs
+- Empujar el boundary de cliente a hojas del árbol (islas)
+
+## Estilo
+
+- Tailwind CSS 4; tokens en `globals.css` / clases semánticas del design system (`components/design/`)
+- Layout con Flexbox/Grid; evitar CSS-in-JS
+- Componentes tenant: `TenantHomePage`, `TenantHero`, `TenantHeader`, `TenantFooter`
+
+## TypeScript
+
+- Sin `any`; props con `React.ComponentProps<>` o interfaces explícitas
+- Tipos de dominio en `lib/types.ts` (`SalonBranding`, `SalonPublicProfile`, etc.)
+
+## Optimización
+
+- `<Link />` para navegación interna
+- `<Image />` en admin; hero tenant usa `<img>` con `object-cover` + `object-position` configurable
+- `revalidatePath` / `revalidate` en páginas con datos de salón
+- Touch targets ≥44px; contraste WCAG AA; respetar `prefers-reduced-motion`
+
+## Admin UI
+
+- Layout protegido: `app/admin/(protected)/`
+- Patrones: `PageHeader`, `SurfaceCard`, `SegmentedControl`, `ColorField`
+- CMS marca/contenido: `/admin/sitio` (hero overlay, colores, plantilla)

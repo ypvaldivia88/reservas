@@ -1,0 +1,43 @@
+---
+description: Wizard de reserva, plantillas de negocio y componentes relacionados
+globs: components/ReservaForm.tsx,components/reserva/**/*.tsx,app/reserva/**/*.tsx,lib/reserva-*.ts,lib/business-templates.ts
+alwaysApply: false
+---
+
+# Flujo de reserva
+
+## Plantillas (`BusinessTemplate`)
+
+`manicure` | `peluqueria` | `barberia` | `tatuajes` | `generic`
+
+Config en `lib/reserva-template-config.ts` y `lib/business-templates.ts`.
+
+## Paso 3 — detalles (`detailsMode`)
+
+| Modo | Templates | Componente |
+|------|-----------|------------|
+| `manicure` | manicure (default si falta template) | `ReservaServiceDetailsStep` — forma, largo, decoración |
+| `services` | peluqueria, barberia | `ReservaServicesPickerStep` — multi-select servicios |
+| `generic` | generic, tatuajes | `ReservaGenericDetailsStep` — notas libres |
+
+## API calls desde el cliente
+
+Siempre append `?slug=<tenant>` en:
+- `/api/servicios`
+- `/api/availability`
+- `/api/reservas`
+
+Sin `?slug=` en `/reserva` → tenant default + wizard manicure legacy.
+
+## Payload
+
+- Manicure: `forma`, `largo`, `decoracion`, colores
+- Peluquería/barbería: `servicioIds[]`
+- Genérico: `notas` / preferencias según template
+
+Validación compartida en `lib/reserva-payload.ts`; persistencia en `lib/services/reserva.service.ts`.
+
+## CMS relacionado
+
+- `businessTemplate` se define en registro o `/admin/sitio` → Plantilla
+- Salones sin template explícito: default `generic` (no manicure) salvo tenant `default`

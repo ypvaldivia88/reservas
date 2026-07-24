@@ -1,0 +1,46 @@
+---
+description: Capa de datos MongoDB, colecciones, repositorios y servicios
+globs: lib/db/**/*.ts,lib/repositories/**/*.ts,lib/services/**/*.ts,lib/mongodb.ts,scripts/**/*.ts
+alwaysApply: false
+---
+
+# MongoDB y capa de datos
+
+## Conexión
+
+- `lib/mongodb.ts` — singleton client; lanza si falta `MONGODB_URI`
+- DB name: **`nailsalon`** (hardcoded en `lib/db/collections.ts`)
+
+## Colecciones principales
+
+`users`, `sessions`, `reservas`, `schedules`, `availability_overrides`, `servicios`, `categorias`, `imagenes`, `galeria`, `salons`, `subscription_plans`, `tenant_subscriptions`, `payment_requests`, `financial_transactions`, `financial_categories`
+
+## Patrones
+
+```ts
+// Query con scope de tenant
+const filter = withTenantScope({ activo: true }, salonId);
+await collection.find(filter).toArray();
+
+// Insert siempre con salonId
+await collection.insertOne({ ...doc, salonId });
+```
+
+- Repositorios en `lib/repositories/` — acceso CRUD por entidad
+- Servicios en `lib/services/` — lógica de negocio, orquestación
+- Índices: `npx tsx scripts/create-indexes.ts` y `lib/db/tenant-indexes.ts`
+
+## Scripts útiles
+
+| Script | Uso |
+|--------|-----|
+| `scripts/create-indexes.ts` | Crear índices (tras bootstrap colecciones) |
+| `scripts/migrate-multi-tenant.ts` | Migración multi-tenant |
+| `scripts/audit-tenant-images.ts` | Auditoría imágenes por tenant |
+| `scripts/repair-tenant-images.ts` | Reparación scoped (`--dry-run` / `--apply`) |
+
+## Gotchas
+
+- Colección inexistente + `.indexes()` → `NamespaceNotFound`
+- Legacy docs sin `salonId`: `tenantQuery("default")` incluye `null`/missing
+- No borrar imágenes en uso (servicios, categorías, galería del mismo tenant)

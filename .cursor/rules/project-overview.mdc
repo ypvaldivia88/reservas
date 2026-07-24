@@ -1,0 +1,62 @@
+---
+description: Contexto general del proyecto Reservas (stack, comandos, deploy, bootstrap)
+alwaysApply: true
+---
+
+# Reservas — contexto del proyecto
+
+Plataforma **multi-tenant** de reservas para salones (uñas, peluquería, barbería, etc.).
+
+- **Stack:** Next.js 15 App Router, React 19, TypeScript, Tailwind CSS 4, MongoDB
+- **Package manager:** **npm** (`package-lock.json`). Ignorar `pnpm-lock.yaml` / `pnpm-workspace.yaml`
+- **Producción:** https://reservas-taupe.vercel.app (Vercel, Turbopack en build)
+- **DB:** nombre fijo `nailsalon` (`lib/db/collections.ts`)
+
+## Comandos
+
+```bash
+npm run dev          # puerto 3000, Turbopack
+npm run build        # producción
+npm run type-check   # tsc --noEmit
+npm run lint
+```
+
+## Variables de entorno
+
+| Variable | Requerida | Uso |
+|----------|-----------|-----|
+| `MONGODB_URI` | Sí | Conexión MongoDB; sin ella la app falla al importar |
+| `BLOB_READ_WRITE_TOKEN` | Solo uploads | Vercel Blob para imágenes |
+| `UNSPLASH_ACCESS_KEY` | No | Placeholders al registrar salón |
+| `NEXT_PUBLIC_*_WHATSAPP_NUMBER` | No | Links WhatsApp |
+
+`.env.local` está gitignored. Recrear con `MONGODB_URI="mongodb://127.0.0.1:27017/nailsalon"` en local.
+
+## Bootstrap BD vacía
+
+Crear colecciones antes de índices (evita `NamespaceNotFound`):
+
+```bash
+mongosh nailsalon --quiet --eval 'const c=["users","sessions","reservas","schedules","availability_overrides","servicios","categorias","imagenes","galeria","salons","subscription_plans","tenant_subscriptions","payment_requests","financial_transactions","financial_categories"];const e=db.getCollectionNames();c.forEach(n=>{if(!e.includes(n))db.createCollection(n)})'
+npx tsx scripts/create-indexes.ts
+```
+
+Seed: `curl -X POST http://localhost:3000/api/auth/init` → admin/admin.
+
+## Rutas clave
+
+| Ruta | Rol |
+|------|-----|
+| `/` | Directorio de salones |
+| `/[slug]` | Landing pública del tenant |
+| `/reserva?slug=` | Wizard de reserva |
+| `/admin` | Login salón |
+| `/admin/platform` | Super-admin plataforma |
+| `/admin/sitio` | CMS marca/contenido |
+
+## Convenciones de código
+
+- Lógica de negocio en `lib/services/`, no en route handlers
+- API routes usan wrappers de `lib/api/handlers.ts`
+- Tipos compartidos en `lib/types.ts`
+- No commitear secretos ni `.env*.local`
