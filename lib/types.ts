@@ -293,6 +293,7 @@ export interface ReservaFormData {
   decoracion: string;
   fechaCita: string;
   horaCita: string;
+  servicioIds: string[];
 }
 
 export type FormaUna = 'coffin' | 'almond' | 'stiletto' | 'square';

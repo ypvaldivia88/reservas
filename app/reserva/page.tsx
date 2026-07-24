@@ -74,7 +74,11 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
               </div>
             }
           >
-            <ReservaForm salonSlug={slug} salonWhatsapp={salonWhatsapp} />
+            <ReservaForm
+              salonSlug={slug}
+              salonWhatsapp={salonWhatsapp}
+              initialBusinessTemplate={profile?.businessTemplate}
+            />
           </Suspense>
 
           <SurfaceCard padding="default" className="mt-8 text-center">

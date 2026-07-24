@@ -2,6 +2,7 @@ import { BusinessTemplate, FormaUna, FORMAS_UNAS, ReservaFormData } from "@/lib/
 import {
   getReservaTemplateConfig,
   isManicureReservation,
+  usesServicePicker,
 } from "@/lib/reserva-template-config";
 import {
   RESERVA_NEUTRAL_FORMA,
@@ -38,6 +39,8 @@ export interface ReservaRawInput {
   largo?: string | number;
   colores?: string;
   decoracion?: string;
+  servicioIds?: string[];
+  serviceLabels?: string[];
 }
 
 export interface ReservaCreatePayload {
@@ -48,6 +51,7 @@ export interface ReservaCreatePayload {
   forma: FormaUna;
   largo: number;
   decoracion: string;
+  servicioIds?: string[];
 }
 
 function resolveManicureForma(forma?: string): FormaUna {
@@ -82,8 +86,14 @@ export function buildReservaCreatePayload(
   businessTemplate?: BusinessTemplate | null
 ): ReservaCreatePayload {
   const isManicure = isManicureReservation(businessTemplate);
+  const usesServices = usesServicePicker(businessTemplate);
   const config = getReservaTemplateConfig(businessTemplate);
   const decoracionParts: string[] = [];
+
+  const serviceLabels = (raw.serviceLabels ?? []).filter(Boolean);
+  if (usesServices && serviceLabels.length > 0) {
+    decoracionParts.push(serviceLabels.join(", "));
+  }
 
   const notes = raw.decoracion?.trim();
   if (notes) {
@@ -109,6 +119,10 @@ export function buildReservaCreatePayload(
     config.reservation.optionalPreferences.showColorPicker
   );
 
+  const servicioIds = Array.isArray(raw.servicioIds)
+    ? raw.servicioIds.filter((id) => typeof id === "string" && id)
+    : undefined;
+
   return {
     nombre: raw.nombre?.trim() ?? "",
     telefono: raw.telefono?.trim() ?? "",
@@ -117,14 +131,21 @@ export function buildReservaCreatePayload(
     forma: RESERVA_NEUTRAL_FORMA,
     largo: RESERVA_NEUTRAL_LARGO,
     decoracion: decoracionParts.join("; "),
+    ...(usesServices && servicioIds && servicioIds.length > 0
+      ? { servicioIds }
+      : {}),
   };
 }
 
 export function buildReservaCreatePayloadFromForm(
   form: ReservaFormData,
-  businessTemplate?: BusinessTemplate | null
+  businessTemplate?: BusinessTemplate | null,
+  serviceLabels?: string[]
 ): ReservaCreatePayload {
-  return buildReservaCreatePayload(form, businessTemplate);
+  return buildReservaCreatePayload(
+    { ...form, serviceLabels },
+    businessTemplate
+  );
 }
 
 /** Sync form nail fields with template-safe defaults (step 3 → 4). */

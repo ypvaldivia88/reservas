@@ -137,6 +137,12 @@ export class ReservaService {
       fechaCita: payload.fechaCita as string,
       horaCita: payload.horaCita as string,
       estado: "pendiente",
+      ...(payload.servicioIds && payload.servicioIds.length > 0
+        ? {
+            servicioIds: payload.servicioIds,
+            servicioId: payload.servicioIds[0],
+          }
+        : {}),
     };
 
     try {

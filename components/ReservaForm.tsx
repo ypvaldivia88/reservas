@@ -7,6 +7,7 @@ import {
   Reserva,
   User,
   BusinessTemplate,
+  Servicio,
 } from "@/lib/types";
 import CalendarPicker from "./CalendarPicker";
 import {
@@ -24,10 +25,12 @@ import {
   buildReservaCreatePayloadFromForm,
 } from "@/lib/reserva-payload";
 import ReservaGenericDetailsStep from "@/components/reserva/ReservaGenericDetailsStep";
+import ReservaServicesPickerStep from "@/components/reserva/ReservaServicesPickerStep";
 import ReservaOptionalPreferences from "@/components/reserva/ReservaOptionalPreferences";
 import {
   getReservaTemplateConfig,
   isManicureReservation,
+  usesServicePicker,
   formatActiveReservationDetail,
 } from "@/lib/reserva-template-config";
 import { IconInput } from "@/components/design/IconInput";
@@ -40,14 +43,17 @@ interface FormErrors {
   colores?: string;
   fechaCita?: string;
   horaCita?: string;
+  servicios?: string;
 }
 
 export default function ReservaForm({
   salonSlug: salonSlugProp,
   salonWhatsapp: salonWhatsappProp,
+  initialBusinessTemplate,
 }: {
   salonSlug?: string;
   salonWhatsapp?: string;
+  initialBusinessTemplate?: BusinessTemplate;
 }) {
   const searchParams = useSearchParams();
   const salonSlug = salonSlugProp ?? searchParams.get("slug") ?? undefined;
@@ -64,13 +70,17 @@ export default function ReservaForm({
   );
   const [businessTemplate, setBusinessTemplate] = useState<
     BusinessTemplate | undefined
-  >(undefined);
+  >(initialBusinessTemplate);
 
   const isManicure = isManicureReservation(businessTemplate);
+  const showServicePicker = usesServicePicker(businessTemplate);
   const templateConfig = isManicure
     ? getReservaTemplateConfig("manicure")
     : getReservaTemplateConfig(businessTemplate);
   const wizard = templateConfig.reservation.wizard;
+
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [loadingServicios, setLoadingServicios] = useState(false);
 
   useEffect(() => {
     if (salonWhatsappProp) {
@@ -101,6 +111,30 @@ export default function ReservaForm({
     };
   }, [salonSlug, salonWhatsappProp]);
 
+  useEffect(() => {
+    if (!showServicePicker || !salonSlug) return;
+
+    let cancelled = false;
+    setLoadingServicios(true);
+
+    fetch(`/api/servicios?slug=${encodeURIComponent(salonSlug)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled || !data.success) return;
+        setServicios(
+          (data.data as Servicio[]).filter((servicio) => servicio.activo)
+        );
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingServicios(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showServicePicker, salonSlug]);
+
   // Constants
   const WHATSAPP_OPEN_DELAY_MS = 1000;
 
@@ -118,6 +152,7 @@ export default function ReservaForm({
     decoracion: "",
     fechaCita: "",
     horaCita: "",
+    servicioIds: [],
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -260,14 +295,16 @@ export default function ReservaForm({
     setForm((prev) => ({ ...prev, colores: selectedColors.join(", ") }));
   }, [selectedColors]);
 
-  // Update decoracion field when selectedDecorations changes
+  // Update decoracion field when selectedDecorations changes (manicure / generic only)
   useEffect(() => {
+    if (showServicePicker) return;
+
     const allDecorations = [...selectedDecorations];
     if (customDecoration.trim()) {
       allDecorations.push(customDecoration.trim());
     }
     setForm((prev) => ({ ...prev, decoracion: allDecorations.join(", ") }));
-  }, [selectedDecorations, customDecoration]);
+  }, [selectedDecorations, customDecoration, showServicePicker]);
 
   // Guardar nombre y teléfono en localStorage cuando cambien
   useEffect(() => {
@@ -338,7 +375,7 @@ export default function ReservaForm({
           ["nombre", "telefono"].forEach((field) => {
             const error = validateField(
               field as keyof ReservaFormData,
-              form[field as keyof ReservaFormData]
+              form[field as keyof ReservaFormData] as string
             );
             if (error) {
               newErrors[field as keyof FormErrors] = error;
@@ -350,7 +387,7 @@ export default function ReservaForm({
           ["fechaCita", "horaCita"].forEach((field) => {
             const error = validateField(
               field as keyof ReservaFormData,
-              form[field as keyof ReservaFormData]
+              form[field as keyof ReservaFormData] as string
             );
             if (error) {
               newErrors[field as keyof FormErrors] = error;
@@ -368,7 +405,11 @@ export default function ReservaForm({
             isValid = false;
           }
           break;
-        case 3: // Forma y largo (manicure) — optional; defaults on submit
+        case 3:
+          if (showServicePicker && form.servicioIds.length === 0) {
+            newErrors.servicios = "Selecciona al menos un servicio";
+            isValid = false;
+          }
           break;
         case 4: // Confirmar
           break;
@@ -377,8 +418,22 @@ export default function ReservaForm({
       setErrors(newErrors);
       return isValid;
     },
-    [form, validateField, clientInfo, isManicure]
+    [form, validateField, clientInfo, isManicure, showServicePicker]
   );
+
+  const toggleServicio = useCallback((servicioId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      servicioIds: prev.servicioIds.includes(servicioId)
+        ? prev.servicioIds.filter((id) => id !== servicioId)
+        : [...prev.servicioIds, servicioId],
+    }));
+    setErrors((prev) => ({ ...prev, servicios: undefined }));
+  }, []);
+
+  const selectedServiceLabels = servicios
+    .filter((servicio) => form.servicioIds.includes(servicio._id!))
+    .map((servicio) => servicio.nombre);
 
   const handleNext = useCallback(() => {
     const steppedForm =
@@ -428,7 +483,12 @@ export default function ReservaForm({
     setMensaje("");
 
     try {
-      const payload = buildReservaCreatePayloadFromForm(form, businessTemplate);
+      const serviceLabels = showServicePicker ? selectedServiceLabels : undefined;
+      const payload = buildReservaCreatePayloadFromForm(
+        form,
+        businessTemplate,
+        serviceLabels
+      );
 
       for (let step = 1; step <= 3; step++) {
         if (!validateStep(step)) {
@@ -490,6 +550,7 @@ export default function ReservaForm({
           decoracion: "",
           fechaCita: "",
           horaCita: "",
+          servicioIds: [],
         });
         setErrors({});
         setSelectedColors([]);
@@ -1189,7 +1250,25 @@ export default function ReservaForm({
               onApplyRecommended={applyRecommendedService}
             />
           )}
-          {currentStep === 3 && !isManicure && (
+          {currentStep === 3 && showServicePicker && (
+            <ReservaServicesPickerStep
+              heading={templateConfig.reservation.genericDetails.heading}
+              description={templateConfig.reservation.genericDetails.description}
+              servicios={servicios}
+              selectedIds={form.servicioIds}
+              onToggle={toggleServicio}
+              loading={loadingServicios}
+              error={errors.servicios}
+              notes={form.decoracion}
+              onNotesChange={(value) =>
+                setForm((prev) => ({ ...prev, decoracion: value }))
+              }
+              notesPlaceholder={
+                templateConfig.reservation.genericDetails.notesPlaceholder
+              }
+            />
+          )}
+          {currentStep === 3 && !isManicure && !showServicePicker && (
             <ReservaGenericDetailsStep
               config={templateConfig}
               notes={form.decoracion}
@@ -1236,6 +1315,10 @@ export default function ReservaForm({
                       {isManicure ?
                         FORMA_LABELS[form.forma as keyof typeof FORMA_LABELS]
                           ?.label ?? form.forma
+                      : showServicePicker ?
+                        selectedServiceLabels.length > 0 ?
+                          selectedServiceLabels.join(", ")
+                        : "A confirmar con el negocio"
                       : form.decoracion || "A confirmar con el negocio"}
                     </dd>
                   </div>
@@ -1247,7 +1330,13 @@ export default function ReservaForm({
                       </dd>
                     </div>
                   )}
-                  {!isManicure && form.colores && (
+                  {showServicePicker && form.decoracion && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Notas</dt>
+                      <dd className="font-medium text-right">{form.decoracion}</dd>
+                    </div>
+                  )}
+                  {!isManicure && !showServicePicker && form.colores && (
                     <div className="flex justify-between gap-4">
                       <dt className="text-muted-foreground">Colores</dt>
                       <dd className="font-medium text-right">{form.colores}</dd>

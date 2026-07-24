@@ -15,7 +15,9 @@ import {
 import { DEFAULT_SALON_ID } from "@/lib/tenant";
 
 function toPublicProfile(salon: Salon): SalonPublicProfile {
-  const template = salon.businessTemplate || "manicure";
+  const template =
+    salon.businessTemplate ||
+    (salon.salonId === DEFAULT_SALON_ID ? "manicure" : "generic");
   const merged = mergeSalonCms(
     template,
     salon.branding,

@@ -1,6 +1,6 @@
 import { BusinessTemplate } from "@/lib/types";
 
-export type ReservaDetailsMode = "manicure" | "generic";
+export type ReservaDetailsMode = "manicure" | "generic" | "services";
 
 export interface ReservaWizardStepCopy {
   title: string;
@@ -242,11 +242,11 @@ const peluqueriaConfig: ReservaTemplateConfig = {
       ],
       "Ej: Ana López"
     ),
-    detailsMode: "generic",
+    detailsMode: "services",
     genericDetails: {
-      heading: "¿Qué te gustaría hacerte?",
+      heading: "¿Qué servicios te gustaría?",
       description:
-        "Describe el corte, color o tratamiento. Si no estás segura, deja una nota breve y el salón te asesora.",
+        "Elige uno o varios servicios para tu cita. Si tienes dudas, el equipo te asesora al confirmar.",
       notesLabel: "Detalles del servicio",
       notesPlaceholder:
         "Ej: Corte en capas, balayage rubio miel, hidratación profunda…",
@@ -331,11 +331,11 @@ const barberiaConfig: ReservaTemplateConfig = {
       ],
       "Ej: Carlos Méndez"
     ),
-    detailsMode: "generic",
+    detailsMode: "services",
     genericDetails: {
-      heading: "¿Qué servicio necesitas?",
+      heading: "¿Qué servicios necesitas?",
       description:
-        "Describe el corte, fade o arreglo de barba. Si prefieres, confía en la recomendación del barbero.",
+        "Selecciona uno o varios servicios. Puedes combinar corte, barba u otros en el mismo turno.",
       notesLabel: "Estilo o preferencias",
       notesPlaceholder: "Ej: Fade medio, barba perfilada, navaja en contornos…",
       quickOptions: [
@@ -573,11 +573,18 @@ export function isManicureReservation(
   return !NON_MANICURE_TEMPLATES.has(template);
 }
 
+export function usesServicePicker(
+  template?: BusinessTemplate | null
+): boolean {
+  return getReservaTemplateConfig(template).reservation.detailsMode === "services";
+}
+
 export function formatActiveReservationDetail(
   reserva: {
     forma?: string;
     largo?: string | number;
     decoracion?: string;
+    servicioIds?: string[];
   },
   template?: BusinessTemplate | null
 ): string {
@@ -586,6 +593,12 @@ export function formatActiveReservationDetail(
     const largo = reserva.largo ? `Largo #${reserva.largo}` : "";
     const parts = [reserva.forma, largo, reserva.decoracion].filter(Boolean);
     return parts.join(" • ");
+  }
+  if (
+    config.reservation.detailsMode === "services" &&
+    reserva.decoracion?.trim()
+  ) {
+    return reserva.decoracion;
   }
   return reserva.decoracion || reserva.forma || "Detalles a confirmar";
 }
