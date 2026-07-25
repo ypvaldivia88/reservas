@@ -6,6 +6,87 @@ import {
 } from "@/lib/types";
 
 export const SUBSCRIPTION_CURRENCY = "USD" as const;
+export const TRIAL_DAYS = 14;
+
+export type TrialPhase = "active" | "expiring_soon" | "expired";
+
+export interface TrialRemaining {
+  expired: boolean;
+  msRemaining: number;
+  daysRemaining: number;
+  hoursRemaining: number;
+  /** Texto legible, ej. "5 días" o "Expirada" */
+  label: string;
+  phase: TrialPhase;
+}
+
+const MS_PER_HOUR = 60 * 60 * 1000;
+const MS_PER_DAY = 24 * MS_PER_HOUR;
+const EXPIRING_SOON_DAYS = 3;
+
+export function isTrialSubscription(
+  subscription: TenantSubscription | null | undefined
+): boolean {
+  return subscription?.status === "trial";
+}
+
+export function getTrialRemaining(
+  periodoFin: Date | string | undefined,
+  now: Date = new Date()
+): TrialRemaining {
+  if (!periodoFin) {
+    return {
+      expired: false,
+      msRemaining: 0,
+      daysRemaining: 0,
+      hoursRemaining: 0,
+      label: "Sin fecha de fin",
+      phase: "active",
+    };
+  }
+
+  const end = new Date(periodoFin);
+  const msRemaining = end.getTime() - now.getTime();
+
+  if (msRemaining <= 0) {
+    return {
+      expired: true,
+      msRemaining: 0,
+      daysRemaining: 0,
+      hoursRemaining: 0,
+      label: "Expirada",
+      phase: "expired",
+    };
+  }
+
+  const daysRemaining = Math.floor(msRemaining / MS_PER_DAY);
+  const hoursRemaining = Math.floor(
+    (msRemaining % MS_PER_DAY) / MS_PER_HOUR
+  );
+
+  let label: string;
+  if (daysRemaining >= 1) {
+    label =
+      daysRemaining === 1 ? "1 día" : `${daysRemaining} días`;
+  } else if (hoursRemaining >= 1) {
+    label =
+      hoursRemaining === 1 ? "1 hora" : `${hoursRemaining} horas`;
+  } else {
+    label = "Menos de 1 hora";
+  }
+
+  const phase: TrialPhase =
+    daysRemaining <= EXPIRING_SOON_DAYS ? "expiring_soon" : "active";
+
+  return {
+    expired: false,
+    msRemaining,
+    daysRemaining,
+    hoursRemaining,
+    label,
+    phase,
+  };
+}
 
 const BILLING_CYCLE_MONTHS: Record<BillingCycle, number> = {
   monthly: 1,

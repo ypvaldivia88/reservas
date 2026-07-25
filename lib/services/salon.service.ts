@@ -18,7 +18,11 @@ import {
 import { userRepository } from "@/lib/repositories/user.repository";
 import { DEFAULT_FINANCIAL_CATEGORIES } from "@/lib/finances";
 import { scheduleUtils } from "@/lib/utils";
-import { getSubscriptionPeriodEnd } from "@/lib/subscription";
+import {
+  getSubscriptionPeriodEnd,
+  getTrialRemaining,
+  TRIAL_DAYS,
+} from "@/lib/subscription";
 import {
   getBusinessTemplate,
   isValidBusinessTemplate,
@@ -27,7 +31,6 @@ import { seedTenantMedia } from "@/lib/services/tenant-seed.service";
 import { resolvePlaceholderPack } from "@/lib/placeholder-images";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const TRIAL_DAYS = 14;
 
 export class SalonService {
   normalizeSlug(slug: string): string {
@@ -234,6 +237,74 @@ export class PlatformService {
         };
       })
     );
+  }
+
+  async listTrials() {
+    const db = await getDb();
+    const salons = await salonRepository.listAll();
+
+    const trials = await Promise.all(
+      salons.map(async (salon) => {
+        const subscription = (await db
+          .collection<TenantSubscription>(Collections.TENANT_SUBSCRIPTIONS)
+          .findOne(
+            { salonId: salon.salonId },
+            { sort: { fechaCreacion: -1 } }
+          )) as TenantSubscription | null;
+
+        if (!subscription || subscription.status !== "trial") {
+          return null;
+        }
+
+        let planNombre: string | undefined;
+        if (subscription.planId) {
+          const plan = await db
+            .collection(Collections.SUBSCRIPTION_PLANS)
+            .findOne({ _id: new ObjectId(subscription.planId) });
+          planNombre = plan?.nombre;
+        }
+
+        const adminUser = await db.collection(Collections.USERS).findOne({
+          salonId: salon.salonId,
+          role: "salon_admin",
+        });
+
+        const pendingPayments = await db
+          .collection(Collections.PAYMENT_REQUESTS)
+          .countDocuments({ salonId: salon.salonId, status: "pending" });
+
+        const trialRemaining = getTrialRemaining(subscription.periodoFin);
+
+        return {
+          salonId: salon.salonId,
+          slug: salon.slug,
+          nombre: salon.nombre,
+          whatsappNumber: salon.whatsappNumber,
+          fechaCreacion: salon.fechaCreacion,
+          adminUsername: adminUser?.username as string | undefined,
+          planNombre,
+          subscription: {
+            status: subscription.status,
+            periodoInicio: subscription.periodoInicio,
+            periodoFin: subscription.periodoFin,
+          },
+          trialRemaining,
+          pendingPayments,
+        };
+      })
+    );
+
+    return trials
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      .sort((a, b) => {
+        const aEnd = a.subscription.periodoFin
+          ? new Date(a.subscription.periodoFin).getTime()
+          : Number.MAX_SAFE_INTEGER;
+        const bEnd = b.subscription.periodoFin
+          ? new Date(b.subscription.periodoFin).getTime()
+          : Number.MAX_SAFE_INTEGER;
+        return aEnd - bEnd;
+      });
   }
 
   async resolvePayment(
