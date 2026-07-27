@@ -12,6 +12,9 @@ export const Collections = {
   SUBSCRIPTION_PLANS: "subscription_plans",
   TENANT_SUBSCRIPTIONS: "tenant_subscriptions",
   PAYMENT_REQUESTS: "payment_requests",
+  ACTIVATION_CERTIFICATES: "activation_certificates",
+  PLATFORM_AUDIT_LOG: "platform_audit_log",
+  REDEEM_ATTEMPTS: "redeem_attempts",
   FINANCIAL_TRANSACTIONS: "financial_transactions",
   FINANCIAL_CATEGORIES: "financial_categories",
 } as const;

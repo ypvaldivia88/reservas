@@ -10,6 +10,10 @@ import {
 import { AppError } from "@/lib/api/errors";
 import { getDb } from "@/lib/mongodb";
 import { Collections } from "@/lib/db/collections";
+import {
+  assertPublicTenantOperational,
+  assertTenantOperational,
+} from "@/lib/services/tenant-access.service";
 
 export interface RequestContext {
   request: NextRequest;
@@ -34,6 +38,7 @@ export async function resolvePublicTenant(
     if (!salon) {
       throw AppError.notFound("Salón no encontrado");
     }
+    await assertPublicTenantOperational(salon.salonId);
     return { salonId: salon.salonId, slug: salon.slug };
   }
   return { salonId: DEFAULT_SALON_ID };
@@ -87,6 +92,10 @@ export async function buildSalonAdminContext(
   if ("error" in auth) throw AppError.unauthorized(auth.error);
 
   const salonId = await resolveAdminTenant(auth.session);
+  await assertTenantOperational(salonId, {
+    requestPath: request.nextUrl.pathname,
+  });
+
   return {
     request,
     params,

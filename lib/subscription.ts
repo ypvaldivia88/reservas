@@ -7,6 +7,23 @@ import {
 
 export const SUBSCRIPTION_CURRENCY = "USD" as const;
 export const TRIAL_DAYS = 14;
+export const GRACE_PERIOD_DAYS = 4;
+export const CERTIFICATE_VALIDITY_DAYS = 30;
+
+export type SubscriptionAccessState =
+  | "active"
+  | "grace_period"
+  | "expired"
+  | "suspended"
+  | "no_subscription";
+
+export interface SubscriptionAccessInfo {
+  accessState: SubscriptionAccessState;
+  isActive: boolean;
+  isOperational: boolean;
+  graceDaysRemaining: number;
+  graceMsRemaining: number;
+}
 
 export type TrialPhase = "active" | "expiring_soon" | "expired";
 
@@ -207,16 +224,116 @@ export function getSubscriptionPeriodEnd(
 }
 
 export function isSubscriptionActive(
-  subscription: TenantSubscription | null
+  subscription: TenantSubscription | null,
+  now: Date = new Date()
 ): boolean {
-  if (!subscription) return false;
-  if (subscription.status === "active" || subscription.status === "trial") {
-    if (subscription.periodoFin) {
-      return new Date(subscription.periodoFin) > new Date();
-    }
-    return true;
+  const info = getSubscriptionAccessInfo(subscription, "active", now);
+  return info.accessState === "active";
+}
+
+export function isTenantOperational(
+  accessState: SubscriptionAccessState
+): boolean {
+  return accessState === "active" || accessState === "grace_period";
+}
+
+export function getSubscriptionAccessState(
+  subscription: TenantSubscription | null,
+  salonStatus: "active" | "inactive" | "suspended" = "active",
+  now: Date = new Date()
+): SubscriptionAccessState {
+  if (salonStatus !== "active") {
+    return "suspended";
   }
-  return false;
+  if (!subscription) {
+    return "no_subscription";
+  }
+
+  const eligibleStatus =
+    subscription.status === "active" ||
+    subscription.status === "trial" ||
+    subscription.status === "past_due";
+
+  if (!eligibleStatus) {
+    return "expired";
+  }
+
+  if (!subscription.periodoFin) {
+    return "active";
+  }
+
+  const periodEnd = new Date(subscription.periodoFin);
+  if (periodEnd > now) {
+    return "active";
+  }
+
+  const graceEnd = new Date(periodEnd);
+  graceEnd.setDate(graceEnd.getDate() + GRACE_PERIOD_DAYS);
+
+  if (now <= graceEnd) {
+    return "grace_period";
+  }
+
+  return "expired";
+}
+
+export function getGracePeriodRemaining(
+  periodoFin: Date | string | undefined,
+  now: Date = new Date()
+): { daysRemaining: number; msRemaining: number } {
+  if (!periodoFin) {
+    return { daysRemaining: 0, msRemaining: 0 };
+  }
+
+  const periodEnd = new Date(periodoFin);
+  const graceEnd = new Date(periodEnd);
+  graceEnd.setDate(graceEnd.getDate() + GRACE_PERIOD_DAYS);
+  const msRemaining = graceEnd.getTime() - now.getTime();
+
+  if (msRemaining <= 0) {
+    return { daysRemaining: 0, msRemaining: 0 };
+  }
+
+  return {
+    daysRemaining: Math.ceil(msRemaining / MS_PER_DAY),
+    msRemaining,
+  };
+}
+
+export function getSubscriptionAccessInfo(
+  subscription: TenantSubscription | null,
+  salonStatus: "active" | "inactive" | "suspended" = "active",
+  now: Date = new Date()
+): SubscriptionAccessInfo {
+  const accessState = getSubscriptionAccessState(
+    subscription,
+    salonStatus,
+    now
+  );
+  const grace = getGracePeriodRemaining(subscription?.periodoFin, now);
+
+  return {
+    accessState,
+    isActive: accessState === "active",
+    isOperational: isTenantOperational(accessState),
+    graceDaysRemaining: grace.daysRemaining,
+    graceMsRemaining: grace.msRemaining,
+  };
+}
+
+export function getAccessStateLabel(state: SubscriptionAccessState): string {
+  switch (state) {
+    case "active":
+      return "Activo";
+    case "grace_period":
+      return "En periodo de gracia";
+    case "expired":
+      return "Expirado";
+    case "suspended":
+      return "Suspendido";
+    case "no_subscription":
+      return "Sin suscripción";
+  }
 }
 
 export const DEFAULT_PLANS: Omit<SubscriptionPlan, "_id">[] = [

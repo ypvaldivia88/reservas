@@ -198,6 +198,40 @@ export interface PaymentRequest {
   fechaResolucion?: Date;
 }
 
+export type ActivationCertificateStatus =
+  | 'pending'
+  | 'redeemed'
+  | 'expired'
+  | 'revoked';
+
+export interface ActivationCertificate {
+  _id?: string;
+  salonId: string;
+  paymentRequestId: string;
+  planId: string;
+  ciclo: BillingCycle;
+  codeHash: string;
+  codePrefix: string;
+  status: ActivationCertificateStatus;
+  expiresAt: Date;
+  createdAt: Date;
+  createdByUserId: string;
+  redeemedAt?: Date;
+  redeemedByUserId?: string;
+  activatedPeriodoFin?: Date;
+}
+
+export interface PlatformAuditLog {
+  _id?: string;
+  action: string;
+  actorUserId: string;
+  actorRole: string;
+  salonId?: string;
+  targetId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+}
+
 // ─── Finanzas ───────────────────────────────────────────────────────────────
 
 export type TransactionType = 'income' | 'expense';

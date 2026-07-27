@@ -474,3 +474,47 @@ export function openSubscriptionPaymentWhatsApp(
   }
 }
 
+export interface ActivationCertificateDetails {
+  salonNombre: string;
+  planNombre: string;
+  ciclo: BillingCycle;
+  code: string;
+  redeemUrl: string;
+  expiresAt?: string;
+  recipientPhone?: string;
+}
+
+export function generateActivationCertificateWhatsAppLink(
+  details: ActivationCertificateDetails
+): string {
+  const cicloLabel = getBillingCycleLabel(details.ciclo);
+  const expiryText = details.expiresAt
+    ? `\n⏳ *Válido hasta:* ${details.expiresAt}`
+    : "";
+
+  const message = `✅ *Pago confirmado — Código de activación*
+
+🏪 *Salón:* ${details.salonNombre}
+📦 *Plan:* ${details.planNombre}
+📅 *Ciclo:* ${cicloLabel}
+🔑 *Código:* ${details.code}
+
+Ingresa este código en tu panel:
+${details.redeemUrl}
+
+Un solo uso.${expiryText}`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const phone = cleanPhoneNumber(details.recipientPhone || platformPhone);
+  return `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+}
+
+export function openActivationCertificateWhatsApp(
+  details: ActivationCertificateDetails
+): void {
+  const link = generateActivationCertificateWhatsAppLink(details);
+  if (typeof window !== "undefined") {
+    window.open(link, "_blank");
+  }
+}
+

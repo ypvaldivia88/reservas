@@ -12,20 +12,17 @@ import {
 import {
   calculatePlanPrice,
   generatePaymentReference,
-  isSubscriptionActive,
+  getSubscriptionAccessInfo,
   normalizeSubscriptionPlan,
 } from "@/lib/subscription";
 import { AppError } from "@/lib/api/errors";
+import { getTenantAccessForSalon } from "@/lib/services/tenant-access.service";
+import { activationCertificateService } from "@/lib/services/activation-certificate.service";
 
 export const GET = adminHandler(async ({ salonId }) => {
   const db = await getDb();
 
-  const subscription = (await db
-    .collection<TenantSubscription>(Collections.TENANT_SUBSCRIPTIONS)
-    .findOne(
-      { ...tenantQuery(salonId) },
-      { sort: { fechaCreacion: -1 } }
-    )) as TenantSubscription | null;
+  const { salon, subscription, access } = await getTenantAccessForSalon(salonId);
 
   let plan: SubscriptionPlan | null = null;
   if (subscription?.planId) {
@@ -41,11 +38,25 @@ export const GET = adminHandler(async ({ salonId }) => {
       status: "pending",
     })) as PaymentRequest | null;
 
+  const pendingCertificate =
+    await activationCertificateService.getPendingForSalon(salonId);
+
   return ok({
     subscription,
     plan,
-    isActive: isSubscriptionActive(subscription),
+    isActive: access.isActive,
+    isOperational: access.isOperational,
+    accessState: access.accessState,
+    graceDaysRemaining: access.graceDaysRemaining,
+    salonStatus: salon?.status ?? "active",
     pendingPayment,
+    pendingCertificate: pendingCertificate
+      ? {
+          _id: pendingCertificate._id,
+          codePrefix: pendingCertificate.codePrefix,
+          expiresAt: pendingCertificate.expiresAt,
+        }
+      : null,
   });
 });
 

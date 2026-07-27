@@ -45,12 +45,15 @@ function toPublicProfile(salon: Salon): SalonPublicProfile {
   };
 }
 
+import { assertPublicTenantOperational } from "@/lib/services/tenant-access.service";
+
 export class SalonCmsService {
   async getPublicBySlug(slug: string): Promise<SalonPublicProfile> {
     const salon = await salonRepository.findBySlug(slug);
     if (!salon || salon.status !== "active") {
       throw AppError.notFound("Salón no encontrado");
     }
+    await assertPublicTenantOperational(salon.salonId);
     return toPublicProfile(salon);
   }
 

@@ -21,8 +21,11 @@ import { scheduleUtils } from "@/lib/utils";
 import {
   getSubscriptionPeriodEnd,
   getTrialRemaining,
+  getSubscriptionAccessInfo,
   TRIAL_DAYS,
 } from "@/lib/subscription";
+import { activationCertificateService } from "@/lib/services/activation-certificate.service";
+import { platformAuditService } from "@/lib/services/platform-audit.service";
 import {
   getBusinessTemplate,
   isValidBusinessTemplate,
@@ -200,12 +203,29 @@ export class SalonService {
           .collection(Collections.PAYMENT_REQUESTS)
           .countDocuments({ salonId: salon.salonId, status: "pending" });
 
+        const access = getSubscriptionAccessInfo(
+          subscription,
+          salon.status
+        );
+
+        const pendingCertificate = await db
+          .collection(Collections.ACTIVATION_CERTIFICATES)
+          .countDocuments({
+            salonId: salon.salonId,
+            status: "pending",
+            expiresAt: { $gt: new Date() },
+          });
+
         return {
           ...salon,
           _id: salon._id?.toString(),
           subscription,
           planNombre,
           pendingPayments,
+          accessState: access.accessState,
+          graceDaysRemaining: access.graceDaysRemaining,
+          isOperational: access.isOperational,
+          hasPendingCertificate: pendingCertificate > 0,
         };
       })
     );
@@ -310,7 +330,8 @@ export class PlatformService {
   async resolvePayment(
     paymentId: string,
     action: "approve" | "reject",
-    notas?: string
+    notas?: string,
+    actorUserId?: string
   ) {
     if (!ObjectId.isValid(paymentId)) {
       throw new AppError("ID de pago inválido", 400);
@@ -334,39 +355,268 @@ export class PlatformService {
     );
 
     if (action === "approve") {
-      const now = new Date();
-      const periodoFin = getSubscriptionPeriodEnd(payment.ciclo, now);
+      if (!actorUserId) {
+        throw new AppError("actorUserId requerido para aprobar", 400);
+      }
 
-      const existingSub = await db
-        .collection(Collections.TENANT_SUBSCRIPTIONS)
-        .findOne({ salonId: payment.salonId });
-
-      const subData = {
-        planId: payment.planId,
-        ciclo: payment.ciclo,
-        status: "active" as const,
-        descuentoAplicado: payment.descuentoPorcentaje,
-        periodoInicio: now,
-        periodoFin,
-        fechaActualizacion: now,
+      const paymentWithId = {
+        ...payment,
+        _id: paymentId,
       };
 
-      if (existingSub) {
-        await db
-          .collection(Collections.TENANT_SUBSCRIPTIONS)
-          .updateOne({ _id: existingSub._id }, { $set: subData });
-      } else {
-        await db.collection(Collections.TENANT_SUBSCRIPTIONS).insertOne({
+      const { certificate, code } =
+        await activationCertificateService.createForPayment(
+          paymentWithId,
+          actorUserId
+        );
+
+      const salon = await db
+        .collection(Collections.SALONS)
+        .findOne({ salonId: payment.salonId });
+      const plan = await db
+        .collection(Collections.SUBSCRIPTION_PLANS)
+        .findOne({ _id: new ObjectId(payment.planId) });
+      const adminUser = await db.collection(Collections.USERS).findOne({
+        salonId: payment.salonId,
+        role: "salon_admin",
+      });
+
+      await platformAuditService.log({
+        action: "payment_approved_certificate_issued",
+        actorUserId,
+        actorRole: "platform_admin",
+        salonId: payment.salonId,
+        targetId: String(certificate._id),
+        metadata: {
+          paymentId,
+          codePrefix: certificate.codePrefix,
+        },
+      });
+
+      return {
+        message: "Pago aprobado. Certificado de activación generado.",
+        certificate: {
+          id: certificate._id,
+          code,
+          codePrefix: certificate.codePrefix,
           salonId: payment.salonId,
-          ...subData,
-          fechaCreacion: now,
-        });
-      }
+          salonNombre: salon?.nombre,
+          planNombre: plan?.nombre,
+          ciclo: payment.ciclo,
+          adminPhone: adminUser?.telefono ?? salon?.whatsappNumber,
+          expiresAt: certificate.expiresAt,
+        },
+      };
     }
 
-    return action === "approve"
-      ? "Pago aprobado y suscripción activada"
-      : "Pago rechazado";
+    if (actorUserId) {
+      await platformAuditService.log({
+        action: "payment_rejected",
+        actorUserId,
+        actorRole: "platform_admin",
+        salonId: payment.salonId,
+        targetId: paymentId,
+      });
+    }
+
+    return { message: "Pago rechazado" };
+  }
+
+  async getDashboardSummary() {
+    const salons = await salonService.listWithSubscriptions();
+    const db = await getDb();
+
+    const summary = {
+      total: salons.length,
+      active: 0,
+      gracePeriod: 0,
+      expired: 0,
+      suspended: 0,
+      trial: 0,
+      pendingPayments: 0,
+      pendingCertificates: 0,
+    };
+
+    for (const salon of salons) {
+      if (salon.accessState === "active") summary.active++;
+      if (salon.accessState === "grace_period") summary.gracePeriod++;
+      if (salon.accessState === "expired") summary.expired++;
+      if (salon.accessState === "suspended") summary.suspended++;
+      if (salon.subscription?.status === "trial" && salon.accessState === "active") {
+        summary.trial++;
+      }
+      summary.pendingPayments += salon.pendingPayments;
+      if (salon.hasPendingCertificate) summary.pendingCertificates++;
+    }
+
+    const recentAudit = await platformAuditService.listRecent(10);
+
+    return { summary, salons, recentAudit };
+  }
+
+  async getSalonDetail(salonId: string) {
+    const db = await getDb();
+    const salon = await salonRepository.findBySalonId(salonId);
+    if (!salon) throw AppError.notFound("Salón no encontrado");
+
+    const subscription = (await db
+      .collection<TenantSubscription>(Collections.TENANT_SUBSCRIPTIONS)
+      .findOne({ salonId }, { sort: { fechaCreacion: -1 } })) as TenantSubscription | null;
+
+    const access = getSubscriptionAccessInfo(subscription, salon.status);
+    const certificates = await activationCertificateService.listForSalon(salonId);
+    const payments = await db
+      .collection<PaymentRequest>(Collections.PAYMENT_REQUESTS)
+      .find({ salonId })
+      .sort({ fechaCreacion: -1 })
+      .limit(20)
+      .toArray();
+
+    const admins = await db
+      .collection(Collections.USERS)
+      .find({ salonId, role: { $in: ["salon_admin", "admin"] } })
+      .project({ password: 0 })
+      .toArray();
+
+    const auditLog = await platformAuditService.listForSalon(salonId);
+
+    return {
+      salon,
+      subscription,
+      access,
+      certificates,
+      payments: payments.map((p) => ({ ...p, _id: p._id?.toString() })),
+      admins: admins.map((a) => ({ ...a, _id: a._id?.toString() })),
+      auditLog,
+    };
+  }
+
+  async updateSalonStatus(
+    salonId: string,
+    status: "active" | "suspended" | "inactive",
+    actorUserId: string
+  ) {
+    const salon = await salonRepository.updateBySalonId(salonId, {
+      status,
+      fechaActualizacion: new Date(),
+    });
+    if (!salon) throw AppError.notFound("Salón no encontrado");
+
+    await platformAuditService.log({
+      action: "salon_status_updated",
+      actorUserId,
+      actorRole: "platform_admin",
+      salonId,
+      metadata: { status },
+    });
+
+    return salon;
+  }
+
+  async extendTrial(salonId: string, days: number, actorUserId: string) {
+    if (days < 1 || days > 90) {
+      throw new AppError("Los días deben estar entre 1 y 90", 400);
+    }
+
+    const db = await getDb();
+    const subscription = await db
+      .collection<TenantSubscription>(Collections.TENANT_SUBSCRIPTIONS)
+      .findOne({ salonId }, { sort: { fechaCreacion: -1 } });
+
+    if (!subscription) throw AppError.notFound("Suscripción no encontrada");
+
+    const base = subscription.periodoFin
+      ? new Date(subscription.periodoFin)
+      : new Date();
+    const newEnd = new Date(base);
+    newEnd.setDate(newEnd.getDate() + days);
+
+    await db.collection(Collections.TENANT_SUBSCRIPTIONS).updateOne(
+      { _id: new ObjectId(String(subscription._id)) },
+      {
+        $set: {
+          status: "trial",
+          periodoFin: newEnd,
+          fechaActualizacion: new Date(),
+        },
+      }
+    );
+
+    await platformAuditService.log({
+      action: "trial_extended",
+      actorUserId,
+      actorRole: "platform_admin",
+      salonId,
+      metadata: { days, newEnd },
+    });
+
+    return { periodoFin: newEnd };
+  }
+
+  async deleteSalonCascade(
+    salonId: string,
+    confirmSlug: string,
+    actorUserId: string
+  ) {
+    const { DEFAULT_SALON_ID } = await import("@/lib/tenant");
+    if (salonId === DEFAULT_SALON_ID) {
+      throw new AppError("No se puede eliminar el salón por defecto", 400);
+    }
+
+    const salon = await salonRepository.findBySalonId(salonId);
+    if (!salon) throw AppError.notFound("Salón no encontrado");
+    if (salon.slug !== confirmSlug) {
+      throw new AppError("El slug de confirmación no coincide", 400);
+    }
+
+    const db = await getDb();
+    const tenantCollections = [
+      Collections.RESERVAS,
+      Collections.SCHEDULES,
+      Collections.AVAILABILITY_OVERRIDES,
+      Collections.SERVICIOS,
+      Collections.CATEGORIAS,
+      Collections.IMAGENES,
+      Collections.GALERIA,
+      Collections.TENANT_SUBSCRIPTIONS,
+      Collections.PAYMENT_REQUESTS,
+      Collections.ACTIVATION_CERTIFICATES,
+      Collections.FINANCIAL_TRANSACTIONS,
+      Collections.FINANCIAL_CATEGORIES,
+      Collections.REDEEM_ATTEMPTS,
+    ] as const;
+
+    const users = await db
+      .collection(Collections.USERS)
+      .find({ salonId })
+      .toArray();
+    const userIds = users.map((u) => u._id);
+
+    if (userIds.length > 0) {
+      await db.collection(Collections.SESSIONS).deleteMany({
+        userId: { $in: userIds },
+      });
+      await db.collection(Collections.USERS).deleteMany({ salonId });
+    }
+
+    for (const col of tenantCollections) {
+      await db.collection(col).deleteMany({ salonId });
+    }
+
+    await db.collection(Collections.SALONS).deleteOne({ salonId });
+    await db
+      .collection(Collections.PLATFORM_AUDIT_LOG)
+      .deleteMany({ salonId });
+
+    await platformAuditService.log({
+      action: "salon_deleted",
+      actorUserId,
+      actorRole: "platform_admin",
+      salonId,
+      metadata: { slug: salon.slug, nombre: salon.nombre },
+    });
+
+    return { deleted: true };
   }
 }
 

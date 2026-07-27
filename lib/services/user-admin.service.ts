@@ -9,6 +9,7 @@ import {
   User,
 } from "@/lib/types";
 import { userRepository } from "@/lib/repositories/user.repository";
+import { hashPassword } from "@/lib/auth";
 import { authService } from "@/lib/services/auth.service";
 import { salonRepository } from "@/lib/repositories/salon.repository";
 import { ACTIVE_RESERVATION_STATES } from "@/lib/reservaValidation";
@@ -244,6 +245,55 @@ export class UserAdminService {
       _id: new ObjectId(id),
       role: "cliente",
     });
+  }
+
+  async createSalonAdmin(
+    salonId: string,
+    data: {
+      nombre: string;
+      username: string;
+      password: string;
+    }
+  ) {
+    const salon = await salonRepository.findBySalonId(salonId);
+    if (!salon) throw new AppError("El salón no existe", 400);
+
+    const nombre = data.nombre?.trim();
+    const username = data.username?.trim().toLowerCase();
+    const password = data.password;
+
+    if (!nombre || nombre.length < 2) {
+      throw new AppError("El nombre debe tener al menos 2 caracteres", 400);
+    }
+    if (!username || username.length < 3) {
+      throw new AppError("El usuario debe tener al menos 3 caracteres", 400);
+    }
+    if (!password || password.length < 8) {
+      throw new AppError("La contraseña debe tener al menos 8 caracteres", 400);
+    }
+
+    const existing = await userRepository.findAdminByUsername(username);
+    if (existing) {
+      throw AppError.conflict("Este nombre de usuario ya está registrado");
+    }
+
+    const db = await getDb();
+    const now = new Date();
+    const result = await db.collection(Collections.USERS).insertOne({
+      username,
+      password: await hashPassword(password),
+      role: "salon_admin",
+      salonId,
+      nombre,
+      fechaCreacion: now,
+    });
+
+    return {
+      _id: result.insertedId.toString(),
+      username,
+      nombre,
+      salonId,
+    };
   }
 }
 
