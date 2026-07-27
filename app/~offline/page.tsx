@@ -14,8 +14,13 @@ export default function OfflinePage() {
         </div>
         <h1 className="text-2xl font-bold tracking-tight">Sin conexión</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          No hay internet ahora mismo. Si ya abriste el panel antes, tus turnos
-          guardados siguen disponibles en el calendario.
+          No hay internet ahora mismo. Para ver turnos sin conexión, abre el
+          calendario al menos una vez con datos móviles o Wi‑Fi; guardamos una
+          copia en tu dispositivo.
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Otras secciones del panel (finanzas, servicios, etc.) requieren
+          conexión.
         </p>
         <div className="mt-8 flex flex-col gap-2.5">
           <Link
@@ -25,14 +30,12 @@ export default function OfflinePage() {
             <CalendarDays className="size-4" />
             Ir al calendario
           </Link>
-          <form action="/admin/calendario?view=month">
-            <button
-              type="submit"
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              Reintentar conexión
-            </button>
-          </form>
+          <Link
+            href="/admin/calendario?view=month"
+            className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            Reintentar
+          </Link>
         </div>
       </div>
     </main>

@@ -15,8 +15,9 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     },
     additionalPrecacheEntries: [
       { url: "/~offline", revision },
-      { url: "/admin/calendario", revision },
       { url: "/admin", revision },
+      { url: "/admin/calendario", revision },
+      { url: "/admin/calendario?view=month", revision },
       { url: "/pwa/icon-192.png", revision },
       { url: "/pwa/icon-512.png", revision },
     ],

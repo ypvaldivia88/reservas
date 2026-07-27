@@ -13,6 +13,7 @@ import {
 import FinanzasOverview from "@/components/admin/finanzas/FinanzasOverview";
 import FinanzasTransactionsPanel from "@/components/admin/finanzas/FinanzasTransactionsPanel";
 import { DatePreset } from "@/components/admin/finanzas/FinanzasPeriodFilter";
+import { useOnlineStatus } from "@/lib/hooks/useOnlineStatus";
 
 const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
 
@@ -54,6 +55,7 @@ function getDatePresetRange(preset: DatePreset): { desde: string; hasta: string 
 }
 
 export default function FinanzasPage() {
+  const online = useOnlineStatus();
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [categories, setCategories] = useState<FinancialCategory[]>([]);
   const [report, setReport] = useState<FinancialReport | null>(null);
@@ -104,6 +106,14 @@ export default function FinanzasPage() {
       if (showLoading) setLoading(true);
       setError("");
 
+      if (!online) {
+        setError(
+          "Finanzas requiere conexión a internet. El calendario de turnos sigue disponible sin conexión."
+        );
+        if (showLoading) setLoading(false);
+        return;
+      }
+
       const tipoParam = filterTipo ? `&tipo=${filterTipo}` : "";
       const metodoParam =
         filterMetodoPago ? `&metodoPago=${filterMetodoPago}` : "";
@@ -132,7 +142,7 @@ export default function FinanzasPage() {
         if (showLoading) setLoading(false);
       }
     },
-    [desde, hasta, filterTipo, filterMetodoPago]
+    [desde, hasta, filterTipo, filterMetodoPago, online]
   );
 
   const runSync = useCallback(
