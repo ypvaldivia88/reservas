@@ -118,9 +118,16 @@ export default function CertificateIssuedDialog({
             disabled={!certificate.adminPhone?.trim()}
             icon={<MessageCircle className="size-4" />}
           >
-            Enviar por WhatsApp
+            Enviar al salón por WhatsApp
           </Button>
         </div>
+
+        {!certificate.adminPhone?.trim() && (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            El administrador del salón no tiene teléfono en su perfil. Copia el
+            código y envíalo manualmente.
+          </p>
+        )}
 
         <Button variant="ghost" fullWidth className="mt-3" onClick={onClose}>
           Cerrar

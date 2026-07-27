@@ -26,6 +26,7 @@ import {
 } from "@/lib/subscription";
 import { activationCertificateService } from "@/lib/services/activation-certificate.service";
 import { platformAuditService } from "@/lib/services/platform-audit.service";
+import { resolveSalonAdminPhone } from "@/lib/salon-contact";
 import {
   getBusinessTemplate,
   isValidBusinessTemplate,
@@ -404,10 +405,10 @@ export class PlatformService {
       const plan = await db
         .collection(Collections.SUBSCRIPTION_PLANS)
         .findOne({ _id: new ObjectId(payment.planId) });
-      const adminUser = await db.collection(Collections.USERS).findOne({
-        salonId: payment.salonId,
-        role: "salon_admin",
-      });
+      const adminPhone = await resolveSalonAdminPhone(
+        payment.salonId,
+        salon as Parameters<typeof resolveSalonAdminPhone>[1]
+      );
 
       await platformAuditService.log({
         action: "payment_approved_certificate_issued",
@@ -431,7 +432,7 @@ export class PlatformService {
           salonNombre: salon?.nombre,
           planNombre: plan?.nombre,
           ciclo: payment.ciclo,
-          adminPhone: adminUser?.telefono ?? salon?.whatsappNumber,
+          adminPhone,
           expiresAt: certificate.expiresAt,
         },
       };
