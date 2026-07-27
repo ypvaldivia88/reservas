@@ -20,6 +20,7 @@ import {
   type SubscriptionAccessState,
 } from "@/lib/subscription";
 import { KeyRound } from "lucide-react";
+import { notifySubscriptionRefresh } from "@/lib/subscription-events";
 
 interface SubscriptionData {
   subscription: TenantSubscription | null;
@@ -171,6 +172,7 @@ export default function SuscripcionPage() {
         setRedeemMessage(data.message ?? "Suscripción activada correctamente");
         setRedeemCode("");
         await loadData();
+        notifySubscriptionRefresh();
       } else {
         setRedeemError(data.error ?? "No se pudo canjear el código");
       }

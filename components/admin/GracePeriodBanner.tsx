@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, X } from "lucide-react";
+import { SUBSCRIPTION_REFRESH_EVENT } from "@/lib/subscription-events";
 
 interface GraceBannerData {
   accessState: string;
@@ -19,44 +20,64 @@ export default function GracePeriodBanner() {
   const [data, setData] = useState<GraceBannerData | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/subscriptions", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((res) => {
-        if (!res.success) return;
-        const sub = res.data;
-        if (sub.accessState !== "grace_period") return;
+  const loadBanner = useCallback(async () => {
+    try {
+      const subRes = await fetch("/api/subscriptions", { cache: "no-store" });
+      const res = await subRes.json();
+      if (!res.success) {
+        setData(null);
+        return;
+      }
 
-        const salonId =
-          sub.subscription?.salonId ??
-          (typeof window !== "undefined"
-            ? localStorage.getItem("salon-id-cache")
-            : null);
+      const sub = res.data;
+      if (sub.accessState !== "grace_period") {
+        setData(null);
+        setDismissed(false);
+        return;
+      }
 
-        fetch("/api/salons/current")
-          .then((r) => r.json())
-          .then((salonRes) => {
-            const sid = salonRes.success
-              ? salonRes.data?.salonId
-              : salonId;
-            if (sid && typeof window !== "undefined") {
-              localStorage.setItem("salon-id-cache", sid);
-            }
-            const periodoFin = sub.subscription?.periodoFin;
-            if (sid && periodoFin) {
-              const key = getDismissKey(sid, String(periodoFin));
-              setDismissed(localStorage.getItem(key) === "1");
-            }
-            setData({
-              accessState: sub.accessState,
-              graceDaysRemaining: sub.graceDaysRemaining,
-              periodoFin: sub.subscription?.periodoFin,
-              salonId: sid,
-            });
-          });
-      })
-      .catch(() => {});
+      const salonRes = await fetch("/api/salons/current");
+      const salonData = await salonRes.json();
+
+      const sid = salonData.success
+        ? salonData.data?.salonId
+        : typeof window !== "undefined"
+          ? localStorage.getItem("salon-id-cache")
+          : null;
+
+      if (sid && typeof window !== "undefined") {
+        localStorage.setItem("salon-id-cache", sid);
+      }
+
+      const periodoFin = sub.subscription?.periodoFin;
+      if (sid && periodoFin) {
+        const key = getDismissKey(sid, String(periodoFin));
+        setDismissed(localStorage.getItem(key) === "1");
+      } else {
+        setDismissed(false);
+      }
+
+      setData({
+        accessState: sub.accessState,
+        graceDaysRemaining: sub.graceDaysRemaining,
+        periodoFin: sub.subscription?.periodoFin,
+        salonId: sid,
+      });
+    } catch {
+      // Mantener estado anterior si falla la red
+    }
   }, []);
+
+  useEffect(() => {
+    loadBanner();
+
+    const onRefresh = () => {
+      void loadBanner();
+    };
+
+    window.addEventListener(SUBSCRIPTION_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(SUBSCRIPTION_REFRESH_EVENT, onRefresh);
+  }, [loadBanner]);
 
   if (!data || data.accessState !== "grace_period" || dismissed) {
     return null;
