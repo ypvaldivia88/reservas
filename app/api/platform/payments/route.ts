@@ -11,16 +11,18 @@ export const GET = platformHandler(async ({ request }) => {
   return ok(payments);
 });
 
-export const PATCH = platformHandler(async ({ request }) => {
+export const PATCH = platformHandler(async ({ session, request }) => {
   const { paymentId, action, notas } = await request.json();
   if (!paymentId || !["approve", "reject"].includes(action)) {
     throw new AppError("paymentId y action (approve/reject) requeridos", 400);
   }
 
-  const message = await platformService.resolvePayment(
+  const result = await platformService.resolvePayment(
     paymentId,
     action,
-    notas
+    notas,
+    session!.userId
   );
-  return ok(undefined, { message });
+
+  return ok(result, { message: result.message });
 });

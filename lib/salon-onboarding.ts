@@ -30,6 +30,18 @@ export interface OnboardingState {
   manualCompleted: OnboardingStepId[];
 }
 
+/** Rutas de configuración accesibles durante onboarding (incluso con suscripción vencida). */
+export const ONBOARDING_SETUP_PATHS = [
+  "/admin",
+  "/admin/sitio",
+  "/admin/servicios",
+  "/admin/schedule",
+  "/admin/contenido",
+  "/admin/galeria",
+] as const;
+
+export type OnboardingStepStatus = "completed" | "visited" | "pending";
+
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "sitio",
@@ -194,29 +206,87 @@ export interface OnboardingCompletionInput {
   slug: string;
 }
 
-export function resolveStepCompletion(
+export function matchOnboardingStepPath(pathname: string): OnboardingStepId | null {
+  if (pathname.startsWith("/admin/sitio")) return "sitio";
+  if (pathname.startsWith("/admin/servicios")) return "servicios";
+  if (pathname.startsWith("/admin/schedule")) return "horario";
+  if (
+    pathname.startsWith("/admin/contenido") ||
+    pathname.startsWith("/admin/galeria")
+  ) {
+    return "galeria";
+  }
+  return null;
+}
+
+export function isOnboardingSetupPath(pathname: string): boolean {
+  return ONBOARDING_SETUP_PATHS.some(
+    (path) => path === "/admin"
+      ? pathname === "/admin" || pathname === "/admin/"
+      : pathname.startsWith(path)
+  );
+}
+
+function resolveSingleStepStatus(
+  stepId: OnboardingStepId,
+  visited: Set<OnboardingStepId>,
+  manual: Set<OnboardingStepId>,
+  dataComplete: boolean
+): OnboardingStepStatus {
+  if (manual.has(stepId) || dataComplete) return "completed";
+  if (stepId === "horario" || stepId === "vista-previa") {
+    return visited.has(stepId) ? "completed" : "pending";
+  }
+  if (visited.has(stepId)) return "visited";
+  return "pending";
+}
+
+export function resolveStepStatuses(
   input: OnboardingCompletionInput
-): Record<OnboardingStepId, boolean> {
+): Record<OnboardingStepId, OnboardingStepStatus> {
   const visited = new Set(input.visited);
   const manual = new Set(input.manualCompleted);
 
   return {
-    sitio:
-      manual.has("sitio") ||
-      visited.has("sitio") ||
-      input.hasContactInfo ||
-      input.hasCustomBranding,
-    servicios:
-      manual.has("servicios") ||
-      visited.has("servicios") ||
-      input.hasPricedServices,
-    horario: manual.has("horario") || visited.has("horario"),
-    galeria:
-      manual.has("galeria") ||
-      visited.has("galeria") ||
-      input.hasRealImages,
-    "vista-previa": manual.has("vista-previa") || visited.has("vista-previa"),
+    sitio: resolveSingleStepStatus(
+      "sitio",
+      visited,
+      manual,
+      input.hasContactInfo || input.hasCustomBranding
+    ),
+    servicios: resolveSingleStepStatus(
+      "servicios",
+      visited,
+      manual,
+      input.hasPricedServices
+    ),
+    horario: resolveSingleStepStatus("horario", visited, manual, false),
+    galeria: resolveSingleStepStatus(
+      "galeria",
+      visited,
+      manual,
+      input.hasRealImages
+    ),
+    "vista-previa": resolveSingleStepStatus(
+      "vista-previa",
+      visited,
+      manual,
+      false
+    ),
   };
+}
+
+/** @deprecated Use resolveStepStatuses for richer UI states */
+export function resolveStepCompletion(
+  input: OnboardingCompletionInput
+): Record<OnboardingStepId, boolean> {
+  const statuses = resolveStepStatuses(input);
+  return Object.fromEntries(
+    Object.entries(statuses).map(([id, status]) => [
+      id,
+      status === "completed",
+    ])
+  ) as Record<OnboardingStepId, boolean>;
 }
 
 export function stepHref(step: OnboardingStep, slug: string): string {

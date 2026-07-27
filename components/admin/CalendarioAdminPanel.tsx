@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/Button";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import ReservasTable from "@/components/ReservasTable";
 import ReservaWorkPhotosUpload from "@/components/admin/ReservaWorkPhotosUpload";
+import OfflineBanner from "@/components/admin/OfflineBanner";
 import { ReservationMetricsSection } from "@/components/admin/TenantMetricSections";
+import { useOnlineStatus } from "@/lib/hooks/useOnlineStatus";
+import { loadCalendarBundle } from "@/lib/offline/calendar-sync";
 import {
   getReservaTemplateConfig,
   isManicureReservation,
@@ -76,6 +79,10 @@ function CalendarioAdminPanel() {
   const [businessTemplate, setBusinessTemplate] = useState<BusinessTemplate | null>(
     null
   );
+  const [fromCache, setFromCache] = useState(false);
+  const [syncedAt, setSyncedAt] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const online = useOnlineStatus();
   const searchParams = useSearchParams();
   const isManicure = isManicureReservation(businessTemplate);
   const templateConfig = getReservaTemplateConfig(businessTemplate);
@@ -173,9 +180,43 @@ function CalendarioAdminPanel() {
     });
   };
 
-  useEffect(() => {
-    loadData();
+  const loadData = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true);
+    try {
+      const bundle = await loadCalendarBundle();
+      setReservas(bundle.reservas);
+      setServicios(bundle.servicios);
+      setCategorias(bundle.categorias);
+      setClientesCount(bundle.clientesCount);
+      if (bundle.businessTemplate) {
+        setBusinessTemplate(bundle.businessTemplate);
+      }
+      setFromCache(bundle.fromCache);
+      setSyncedAt(bundle.syncedAt);
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+    } finally {
+      if (!options?.silent) setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  const wasOfflineRef = useRef(false);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (!online) {
+      wasOfflineRef.current = true;
+      return;
+    }
+    if (wasOfflineRef.current) {
+      wasOfflineRef.current = false;
+      void loadData({ silent: true });
+    }
+  }, [online, loadData]);
 
   useEffect(() => {
     const view = searchParams.get("view");
@@ -219,67 +260,16 @@ function CalendarioAdminPanel() {
     }
   }, [searchParams, reservas]);
 
-  const loadData = async () => {
-    try {
-      // Cargar reservas
-      const resReservas = await fetch("/api/reservas");
-      if (resReservas.ok) {
-        const dataReservas = await resReservas.json();
-        if (dataReservas.success) {
-          setReservas(dataReservas.data);
-        }
-      }
-
-      // Cargar servicios (categorías de ingreso)
-      const [resServicios, resCategorias] = await Promise.all([
-        fetch("/api/servicios"),
-        fetch("/api/categorias"),
-      ]);
-      if (resServicios.ok) {
-        const dataServicios = await resServicios.json();
-        if (dataServicios.success) {
-          setServicios(dataServicios.data);
-        }
-      }
-      if (resCategorias.ok) {
-        const dataCategorias = await resCategorias.json();
-        if (dataCategorias.success) {
-          setCategorias(dataCategorias.data);
-        }
-      }
-
-      const resClientes = await fetch("/api/clientes");
-      if (resClientes.ok) {
-        const dataClientes = await resClientes.json();
-        if (dataClientes.success && Array.isArray(dataClientes.data)) {
-          setClientesCount(dataClientes.data.length);
-        }
-      }
-
-      const resSalon = await fetch("/api/salons/current");
-      if (resSalon.ok) {
-        const salonData = await resSalon.json();
-        if (salonData.success) {
-          const template =
-            salonData.data?.cms?.businessTemplate ??
-            salonData.data?.businessTemplate;
-          if (template) {
-            setBusinessTemplate(template);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error cargando datos:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // CRUD Handlers for Reservas
   const handleUpdateReserva = async (
     reserva: Reserva,
     openWhatsApp: boolean = false
   ) => {
+    if (!online) {
+      setActionMessage("Sin conexión. Los cambios se aplican cuando vuelvas a estar en línea.");
+      setTimeout(() => setActionMessage(""), 4000);
+      return;
+    }
     setSaving(true);
     const payload = buildReservaForSave(reserva);
     try {
@@ -370,6 +360,11 @@ function CalendarioAdminPanel() {
   };
 
   const handleDeleteReserva = async (id: string) => {
+    if (!online) {
+      setActionMessage("Sin conexión. Los cambios se aplican cuando vuelvas a estar en línea.");
+      setTimeout(() => setActionMessage(""), 4000);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/reservas/${id}`, {
@@ -411,6 +406,17 @@ function CalendarioAdminPanel() {
 
   return (
     <>
+      <OfflineBanner
+        fromCache={fromCache}
+        syncedAt={syncedAt}
+        online={online}
+        refreshing={refreshing}
+        onRefresh={() => {
+          setRefreshing(true);
+          void loadData({ silent: true });
+        }}
+      />
+
       {/* Global Action Message */}
       {actionMessage && (
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-l-4 border-blue-500 dark:border-blue-400 shadow-lg animate-fadeInUp">

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import TenantHeader from "@/components/TenantHeader";
 import TenantBrandingProvider from "@/components/TenantBrandingProvider";
-import { salonCmsService } from "@/lib/services/salon-cms.service";
+import { resolvePublicSalonBySlug } from "@/lib/services/salon-cms.service";
 
 const RESERVED_SLUGS = new Set([
   "admin",
@@ -23,7 +23,9 @@ export default async function SalonLayout({ children, params }: LayoutProps) {
   }
 
   try {
-    const profile = await salonCmsService.getPublicBySlug(slug);
+    const resolution = await resolvePublicSalonBySlug(slug);
+    const profile = resolution.profile;
+
     return (
       <TenantBrandingProvider branding={profile.branding}>
         <TenantHeader profile={profile} isHomePage />

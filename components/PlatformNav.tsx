@@ -7,6 +7,24 @@ import { cn } from "@/lib/utils";
 const platformNavItems = [
   {
     href: "/admin/platform",
+    label: "Resumen",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/tenants",
+    label: "Tenants",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/pagos",
     label: "Pagos",
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -15,20 +33,11 @@ const platformNavItems = [
     ),
   },
   {
-    href: "/admin/platform/salones",
-    label: "Salones",
+    href: "/admin/platform/planes",
+    label: "Planes",
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
-    ),
-  },
-  {
-    href: "/admin/platform/pruebas",
-    label: "Pruebas",
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
     ),
   },
@@ -58,19 +67,19 @@ export default function PlatformNav() {
   return (
     <nav className="mb-6 border-b border-border/80 bg-card/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-2 sm:px-4">
-        <div className="flex justify-center py-2 sm:py-3">
+        <div className="flex justify-center py-2 sm:py-3 overflow-x-auto">
           <div className="inline-flex rounded-2xl border border-border bg-muted/50 p-1 shadow-inner">
             {platformNavItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.href !== "/admin/platform" &&
-                  pathname.startsWith(`${item.href}/`));
+                  pathname.startsWith(`${item.href}`));
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "relative flex min-w-[72px] flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-semibold transition-colors sm:min-w-[90px] sm:gap-1 sm:px-5 sm:py-2.5 sm:text-xs",
+                    "relative flex min-w-[72px] flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[10px] font-semibold transition-colors sm:min-w-[80px] sm:gap-1 sm:px-4 sm:py-2.5 sm:text-xs",
                     isActive
                       ? "bg-card text-primary shadow-sm"
                       : "text-muted-foreground hover:bg-card/60 hover:text-foreground"

@@ -359,6 +359,7 @@
 }
 
 .admin-shell {
+  --admin-scroll-pad-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
   background-color: var(--background);
   background-image:
     radial-gradient(
@@ -373,6 +374,12 @@
     );
 }
 
+@media (min-width: 768px) {
+  .admin-shell {
+    --admin-scroll-pad-bottom: 2rem;
+  }
+}
+
 .dashboard-card {
   background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(180%);
@@ -383,7 +390,7 @@
 }
 
 .admin-dock {
-  @apply fixed inset-x-5 bottom-3 z-40 mx-auto max-w-lg rounded-2xl shadow-lg sm:inset-x-6;
+  @apply z-40 mx-auto w-full max-w-lg rounded-2xl shadow-lg;
   isolation: isolate;
   border: 1px solid var(--admin-dock-border);
   background-color: color-mix(in oklch, var(--card) 90%, transparent);
@@ -394,6 +401,22 @@
   );
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
+}
+
+@media (max-width: 767px) {
+  .admin-dock {
+    @apply fixed inset-x-5 bottom-3 sm:inset-x-6;
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-dock {
+    @apply static mb-6 max-w-none rounded-none border-x-0 border-b border-t shadow-none;
+    background-image: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: var(--card);
+  }
 }
 
 .dark .admin-dock {

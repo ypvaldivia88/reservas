@@ -5,12 +5,15 @@ import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import TenantFooter from "@/components/TenantFooter";
 import ReservaForm from "@/components/ReservaForm";
 import SurfaceCard from "@/components/design/SurfaceCard";
-import { salonCmsService } from "@/lib/services/salon-cms.service";
+import TenantUnavailablePage from "@/components/TenantUnavailablePage";
+import { resolvePublicSalonBySlug } from "@/lib/services/salon-cms.service";
 import {
   buildSalonWhatsAppLink,
   resolveSalonWhatsapp,
 } from "@/lib/whatsapp";
 import { getReservaTemplateConfig } from "@/lib/reserva-template-config";
+import type { SubscriptionAccessState } from "@/lib/subscription";
+import type { SalonPublicProfile } from "@/lib/types";
 
 interface ReservaPageProps {
   searchParams: Promise<{ slug?: string }>;
@@ -21,14 +24,41 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
 
   let header = <Header isHomePage={false} />;
   let profile = null;
+  let unavailable: {
+    profile: SalonPublicProfile;
+    accessState: SubscriptionAccessState;
+  } | null = null;
 
   if (slug) {
     try {
-      profile = await salonCmsService.getPublicBySlug(slug);
-      header = <TenantHeader profile={profile} isHomePage={false} />;
+      const resolution = await resolvePublicSalonBySlug(slug);
+      if (resolution.kind === "unavailable") {
+        unavailable = {
+          profile: resolution.profile,
+          accessState: resolution.accessState,
+        };
+        header = (
+          <TenantHeader profile={resolution.profile} isHomePage={false} />
+        );
+      } else {
+        profile = resolution.profile;
+        header = <TenantHeader profile={profile} isHomePage={false} />;
+      }
     } catch {
-      // Sin slug válido, se mantiene el header genérico
+      // Slug inválido: se mantiene el header genérico
     }
+  }
+
+  if (unavailable) {
+    return (
+      <TenantBrandingProvider branding={unavailable.profile.branding}>
+        {header}
+        <TenantUnavailablePage
+          profile={unavailable.profile}
+          accessState={unavailable.accessState}
+        />
+      </TenantBrandingProvider>
+    );
   }
 
   const salonWhatsapp = profile ? resolveSalonWhatsapp(profile) : undefined;
@@ -88,14 +118,20 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
             <p className="mb-4 text-sm text-muted-foreground">
               {pageConfig.page.referenceDescription}
             </p>
-            <a
-              href={referenciaWaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg sm:text-base"
-            >
-              Enviar Referencia por WhatsApp
-            </a>
+            {referenciaWaLink ? (
+              <a
+                href={referenciaWaLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg sm:text-base"
+              >
+                Enviar Referencia por WhatsApp
+              </a>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                El salón aún no tiene WhatsApp configurado para referencias.
+              </p>
+            )}
           </SurfaceCard>
         </div>
       </section>
@@ -131,27 +167,35 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
-            <a href={contactWaLink} target="_blank" rel="noopener noreferrer">
-              <div className="flex items-center space-x-3">
-                <span className="text-xl sm:text-2xl">📞</span>
-                <div className="text-left">
-                  <p className="text-sm font-semibold sm:text-base">Llámanos</p>
-                  <p className="text-sm opacity-90 sm:text-base">
-                    {displayPhone || "Contáctanos"}
-                  </p>
-                </div>
-              </div>
-            </a>
+            {contactWaLink ? (
+              <>
+                <a href={contactWaLink} target="_blank" rel="noopener noreferrer">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl sm:text-2xl">📞</span>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold sm:text-base">Llámanos</p>
+                      <p className="text-sm opacity-90 sm:text-base">
+                        {displayPhone || "Contáctanos"}
+                      </p>
+                    </div>
+                  </div>
+                </a>
 
-            <a href={contactWaLink} target="_blank" rel="noopener noreferrer">
-              <div className="flex items-center space-x-3">
-                <span className="text-xl sm:text-2xl">💬</span>
-                <div className="text-left">
-                  <p className="text-sm font-semibold sm:text-base">WhatsApp</p>
-                  <p className="text-sm opacity-90 sm:text-base">Respuesta inmediata</p>
-                </div>
-              </div>
-            </a>
+                <a href={contactWaLink} target="_blank" rel="noopener noreferrer">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl sm:text-2xl">💬</span>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold sm:text-base">WhatsApp</p>
+                      <p className="text-sm opacity-90 sm:text-base">Respuesta inmediata</p>
+                    </div>
+                  </div>
+                </a>
+              </>
+            ) : (
+              <p className="text-sm opacity-90 sm:text-base">
+                Contacta al salón para reservar por teléfono.
+              </p>
+            )}
           </div>
         </div>
       </section>

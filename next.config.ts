@@ -1,3 +1,4 @@
+import { withSerwist } from "@serwist/turbopack";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -12,9 +13,8 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
-    // En desarrollo, usar unoptimized para evitar timeouts con Vercel Blob
     unoptimized: process.env.NODE_ENV === "development",
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

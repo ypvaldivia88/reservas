@@ -114,3 +114,34 @@ export async function ensureMultiTenantIndexes(db: Db): Promise<void> {
 
   tenantIndexesReady = true;
 }
+
+export async function ensureSubscriptionIndexes(db: Db): Promise<void> {
+  await db.collection(Collections.TENANT_SUBSCRIPTIONS).createIndex(
+    { salonId: 1, fechaCreacion: -1 },
+    { name: "idx_tenant_sub_salon" }
+  );
+  await db.collection(Collections.TENANT_SUBSCRIPTIONS).createIndex(
+    { periodoFin: 1 },
+    { name: "idx_tenant_sub_periodo_fin" }
+  );
+  await db.collection(Collections.ACTIVATION_CERTIFICATES).createIndex(
+    { salonId: 1, status: 1 },
+    { name: "idx_activation_cert_salon_status" }
+  );
+  await db.collection(Collections.ACTIVATION_CERTIFICATES).createIndex(
+    { paymentRequestId: 1 },
+    { name: "uniq_activation_cert_payment", unique: true }
+  );
+  await db.collection(Collections.PLATFORM_AUDIT_LOG).createIndex(
+    { createdAt: -1 },
+    { name: "idx_audit_created" }
+  );
+  await db.collection(Collections.PLATFORM_AUDIT_LOG).createIndex(
+    { salonId: 1, createdAt: -1 },
+    { name: "idx_audit_salon" }
+  );
+  await db.collection(Collections.REDEEM_ATTEMPTS).createIndex(
+    { salonId: 1, success: 1, createdAt: -1 },
+    { name: "idx_redeem_attempts" }
+  );
+}

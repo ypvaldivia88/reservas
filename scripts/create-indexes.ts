@@ -9,7 +9,7 @@ import "./load-env";
 import clientPromise from "@/lib/mongodb";
 import { DB_NAME } from "@/lib/db/collections";
 import { dedupeAllReservaIncomeTransactions, ensureFinancialQueryIndexes } from "@/lib/finances";
-import { ensureMultiTenantIndexes } from "@/lib/db/tenant-indexes";
+import { ensureMultiTenantIndexes, ensureSubscriptionIndexes } from "@/lib/db/tenant-indexes";
 
 async function createIndexes() {
   try {
@@ -59,6 +59,11 @@ async function createIndexes() {
     await ensureMultiTenantIndexes(db);
     console.log(
       "✅ Índices multi-tenant creados: uniq_cliente_phone_by_salon, uniq_active_slot_by_salon, uniq_active_client_day_by_salon"
+    );
+
+    await ensureSubscriptionIndexes(db);
+    console.log(
+      "✅ Índices de suscripción creados: tenant_subscriptions, activation_certificates, audit_log"
     );
 
     console.log("\n✨ Todos los índices creados exitosamente!");

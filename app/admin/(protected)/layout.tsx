@@ -6,6 +6,9 @@ import AdminNav from "@/components/AdminNav";
 import AdminSidebarMenu from "@/components/AdminSidebarMenu";
 import AdminRoleGuard from "@/components/AdminRoleGuard";
 import SalonOnboardingGuide from "@/components/admin/SalonOnboardingGuide";
+import PwaInstallPrompt from "@/components/admin/PwaInstallPrompt";
+import GracePeriodBanner from "@/components/admin/GracePeriodBanner";
+import SubscriptionGate from "@/components/admin/SubscriptionGate";
 import ThemeToggle from "@/components/ThemeToggle";
 import HamburgerButton from "@/components/HamburgerButton";
 import { Button } from "@/components/ui/Button";
@@ -101,13 +104,24 @@ export default function AdminProtectedLayout({
 
       {!isPlatformRoute && <AdminNav />}
 
-      <div className="mx-auto max-w-7xl px-3 py-6 pb-36 sm:px-4 sm:py-8 sm:pb-10 md:pb-8 lg:px-8">
-        <AdminRoleGuard>{children}</AdminRoleGuard>
+      <div
+        className="admin-main mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8 lg:px-8"
+        style={{ paddingBottom: "var(--admin-scroll-pad-bottom)" }}
+      >
+        {!isPlatformRoute && <GracePeriodBanner />}
+        <AdminRoleGuard>
+          {!isPlatformRoute ? (
+            <SubscriptionGate>{children}</SubscriptionGate>
+          ) : (
+            children
+          )}
+        </AdminRoleGuard>
       </div>
 
       {!isPlatformRoute && (
         <Suspense fallback={null}>
           <SalonOnboardingGuide />
+          <PwaInstallPrompt />
         </Suspense>
       )}
     </div>

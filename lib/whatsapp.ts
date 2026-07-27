@@ -9,15 +9,14 @@ import {
 } from "@/lib/reserva-template-config";
 import type { BusinessTemplate } from "@/lib/types";
 
-// Platform WhatsApp for subscription payments
-const platformPhone =
-  process.env.NEXT_PUBLIC_PLATFORM_WHATSAPP_NUMBER ||
-  process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER ||
-  "+5363233073";
+/** Superadmin / plataforma: pagos de suscripción y soporte */
+export const PLATFORM_WHATSAPP_DEFAULT = "+5354148857";
 
-// Admin WhatsApp number - can be overridden with environment variable or per-salon
-const defaultAdminPhone =
-  process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "+5363233073";
+/** Número de WhatsApp de la plataforma (no mezclar con números de salones). */
+export function getPlatformWhatsAppNumber(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_PLATFORM_WHATSAPP_NUMBER?.trim();
+  return fromEnv || PLATFORM_WHATSAPP_DEFAULT;
+}
 
 /**
  * Resuelve el número de WhatsApp de un salón desde su perfil/CMS.
@@ -35,20 +34,23 @@ export function resolveSalonWhatsapp(salon: {
 }
 
 /**
- * Get admin phone for a salon (falls back to default)
+ * Número de WhatsApp del salón (sin fallback global; multi-tenant).
  */
-export function getSalonWhatsAppNumber(salonWhatsapp?: string): string {
-  return salonWhatsapp || defaultAdminPhone;
+export function getSalonWhatsAppNumber(
+  salonWhatsapp?: string
+): string | undefined {
+  return salonWhatsapp?.trim() || undefined;
 }
 
 /**
- * Enlace wa.me para contactar al salón
+ * Enlace wa.me para contactar al salón. `null` si el salón no tiene número.
  */
 export function buildSalonWhatsAppLink(
   salonWhatsapp: string | undefined,
   text: string
-): string {
+): string | null {
   const phone = getSalonWhatsAppNumber(salonWhatsapp);
+  if (!phone) return null;
   return `https://wa.me/${cleanPhoneNumber(phone)}?text=${encodeURIComponent(text)}`;
 }
 
@@ -217,8 +219,9 @@ export function generateConsultExpertWhatsAppLink(
   clientName: string,
   clientPhone: string,
   salonWhatsapp?: string
-): string {
+): string | null {
   const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
+  if (!adminPhone) return null;
   // Check if client info is provided
   const hasClientInfo = clientName?.trim() && clientPhone?.trim();
 
@@ -252,12 +255,18 @@ export function openConsultExpertWhatsApp(
   clientName: string,
   clientPhone: string,
   salonWhatsapp?: string
-): void {
-  const whatsappLink = generateConsultExpertWhatsAppLink(clientName, clientPhone, salonWhatsapp);
-  
-  if (typeof window !== 'undefined') {
-    window.open(whatsappLink, '_blank');
+): boolean {
+  const whatsappLink = generateConsultExpertWhatsAppLink(
+    clientName,
+    clientPhone,
+    salonWhatsapp
+  );
+  if (!whatsappLink) return false;
+
+  if (typeof window !== "undefined") {
+    window.open(whatsappLink, "_blank");
   }
+  return true;
 }
 
 /**
@@ -270,8 +279,9 @@ export function generateSendReferenceWhatsAppLink(
   clientName: string,
   clientPhone: string,
   salonWhatsapp?: string
-): string {
+): string | null {
   const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
+  if (!adminPhone) return null;
   const message = `👋 Hola, soy *${clientName}*.
 
 Quisiera enviarles una imagen de referencia para el diseño de uñas que me gustaría.
@@ -297,12 +307,18 @@ export function openSendReferenceWhatsApp(
   clientName: string,
   clientPhone: string,
   salonWhatsapp?: string
-): void {
-  const whatsappLink = generateSendReferenceWhatsAppLink(clientName, clientPhone, salonWhatsapp);
-  
-  if (typeof window !== 'undefined') {
-    window.open(whatsappLink, '_blank');
+): boolean {
+  const whatsappLink = generateSendReferenceWhatsAppLink(
+    clientName,
+    clientPhone,
+    salonWhatsapp
+  );
+  if (!whatsappLink) return false;
+
+  if (typeof window !== "undefined") {
+    window.open(whatsappLink, "_blank");
   }
+  return true;
 }
 
 /**
@@ -315,8 +331,9 @@ export function generateCustomDesignWhatsAppLink(
   clientName: string,
   clientPhone: string,
   salonWhatsapp?: string
-): string {
+): string | null {
   const adminPhone = getSalonWhatsAppNumber(salonWhatsapp);
+  if (!adminPhone) return null;
   const message = `👋 Hola, soy *${clientName}*.
 
 Estoy interesada en consultar sobre un diseño personalizado de uñas.
@@ -342,12 +359,18 @@ export function openCustomDesignWhatsApp(
   clientName: string,
   clientPhone: string,
   salonWhatsapp?: string
-): void {
-  const whatsappLink = generateCustomDesignWhatsAppLink(clientName, clientPhone, salonWhatsapp);
-  
-  if (typeof window !== 'undefined') {
-    window.open(whatsappLink, '_blank');
+): boolean {
+  const whatsappLink = generateCustomDesignWhatsAppLink(
+    clientName,
+    clientPhone,
+    salonWhatsapp
+  );
+  if (!whatsappLink) return false;
+
+  if (typeof window !== "undefined") {
+    window.open(whatsappLink, "_blank");
   }
+  return true;
 }
 
 /**
@@ -458,7 +481,7 @@ He realizado el pago por transferencia/efectivo. Adjunto comprobante si aplica.
 ¡Gracias!`;
 
   const encodedMessage = encodeURIComponent(message);
-  const phone = cleanPhoneNumber(platformPhone);
+  const phone = cleanPhoneNumber(getPlatformWhatsAppNumber());
   return `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
 }
 
@@ -472,5 +495,55 @@ export function openSubscriptionPaymentWhatsApp(
   if (typeof window !== 'undefined') {
     window.open(link, '_blank');
   }
+}
+
+export interface ActivationCertificateDetails {
+  salonNombre: string;
+  planNombre: string;
+  ciclo: BillingCycle;
+  code: string;
+  redeemUrl: string;
+  expiresAt?: string;
+  recipientPhone?: string;
+}
+
+export function generateActivationCertificateWhatsAppLink(
+  details: ActivationCertificateDetails
+): string | null {
+  const cicloLabel = getBillingCycleLabel(details.ciclo);
+  const expiryText = details.expiresAt
+    ? `\n⏳ *Válido hasta:* ${details.expiresAt}`
+    : "";
+
+  const message = `✅ *Pago confirmado — Código de activación*
+
+🏪 *Salón:* ${details.salonNombre}
+📦 *Plan:* ${details.planNombre}
+📅 *Ciclo:* ${cicloLabel}
+🔑 *Código:* ${details.code}
+
+Ingresa este código en tu panel:
+${details.redeemUrl}
+
+Un solo uso.${expiryText}`;
+
+  const recipient = details.recipientPhone?.trim();
+  if (!recipient) return null;
+
+  const encodedMessage = encodeURIComponent(message);
+  const phone = cleanPhoneNumber(recipient);
+  return `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+}
+
+export function openActivationCertificateWhatsApp(
+  details: ActivationCertificateDetails
+): boolean {
+  const link = generateActivationCertificateWhatsAppLink(details);
+  if (!link) return false;
+
+  if (typeof window !== "undefined") {
+    window.open(link, "_blank");
+  }
+  return true;
 }
 
