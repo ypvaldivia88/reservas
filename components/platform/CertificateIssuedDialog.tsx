@@ -55,7 +55,11 @@ export default function CertificateIssuedDialog({
         : undefined,
       recipientPhone: certificate.adminPhone,
     };
-    openActivationCertificateWhatsApp(details);
+    if (!openActivationCertificateWhatsApp(details)) {
+      window.alert(
+        "No hay teléfono del administrador del salón. Copia el código y envíalo manualmente."
+      );
+    }
   };
 
   return (
@@ -111,6 +115,7 @@ export default function CertificateIssuedDialog({
             variant="primary"
             fullWidth
             onClick={handleWhatsApp}
+            disabled={!certificate.adminPhone?.trim()}
             icon={<MessageCircle className="size-4" />}
           >
             Enviar por WhatsApp

@@ -28,7 +28,8 @@ npm run lint
 | `MONGODB_URI` | Sí | Conexión MongoDB; sin ella la app falla al importar |
 | `BLOB_READ_WRITE_TOKEN` | Solo uploads | Vercel Blob para imágenes |
 | `UNSPLASH_ACCESS_KEY` | No | Placeholders al registrar salón |
-| `NEXT_PUBLIC_*_WHATSAPP_NUMBER` | No | Links WhatsApp |
+| `NEXT_PUBLIC_PLATFORM_WHATSAPP_NUMBER` | No | Superadmin: pagos de suscripción (`+5354148857` por defecto) |
+| `NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER` | No | **Obsoleto** — no usar; cada salón tiene su número en CMS |
 
 `.env.local` está gitignored. Recrear con `MONGODB_URI="mongodb://127.0.0.1:27017/nailsalon"` en local.
 

@@ -2,6 +2,10 @@
 import { useEffect, useState } from "react";
 import { ImageData, Categoria } from "@/lib/types";
 import Image from "next/image";
+import {
+  buildSalonWhatsAppLink,
+  resolveSalonWhatsapp,
+} from "@/lib/whatsapp";
 
 // Gallery item card component
 const GalleryItemCard = ({ imagen }: { imagen: ImageData }) => {
@@ -42,8 +46,37 @@ export default function DynamicInspirationGallery({ slug }: { slug?: string }) {
   const [galleryImages, setGalleryImages] = useState<ImageData[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [salonWhatsapp, setSalonWhatsapp] = useState<string | undefined>();
 
   const slugQuery = slug ? `?slug=${encodeURIComponent(slug)}` : "";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSalonContact() {
+      if (!slug) {
+        setSalonWhatsapp(undefined);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/salons/public?slug=${encodeURIComponent(slug)}`
+        );
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (data.success && data.data) {
+          setSalonWhatsapp(resolveSalonWhatsapp(data.data));
+        }
+      } catch {
+        // Sin contacto del salón, los CTAs de WhatsApp se ocultan
+      }
+    }
+
+    loadSalonContact();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +149,15 @@ export default function DynamicInspirationGallery({ slug }: { slug?: string }) {
   // Filter out empty categories
   const nonEmptyCategories = imagesByCategory.filter((group) => group.images.length > 0);
 
+  const referenceWaLink = buildSalonWhatsAppLink(
+    salonWhatsapp,
+    "Hola, quiero enviar una referencia de diseño"
+  );
+  const customDesignWaLink = buildSalonWhatsAppLink(
+    salonWhatsapp,
+    "Hola, quiero consultar sobre un diseño personalizado"
+  );
+
   return (
     <section className="py-12 sm:py-14 lg:py-16 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -180,23 +222,33 @@ export default function DynamicInspirationGallery({ slug }: { slug?: string }) {
               mente. Trae tu inspiración o déjanos sorprenderte con algo único.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <a
-                href="https://wa.me/+5363233073?text=Hola,%20quiero%20enviar%20una%20referencia%20de%20diseño"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base text-center"
-              >
-                📱 Enviar Referencia por WhatsApp
-              </a>
-              <a
-                href="https://wa.me/+5363233073?text=Hola,%20quiero%20consultar%20sobre%20un%20diseño%20personalizado"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-sm sm:text-base text-center"
-              >
-                💬 Consultar Diseño Personalizado
-              </a>
+              {referenceWaLink ? (
+                <a
+                  href={referenceWaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-500 dark:to-violet-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-blue-500/25 dark:hover:shadow-blue-400/25 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base text-center"
+                >
+                  📱 Enviar Referencia por WhatsApp
+                </a>
+              ) : null}
+              {customDesignWaLink ? (
+                <a
+                  href={customDesignWaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-sm sm:text-base text-center"
+                >
+                  💬 Consultar Diseño Personalizado
+                </a>
+              ) : null}
             </div>
+            {!referenceWaLink && !customDesignWaLink ? (
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                Configura el WhatsApp del salón en el panel para habilitar estos
+                enlaces.
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
