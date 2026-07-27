@@ -31,7 +31,10 @@ interface SubscriptionData {
   pendingPayment: {
     _id: string;
     codigoReferencia: string;
+    montoOriginal: number;
+    descuentoPorcentaje: number;
     montoFinal: number;
+    ciclo: BillingCycle;
     status: string;
   } | null;
   pendingCertificate: {
@@ -50,6 +53,7 @@ export default function SuscripcionPage() {
   const [loading, setLoading] = useState(true);
   const [ciclo, setCiclo] = useState<BillingCycle>("monthly");
   const [processing, setProcessing] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
   const [redeemCode, setRedeemCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [redeemMessage, setRedeemMessage] = useState<string | null>(null);
@@ -83,9 +87,32 @@ export default function SuscripcionPage() {
     loadData();
   }, [loadData]);
 
+  const openPaymentWhatsApp = (
+    paymentRequest: {
+      montoOriginal: number;
+      descuentoPorcentaje: number;
+      montoFinal: number;
+      codigoReferencia: string;
+    },
+    paymentCiclo: BillingCycle,
+    planNombre: string
+  ) => {
+    const details: SubscriptionPaymentDetails = {
+      salonNombre,
+      planNombre,
+      ciclo: paymentCiclo,
+      montoOriginal: paymentRequest.montoOriginal,
+      descuentoPorcentaje: paymentRequest.descuentoPorcentaje,
+      montoFinal: paymentRequest.montoFinal,
+      codigoReferencia: paymentRequest.codigoReferencia,
+    };
+    openSubscriptionPaymentWhatsApp(details);
+  };
+
   const handleSubscribe = async () => {
     if (!plan?._id) return;
     setProcessing(true);
+    setPaymentNotice(null);
     try {
       const res = await fetch("/api/subscriptions", {
         method: "POST",
@@ -94,17 +121,18 @@ export default function SuscripcionPage() {
       });
       const data = await res.json();
       if (data.success) {
-        const { paymentRequest, planNombre } = data.data;
-        const details: SubscriptionPaymentDetails = {
-          salonNombre,
-          planNombre,
-          ciclo,
-          montoOriginal: paymentRequest.montoOriginal,
-          descuentoPorcentaje: paymentRequest.descuentoPorcentaje,
-          montoFinal: paymentRequest.montoFinal,
-          codigoReferencia: paymentRequest.codigoReferencia,
-        };
-        openSubscriptionPaymentWhatsApp(details);
+        const { paymentRequest, planNombre, alreadyPending } = data.data;
+        openPaymentWhatsApp(paymentRequest, ciclo, planNombre);
+        if (alreadyPending) {
+          setPaymentNotice(
+            data.message ??
+              "Tu pago ya está en revisión. Puedes reenviar el comprobante por WhatsApp."
+          );
+        } else {
+          setPaymentNotice(
+            "Solicitud registrada. Envía el comprobante por WhatsApp para acelerar la verificación."
+          );
+        }
         await loadData();
       }
     } catch (e) {
@@ -112,6 +140,19 @@ export default function SuscripcionPage() {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const handleResendPendingPayment = () => {
+    const pending = subData?.pendingPayment;
+    if (!pending || !plan) return;
+    openPaymentWhatsApp(
+      pending,
+      pending.ciclo,
+      subData?.plan?.nombre ?? plan.nombre
+    );
+    setPaymentNotice(
+      "Reenviando comprobante con tu código de referencia existente. No se creó un pago nuevo."
+    );
   };
 
   const handleRedeem = async () => {
@@ -248,7 +289,7 @@ export default function SuscripcionPage() {
             </div>
             {subData.pendingPayment && (
               <span className="text-sm bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 px-3 py-1 rounded-full">
-                Pago pendiente: {subData.pendingPayment.codigoReferencia}
+                Pago en revisión: {subData.pendingPayment.codigoReferencia}
               </span>
             )}
           </div>
@@ -335,18 +376,43 @@ export default function SuscripcionPage() {
             </div>
           </div>
           <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-xs text-gray-600 dark:text-gray-400">
-            Al hacer clic en &quot;Pagar por WhatsApp&quot;, se abrirá WhatsApp
-            con un mensaje prellenado. Tras verificar tu pago, recibirás un
-            código de activación para canjear aquí.
+            {subData?.pendingPayment ? (
+              <>
+                Tu pago con código{" "}
+                <span className="font-mono font-medium">
+                  {subData.pendingPayment.codigoReferencia}
+                </span>{" "}
+                está siendo verificado por el equipo de ReservaSalón. Puedes
+                reenviar el comprobante por WhatsApp sin crear una solicitud
+                nueva.
+              </>
+            ) : (
+              <>
+                Al hacer clic en &quot;Pagar por WhatsApp&quot;, se abrirá
+                WhatsApp con un mensaje prellenado. Tras verificar tu pago,
+                recibirás un código de activación para canjear aquí.
+              </>
+            )}
           </div>
+          {paymentNotice && (
+            <p className="mt-3 text-sm text-amber-700 dark:text-amber-300" role="status">
+              {paymentNotice}
+            </p>
+          )}
           <Button
             variant="primary"
             fullWidth
             className="mt-4"
-            onClick={handleSubscribe}
+            onClick={
+              subData?.pendingPayment
+                ? handleResendPendingPayment
+                : handleSubscribe
+            }
             loading={processing}
           >
-            Pagar por WhatsApp
+            {subData?.pendingPayment
+              ? "Reenviar comprobante por WhatsApp"
+              : "Pagar por WhatsApp"}
           </Button>
         </div>
       )}
