@@ -14,6 +14,7 @@ import {
   SaveIcon,
   CloseIcon,
 } from "@/components/ui/Icons";
+import { getApiErrorMessage, parseApiJson } from "@/lib/api/fetch-utils";
 
 export default function ClientesAdminPanel() {
   const [clientes, setClientes] = useState<User[]>([]);
@@ -70,16 +71,17 @@ export default function ClientesAdminPanel() {
         body: JSON.stringify({ nombre, telefono }),
       });
 
-      const data = await res.json();
+      const data = await parseApiJson(res);
 
-      if (data.success) {
+      if (res.ok && data.success) {
         setActionMessage("✅ Cliente creado exitosamente");
         setCreatingCliente(false);
         loadClientes();
         setTimeout(() => setActionMessage(""), 3000);
       } else {
         setActionMessage(
-          "❌ " + (data.error || data.message || "Error al crear cliente")
+          "❌ " +
+            getApiErrorMessage(res, data, "Error al crear cliente")
         );
         setTimeout(() => setActionMessage(""), 3000);
       }

@@ -62,8 +62,18 @@ export function buildFinancialTransactionFilter(
   return match;
 }
 
+async function ensureFinanceCollection(db: Db, name: string): Promise<void> {
+  const exists = await db.listCollections({ name }, { nameOnly: true }).hasNext();
+  if (!exists) {
+    await db.createCollection(name);
+  }
+}
+
 export async function ensureFinancialQueryIndexes(db: Db): Promise<void> {
   if (financialIndexesReady) return;
+
+  await ensureFinanceCollection(db, Collections.FINANCIAL_TRANSACTIONS);
+  await ensureFinanceCollection(db, Collections.FINANCIAL_CATEGORIES);
 
   const col = db.collection(Collections.FINANCIAL_TRANSACTIONS);
   const indexes = await col.indexes();

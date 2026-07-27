@@ -1,15 +1,17 @@
 "use client";
 
-import { SerwistProvider } from "@serwist/turbopack/react";
+import dynamic from "next/dynamic";
+import type { ReactNode } from "react";
 
-export default function PwaProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <SerwistProvider
-      swUrl="/serwist/sw.js"
-      reloadOnOnline
-      cacheOnNavigation
-    >
-      {children}
-    </SerwistProvider>
-  );
+const SerwistPwaProvider =
+  process.env.NODE_ENV === "development"
+    ? null
+    : dynamic(() => import("./PwaProviderSerwist"), { ssr: false });
+
+export default function PwaProvider({ children }: { children: ReactNode }) {
+  if (process.env.NODE_ENV === "development" || !SerwistPwaProvider) {
+    return <>{children}</>;
+  }
+
+  return <SerwistPwaProvider>{children}</SerwistPwaProvider>;
 }

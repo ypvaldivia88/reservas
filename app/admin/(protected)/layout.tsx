@@ -9,6 +9,7 @@ import SalonOnboardingGuide from "@/components/admin/SalonOnboardingGuide";
 import PwaInstallPrompt from "@/components/admin/PwaInstallPrompt";
 import GracePeriodBanner from "@/components/admin/GracePeriodBanner";
 import SubscriptionGate from "@/components/admin/SubscriptionGate";
+import { PwaInstallProvider } from "@/contexts/PwaInstallContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import HamburgerButton from "@/components/HamburgerButton";
 import { Button } from "@/components/ui/Button";
@@ -53,6 +54,7 @@ export default function AdminProtectedLayout({
   };
 
   return (
+    <PwaInstallProvider>
     <div className="admin-shell min-h-screen">
       <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-3.5 lg:px-8">
@@ -125,5 +127,6 @@ export default function AdminProtectedLayout({
         </Suspense>
       )}
     </div>
+    </PwaInstallProvider>
   );
 }

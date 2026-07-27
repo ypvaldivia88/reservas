@@ -12,6 +12,8 @@ import {
   readOnboardingState,
 } from "@/lib/salon-onboarding";
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+import { usePwaInstallOptional } from "@/contexts/PwaInstallContext";
 
 interface AdminSidebarMenuProps {
   isOpen: boolean;
@@ -122,6 +124,7 @@ export default function AdminSidebarMenu({
 }: AdminSidebarMenuProps) {
   const pathname = usePathname();
   const [showGuideInSidebar, setShowGuideInSidebar] = useState(false);
+  const pwaInstall = usePwaInstallOptional();
 
   useEffect(() => {
     if (isPlatformRoute) return;
@@ -197,6 +200,33 @@ export default function AdminSidebarMenu({
               </svg>
             </span>
             <span className="text-base">Guía de configuración</span>
+          </button>
+        </div>
+      )}
+
+      {!isPlatformRoute && pwaInstall?.canInstall && (
+        <div
+          className={
+            showGuideInSidebar
+              ? "mt-1.5"
+              : "mt-4 border-t border-border/60 pt-4"
+          }
+        >
+          <button
+            type="button"
+            onClick={() => {
+              void pwaInstall.installApp();
+              onClose();
+            }}
+            disabled={pwaInstall.installing}
+            className="group flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left font-medium text-foreground transition-all duration-200 hover:bg-muted hover:text-primary active:scale-[0.98] disabled:opacity-60"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+              <Download className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-base">
+              {pwaInstall.installing ? "Instalando…" : "Instalar app"}
+            </span>
           </button>
         </div>
       )}

@@ -93,16 +93,6 @@ const nextAppCache: RuntimeCaching[] = [
     }),
   },
   {
-    matcher: ({ sameOrigin, url: { pathname } }) =>
-      sameOrigin && pathname.startsWith("/api/"),
-    method: "GET",
-    handler: new NetworkFirst({
-      cacheName: "reservas-api",
-      networkTimeoutSeconds: 4,
-      plugins: expire(80, DAY),
-    }),
-  },
-  {
     matcher: ({ request, url: { pathname }, sameOrigin }) =>
       sameOrigin &&
       isAdminPath(pathname) &&

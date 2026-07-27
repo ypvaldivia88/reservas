@@ -1,64 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-
-const DISMISS_KEY = "reservas:pwa-install-dismissed";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import { usePwaInstallOptional } from "@/contexts/PwaInstallContext";
 
 export default function PwaInstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
-    null
-  );
-  const [visible, setVisible] = useState(false);
-  const [installing, setInstalling] = useState(false);
+  const pwa = usePwaInstallOptional();
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(DISMISS_KEY) === "1") return;
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
+  if (!pwa?.showBanner) return null;
 
-    const onBeforeInstall = (event: Event) => {
-      event.preventDefault();
-      setDeferred(event as BeforeInstallPromptEvent);
-      setVisible(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    return () =>
-      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-  }, []);
-
-  const dismiss = () => {
-    localStorage.setItem(DISMISS_KEY, "1");
-    setVisible(false);
-    setDeferred(null);
-  };
-
-  const install = async () => {
-    if (!deferred) return;
-    setInstalling(true);
-    try {
-      await deferred.prompt();
-      const { outcome } = await deferred.userChoice;
-      if (outcome === "accepted") {
-        setVisible(false);
-      } else {
-        dismiss();
-      }
-    } finally {
-      setInstalling(false);
-      setDeferred(null);
-    }
-  };
-
-  if (!visible || !deferred) return null;
+  const { dismissBanner, installApp, installing } = pwa;
 
   return (
     <div
@@ -85,7 +37,7 @@ export default function PwaInstallPrompt() {
             </div>
             <button
               type="button"
-              onClick={dismiss}
+              onClick={dismissBanner}
               className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Cerrar aviso de instalación"
             >
@@ -96,7 +48,7 @@ export default function PwaInstallPrompt() {
         <div className="flex items-center justify-end gap-2 border-t border-border/80 px-4 py-2.5">
           <button
             type="button"
-            onClick={dismiss}
+            onClick={dismissBanner}
             className="px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             Ahora no
@@ -106,7 +58,7 @@ export default function PwaInstallPrompt() {
             variant="primary"
             size="sm"
             loading={installing}
-            onClick={install}
+            onClick={installApp}
             icon={<Download className="size-3.5" />}
           >
             Instalar app

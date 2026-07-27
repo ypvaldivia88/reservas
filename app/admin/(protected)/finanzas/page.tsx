@@ -14,6 +14,7 @@ import FinanzasOverview from "@/components/admin/finanzas/FinanzasOverview";
 import FinanzasTransactionsPanel from "@/components/admin/finanzas/FinanzasTransactionsPanel";
 import { DatePreset } from "@/components/admin/finanzas/FinanzasPeriodFilter";
 import { useOnlineStatus } from "@/lib/hooks/useOnlineStatus";
+import { getApiErrorMessage, parseApiJson } from "@/lib/api/fetch-utils";
 
 const SYNC_STORAGE_KEY = "finanzas_last_sync_at";
 
@@ -123,18 +124,26 @@ export default function FinanzasPage() {
           `/api/finanzas/dashboard?desde=${desde}&hasta=${hasta}${tipoParam}${metodoParam}`
         );
 
-        if (!res.ok) {
-          throw new Error("Error en la respuesta del servidor");
+        const data = await parseApiJson<{
+          transactions: FinancialTransaction[];
+          categories: FinancialCategory[];
+          report: FinancialReport;
+        }>(res);
+
+        if (!res.ok || !data.success) {
+          setError(
+            getApiErrorMessage(
+              res,
+              data,
+              "No se pudieron cargar las finanzas. Intenta de nuevo."
+            )
+          );
+          return;
         }
 
-        const data = await res.json();
-        if (!data.success) {
-          throw new Error("No se pudieron obtener los datos de finanzas");
-        }
-
-        setTransactions(data.data.transactions);
-        setCategories(data.data.categories);
-        setReport(data.data.report);
+        setTransactions(data.data!.transactions);
+        setCategories(data.data!.categories);
+        setReport(data.data!.report);
       } catch (e) {
         console.error(e);
         setError("No se pudieron cargar las finanzas. Intenta de nuevo.");
@@ -201,8 +210,8 @@ export default function FinanzasPage() {
         cobroTransferencia,
       }),
     });
-    const data = await res.json();
-    if (data.success) {
+    const data = await parseApiJson(res);
+    if (res.ok && data.success) {
       setShowForm(false);
       setFormError("");
       setForm({
@@ -215,7 +224,9 @@ export default function FinanzasPage() {
       });
       await fetchDashboard();
     } else {
-      setFormError(data.error || "No se pudo registrar la transacción");
+      setFormError(
+        getApiErrorMessage(res, data, "No se pudo registrar la transacción")
+      );
     }
   };
 
