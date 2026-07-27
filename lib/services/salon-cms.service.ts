@@ -6,13 +6,19 @@ import {
 } from "@/lib/business-templates";
 import { salonRepository } from "@/lib/repositories/salon.repository";
 import {
+  assertPublicTenantOperational,
+  getTenantAccessForSalon,
+} from "@/lib/services/tenant-access.service";
+import type { SubscriptionAccessState } from "@/lib/subscription";
+import { DEFAULT_SALON_ID } from "@/lib/tenant";
+import {
   BusinessTemplate,
   Salon,
   SalonCmsUpdateRequest,
   SalonDirectoryItem,
   SalonPublicProfile,
 } from "@/lib/types";
-import { DEFAULT_SALON_ID } from "@/lib/tenant";
+import { cache } from "react";
 
 function toPublicProfile(salon: Salon): SalonPublicProfile {
   const template =
@@ -45,7 +51,42 @@ function toPublicProfile(salon: Salon): SalonPublicProfile {
   };
 }
 
-import { assertPublicTenantOperational } from "@/lib/services/tenant-access.service";
+export type PublicSalonResolution =
+  | { kind: "available"; profile: SalonPublicProfile }
+  | {
+      kind: "unavailable";
+      profile: SalonPublicProfile;
+      accessState: SubscriptionAccessState;
+    };
+
+async function resolvePublicSalonBySlugImpl(
+  slug: string
+): Promise<PublicSalonResolution> {
+  const salon = await salonRepository.findBySlug(slug);
+  if (!salon) {
+    throw AppError.notFound("Salón no encontrado");
+  }
+
+  const profile = toPublicProfile(salon);
+
+  if (salon.status !== "active") {
+    return { kind: "unavailable", profile, accessState: "suspended" };
+  }
+
+  const { access } = await getTenantAccessForSalon(salon.salonId);
+
+  if (access.isOperational) {
+    return { kind: "available", profile };
+  }
+
+  return {
+    kind: "unavailable",
+    profile,
+    accessState: access.accessState,
+  };
+}
+
+export const resolvePublicSalonBySlug = cache(resolvePublicSalonBySlugImpl);
 
 export class SalonCmsService {
   async getPublicBySlug(slug: string): Promise<SalonPublicProfile> {

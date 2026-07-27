@@ -5,12 +5,15 @@ import TenantBrandingProvider from "@/components/TenantBrandingProvider";
 import TenantFooter from "@/components/TenantFooter";
 import ReservaForm from "@/components/ReservaForm";
 import SurfaceCard from "@/components/design/SurfaceCard";
-import { salonCmsService } from "@/lib/services/salon-cms.service";
+import TenantUnavailablePage from "@/components/TenantUnavailablePage";
+import { resolvePublicSalonBySlug } from "@/lib/services/salon-cms.service";
 import {
   buildSalonWhatsAppLink,
   resolveSalonWhatsapp,
 } from "@/lib/whatsapp";
 import { getReservaTemplateConfig } from "@/lib/reserva-template-config";
+import type { SubscriptionAccessState } from "@/lib/subscription";
+import type { SalonPublicProfile } from "@/lib/types";
 
 interface ReservaPageProps {
   searchParams: Promise<{ slug?: string }>;
@@ -21,14 +24,41 @@ export default async function ReservaPage({ searchParams }: ReservaPageProps) {
 
   let header = <Header isHomePage={false} />;
   let profile = null;
+  let unavailable: {
+    profile: SalonPublicProfile;
+    accessState: SubscriptionAccessState;
+  } | null = null;
 
   if (slug) {
     try {
-      profile = await salonCmsService.getPublicBySlug(slug);
-      header = <TenantHeader profile={profile} isHomePage={false} />;
+      const resolution = await resolvePublicSalonBySlug(slug);
+      if (resolution.kind === "unavailable") {
+        unavailable = {
+          profile: resolution.profile,
+          accessState: resolution.accessState,
+        };
+        header = (
+          <TenantHeader profile={resolution.profile} isHomePage={false} />
+        );
+      } else {
+        profile = resolution.profile;
+        header = <TenantHeader profile={profile} isHomePage={false} />;
+      }
     } catch {
-      // Sin slug válido, se mantiene el header genérico
+      // Slug inválido: se mantiene el header genérico
     }
+  }
+
+  if (unavailable) {
+    return (
+      <TenantBrandingProvider branding={unavailable.profile.branding}>
+        {header}
+        <TenantUnavailablePage
+          profile={unavailable.profile}
+          accessState={unavailable.accessState}
+        />
+      </TenantBrandingProvider>
+    );
   }
 
   const salonWhatsapp = profile ? resolveSalonWhatsapp(profile) : undefined;
