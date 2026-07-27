@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -6,6 +6,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import AdminInitializer from "@/components/AdminInitializer";
 import AppHeader from "@/components/AppHeader";
+import PwaProvider from "@/components/PwaProvider";
+
+const APP_NAME = "ReservaSalón";
 
 const displayFont = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -20,9 +23,18 @@ const bodyFont = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
+  applicationName: APP_NAME,
   title: "ReservaSalón — Reservas online para tu salón",
   description:
     "Crea la página web de tu salón, gestiona citas en línea y comparte un enlace único con tus clientes. 14 días de prueba gratis.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
   keywords: [
     "reservas",
     "salon",
@@ -46,6 +58,13 @@ export const metadata: Metadata = {
     locale: "es_ES",
     siteName: "ReservaSalón",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#1a9e8f" },
+    { media: "(prefers-color-scheme: dark)", color: "#134e4a" },
+  ],
 };
 
 export default function RootLayout({
@@ -82,9 +101,11 @@ export default function RootLayout({
           Saltar al contenido
         </a>
         <ThemeProvider>
-          <AdminInitializer />
-          <AppHeader />
-          {children}
+          <PwaProvider>
+            <AdminInitializer />
+            <AppHeader />
+            {children}
+          </PwaProvider>
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />
