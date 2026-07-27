@@ -1,5 +1,3 @@
-"use client";
-
 import { Suspense } from "react";
 import PlatformTenantsPage from "./tenants-page";
 
