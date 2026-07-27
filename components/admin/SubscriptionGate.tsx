@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { isOnboardingSetupPath } from "@/lib/salon-onboarding";
 
 const ALLOWED_PATHS = ["/admin/suscripcion", "/admin/perfil"];
 
@@ -21,7 +22,9 @@ export default function SubscriptionGate({
       return;
     }
 
-    const isAllowed = ALLOWED_PATHS.some((p) => pathname.startsWith(p));
+    const isAllowed =
+      ALLOWED_PATHS.some((p) => pathname.startsWith(p)) ||
+      isOnboardingSetupPath(pathname);
 
     fetch("/api/subscriptions", { cache: "no-store" })
       .then((r) => r.json())

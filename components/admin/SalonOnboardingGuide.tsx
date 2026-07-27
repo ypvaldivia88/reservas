@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   Check,
   ChevronDown,
+  Circle,
   CircleHelp,
   ExternalLink,
   Sparkles,
@@ -18,14 +18,16 @@ import {
   consumeWelcomePending,
   markStepVisited,
   markWelcomePending,
+  matchOnboardingStepPath,
   ONBOARDING_OPEN_EVENT,
   ONBOARDING_STEPS,
   OnboardingState,
   OnboardingStep,
   OnboardingStepId,
+  OnboardingStepStatus,
   readOnboardingState,
   readVisitedSteps,
-  resolveStepCompletion,
+  resolveStepStatuses,
   shouldShowOnboardingHelpFab,
   shouldShowOnboardingPanel,
   isOnboardingFinished,
@@ -193,22 +195,44 @@ function WelcomeModal({
   );
 }
 
+function StepStatusBadge({ status }: { status: OnboardingStepStatus }) {
+  if (status === "completed") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
+        <Check className="size-2.5" strokeWidth={3} />
+        Completado
+      </span>
+    );
+  }
+  if (status === "visited") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-300">
+        <Circle className="size-2 fill-current" />
+        Visitado
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+      Pendiente
+    </span>
+  );
+}
+
 function StepRow({
   step,
   stepNumber,
-  done,
-  slug,
+  status,
   isCurrent,
-  onNavigate,
+  onGoToStep,
 }: {
   step: OnboardingStep;
   stepNumber: number;
-  done: boolean;
-  slug: string;
+  status: OnboardingStepStatus;
   isCurrent: boolean;
-  onNavigate: (stepId: OnboardingStepId, href: string, external?: boolean) => void;
+  onGoToStep: (step: OnboardingStep) => void;
 }) {
-  const href = stepHref(step, slug);
+  const done = status === "completed";
   const content = (
     <>
       <span
@@ -216,17 +240,19 @@ function StepRow({
           "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors",
           done
             ? "border-primary/30 bg-primary/15 text-primary"
-            : "border-border bg-background text-muted-foreground"
+            : status === "visited"
+              ? "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+              : "border-border bg-background text-muted-foreground"
         )}
       >
         {done ? <Check className="size-3.5" strokeWidth={2.5} /> : stepNumber}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
+        <span className="flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              "block text-sm font-semibold",
-              done && "text-muted-foreground line-through decoration-muted-foreground/50"
+              "text-sm font-semibold",
+              done && "text-muted-foreground"
             )}
           >
             {step.title}
@@ -234,6 +260,7 @@ function StepRow({
           {step.external && (
             <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
           )}
+          <StepStatusBadge status={status} />
         </span>
         <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
           {step.description}
@@ -252,38 +279,23 @@ function StepRow({
 
   if (done) {
     return (
-      <div className="flex items-start gap-3 rounded-xl px-2 py-2 opacity-80">
+      <div className="flex items-start gap-3 rounded-xl px-2 py-2 opacity-90">
         {content}
       </div>
     );
   }
 
-  if (step.external) {
-    return (
-      <button
-        type="button"
-        onClick={() => onNavigate(step.id, href, true)}
-        className={cn(
-          "flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          isCurrent && "bg-primary/5 ring-1 ring-primary/20"
-        )}
-      >
-        {content}
-      </button>
-    );
-  }
-
   return (
-    <Link
-      href={href}
-      onClick={() => onNavigate(step.id, href)}
+    <button
+      type="button"
+      onClick={() => onGoToStep(step)}
       className={cn(
-        "flex items-start gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isCurrent && "bg-primary/5 ring-1 ring-primary/20"
       )}
     >
       {content}
-    </Link>
+    </button>
   );
 }
 
@@ -419,37 +431,37 @@ export default function SalonOnboardingGuide() {
   useEffect(() => {
     const handleOpenGuide = () => {
       if (!salon) return;
-      persistState({ ...state, status: "active" }, salon.salonId);
+      setState((prev) => {
+        const next = { ...prev, status: "active" as const };
+        writeOnboardingState(salon.salonId, next);
+        return next;
+      });
       setExpanded(true);
       setShowWelcome(false);
     };
 
     window.addEventListener(ONBOARDING_OPEN_EVENT, handleOpenGuide);
     return () => window.removeEventListener(ONBOARDING_OPEN_EVENT, handleOpenGuide);
-  }, [persistState, salon, state]);
+  }, [salon]);
 
   useEffect(() => {
     if (!salon) return;
 
-    const matched = ONBOARDING_STEPS.find((step) => {
-      if (step.external) return false;
-      return pathname.startsWith(step.href);
-    });
-
+    const matched = matchOnboardingStepPath(pathname);
     if (!matched) return;
 
-    markStepVisited(salon.salonId, matched.id);
+    markStepVisited(salon.salonId, matched);
     setVisited((current) =>
-      current.includes(matched.id) ? current : [...current, matched.id]
+      current.includes(matched) ? current : [...current, matched]
     );
   }, [pathname, salon]);
 
-  const completion = useMemo(() => {
+  const stepStatuses = useMemo(() => {
     if (!salon) {
-      return {} as Record<OnboardingStepId, boolean>;
+      return {} as Record<OnboardingStepId, OnboardingStepStatus>;
     }
 
-    return resolveStepCompletion({
+    return resolveStepStatuses({
       visited,
       manualCompleted: state.manualCompleted,
       hasContactInfo: salon.hasContactInfo,
@@ -461,48 +473,48 @@ export default function SalonOnboardingGuide() {
   }, [hasPricedServices, hasRealImages, salon, state.manualCompleted, visited]);
 
   const completedCount = ONBOARDING_STEPS.filter(
-    (step) => completion[step.id]
+    (step) => stepStatuses[step.id] === "completed"
   ).length;
   const allDone = completedCount === ONBOARDING_STEPS.length;
 
-  const currentStep = ONBOARDING_STEPS.find((step) => !completion[step.id]);
+  const currentStep = ONBOARDING_STEPS.find(
+    (step) => stepStatuses[step.id] !== "completed"
+  );
 
-  const handleNavigate = (
-    stepId: OnboardingStepId,
-    href: string,
-    external?: boolean
-  ) => {
-    if (!salon) return;
+  const goToStep = useCallback(
+    (step: OnboardingStep) => {
+      if (!salon) return;
 
-    markStepVisited(salon.salonId, stepId);
-    setVisited((current) =>
-      current.includes(stepId) ? current : [...current, stepId]
-    );
-
-    if (external) {
-      window.open(href, "_blank", "noopener,noreferrer");
-      persistState(
-        {
-          ...state,
-          manualCompleted: state.manualCompleted.includes(stepId)
-            ? state.manualCompleted
-            : [...state.manualCompleted, stepId],
-        },
-        salon.salonId
+      const href = stepHref(step, salon.slug);
+      markStepVisited(salon.salonId, step.id);
+      setVisited((current) =>
+        current.includes(step.id) ? current : [...current, step.id]
       );
-    }
-  };
+      setShowWelcome(false);
+
+      if (step.external) {
+        window.open(href, "_blank", "noopener,noreferrer");
+        const manualCompleted = state.manualCompleted.includes(step.id)
+          ? state.manualCompleted
+          : [...state.manualCompleted, step.id];
+        persistState(
+          { status: "active", manualCompleted },
+          salon.salonId
+        );
+        return;
+      }
+
+      persistState({ ...state, status: "active" }, salon.salonId);
+      router.push(href);
+    },
+    [persistState, router, salon, state]
+  );
 
   const handleStart = () => {
     setShowWelcome(false);
     restore();
     if (currentStep) {
-      const href = stepHref(currentStep, salon?.slug ?? "");
-      if (currentStep.external) {
-        handleNavigate(currentStep.id, href, true);
-      } else {
-        router.push(href);
-      }
+      goToStep(currentStep);
     }
   };
 
@@ -614,12 +626,11 @@ export default function SalonOnboardingGuide() {
                 key={step.id}
                 step={step}
                 stepNumber={index + 1}
-                done={completion[step.id]}
-                    slug={salon.slug}
-                    isCurrent={currentStep?.id === step.id}
-                    onNavigate={handleNavigate}
-                  />
-                ))}
+                status={stepStatuses[step.id] ?? "pending"}
+                isCurrent={currentStep?.id === step.id}
+                onGoToStep={goToStep}
+              />
+            ))}
               </div>
             )}
 
@@ -636,14 +647,7 @@ export default function SalonOnboardingGuide() {
                   type="button"
                   variant="primary"
                   size="sm"
-                  onClick={() => {
-                    const href = stepHref(currentStep, salon.slug);
-                    if (currentStep.external) {
-                      handleNavigate(currentStep.id, href, true);
-                    } else {
-                      router.push(href);
-                    }
-                  }}
+                  onClick={() => goToStep(currentStep)}
                   icon={
                     currentStep.external ? (
                       <ExternalLink className="size-3.5" />
