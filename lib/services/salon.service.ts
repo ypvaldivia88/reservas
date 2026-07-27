@@ -181,6 +181,28 @@ export class SalonService {
   async listWithSubscriptions() {
     const salons = await salonRepository.listAll();
     const db = await getDb();
+    const salonIds = salons.map((salon) => salon.salonId);
+
+    const adminUsers =
+      salonIds.length > 0
+        ? await db
+            .collection(Collections.USERS)
+            .find({
+              salonId: { $in: salonIds },
+              role: { $in: ["salon_admin", "admin"] },
+              telefono: { $exists: true, $nin: [null, ""] },
+            })
+            .project({ salonId: 1, telefono: 1 })
+            .toArray()
+        : [];
+
+    const adminPhoneBySalon = new Map<string, string>();
+    for (const user of adminUsers) {
+      const phone = String(user.telefono ?? "").trim();
+      if (phone && !adminPhoneBySalon.has(user.salonId)) {
+        adminPhoneBySalon.set(user.salonId, phone);
+      }
+    }
 
     return Promise.all(
       salons.map(async (salon) => {
@@ -219,6 +241,12 @@ export class SalonService {
         return {
           ...salon,
           _id: salon._id?.toString(),
+          contactPhone:
+            adminPhoneBySalon.get(salon.salonId) ||
+            salon.whatsappNumber?.trim() ||
+            salon.contact?.phone?.trim() ||
+            salon.social?.whatsapp?.trim() ||
+            undefined,
           subscription,
           planNombre,
           pendingPayments,

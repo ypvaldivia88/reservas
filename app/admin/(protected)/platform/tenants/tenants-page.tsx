@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { MessageCircle } from "lucide-react";
 import PlatformNav from "@/components/PlatformNav";
 import SurfaceCard from "@/components/design/SurfaceCard";
 import { SegmentedControl, StatusPill } from "@/components/design/dashboard";
 import { getAccessStateLabel } from "@/lib/subscription";
+import { buildSalonWhatsAppLink } from "@/lib/whatsapp";
 import type { SubscriptionAccessState } from "@/lib/subscription";
 
 interface SalonItem {
@@ -14,12 +16,21 @@ interface SalonItem {
   slug: string;
   nombre: string;
   status: string;
+  contactPhone?: string;
   planNombre?: string;
   accessState: SubscriptionAccessState;
   graceDaysRemaining: number;
   pendingPayments: number;
   hasPendingCertificate: boolean;
   subscription?: { status: string; periodoFin?: string };
+}
+
+function buildTenantWhatsAppLink(salon: SalonItem): string | null {
+  if (!salon.contactPhone) return null;
+  return buildSalonWhatsAppLink(
+    salon.contactPhone,
+    `Hola ${salon.nombre}, te escribo desde el equipo de ReservaSalón.`
+  );
 }
 
 type TenantFilter =
@@ -126,6 +137,7 @@ export default function PlatformTenantsPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-4 py-3 text-left">Salón</th>
+                  <th className="px-4 py-3 text-left">Contacto</th>
                   <th className="px-4 py-3 text-left">Estado</th>
                   <th className="px-4 py-3 text-left">Plan</th>
                   <th className="px-4 py-3 text-left">Vence</th>
@@ -133,7 +145,9 @@ export default function PlatformTenantsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((s) => (
+                {filtered.map((s) => {
+                  const whatsappLink = buildTenantWhatsAppLink(s);
+                  return (
                   <tr key={s.salonId} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <Link
@@ -145,6 +159,27 @@ export default function PlatformTenantsPage() {
                       <p className="font-mono text-xs text-muted-foreground">
                         {s.slug}
                       </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      {whatsappLink ? (
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/25 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-800 transition-colors hover:bg-emerald-500/15 dark:text-emerald-300"
+                          aria-label={`Contactar a ${s.nombre} por WhatsApp`}
+                        >
+                          <MessageCircle className="size-3.5 shrink-0" />
+                          WhatsApp
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                      {s.contactPhone && (
+                        <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                          {s.contactPhone}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusPill variant={statusVariant(s.accessState)}>
@@ -172,7 +207,8 @@ export default function PlatformTenantsPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             {filtered.length === 0 && (
