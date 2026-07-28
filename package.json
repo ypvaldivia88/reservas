@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "pwa:icons": "npx tsx scripts/generate-pwa-icons.ts",
     "test": "echo \"No tests specified\" && exit 0",
     "clean": "rm -rf .next out",
     "migrate:multi-tenant": "npx tsx scripts/migrate-multi-tenant.ts"
@@ -48,6 +48,7 @@
     "serwist": "^9.5.12",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
+    "to-ico": "^1.1.5",
     "typescript": "^5"
   }
 }
