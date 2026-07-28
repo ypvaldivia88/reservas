@@ -3,6 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
+import PlatformNav from "@/components/PlatformNav";
+import PlatformLogo from "@/components/PlatformLogo";
+import BrandMark from "@/components/BrandMark";
 import AdminSidebarMenu from "@/components/AdminSidebarMenu";
 import AdminRoleGuard from "@/components/AdminRoleGuard";
 import SalonOnboardingGuide from "@/components/admin/SalonOnboardingGuide";
@@ -22,6 +25,11 @@ export default function AdminProtectedLayout({
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tenantPublicHref, setTenantPublicHref] = useState<string | null>(null);
+  const [tenantBrand, setTenantBrand] = useState<{
+    nombre: string;
+    logoUrl?: string;
+    primaryColor?: string;
+  } | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const isPlatformRoute = pathname.startsWith("/admin/platform");
@@ -36,8 +44,16 @@ export default function AdminProtectedLayout({
     fetch("/api/salons/current")
       .then((r) => r.json())
       .then((data) => {
-        const slug = data.success ? (data.data?.slug as string | undefined) : undefined;
+        if (!data.success) return;
+        const slug = data.data?.slug as string | undefined;
         if (slug) setTenantPublicHref(`/${slug}`);
+        const cms = data.data?.cms;
+        setTenantBrand({
+          nombre: (data.data?.nombre as string) ?? cms?.nombre ?? "Mi salón",
+          logoUrl:
+            cms?.branding?.logoSmallUrl || cms?.branding?.logoUrl || undefined,
+          primaryColor: cms?.branding?.primaryColor,
+        });
       })
       .catch(() => {});
   }, [isPlatformRoute, pathname]);
@@ -60,14 +76,21 @@ export default function AdminProtectedLayout({
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-3.5 lg:px-8">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm sm:size-10">
-                <svg className="size-4 sm:size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
+              {isPlatformRoute ? (
+                <PlatformLogo size="sm" href="/admin/platform" />
+              ) : (
+                <BrandMark
+                  name={tenantBrand?.nombre ?? "Salón"}
+                  logoUrl={tenantBrand?.logoUrl}
+                  primaryColor={tenantBrand?.primaryColor}
+                  size="md"
+                />
+              )}
               <div className="min-w-0">
                 <h1 className="truncate text-base font-bold tracking-tight sm:text-xl">
-                  Administración
+                  {isPlatformRoute
+                    ? "Administración"
+                    : tenantBrand?.nombre ?? "Administración"}
                 </h1>
                 <p className="truncate text-xs text-muted-foreground">
                   {isPlatformRoute ? "Panel de plataforma" : "Gestión del salón"}
@@ -104,7 +127,7 @@ export default function AdminProtectedLayout({
         isPlatformRoute={isPlatformRoute}
       />
 
-      {!isPlatformRoute && <AdminNav />}
+      {isPlatformRoute ? <PlatformNav /> : <AdminNav />}
 
       <div
         className="admin-main mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8 lg:px-8"

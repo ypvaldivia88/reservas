@@ -1,16 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import PlatformNav from "@/components/PlatformNav";
 import { Button } from "@/components/ui/Button";
 import { SaveIcon } from "@/components/ui/Icons";
 import { UserProfile } from "@/lib/types";
 
 export default function PerfilPage() {
-  const pathname = usePathname();
-  const isPlatform = pathname.startsWith("/admin/platform");
-
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [nombre, setNombre] = useState("");
   const [username, setUsername] = useState("");
@@ -93,10 +88,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <>
-      {isPlatform && <PlatformNav />}
-
-      <div className="space-y-8 max-w-2xl">
+    <div className="max-w-2xl space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Mi Perfil
@@ -236,7 +228,6 @@ export default function PerfilPage() {
             Actualizar contraseña
           </Button>
         </form>
-      </div>
-    </>
+    </div>
   );
 }

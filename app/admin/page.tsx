@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import SurfaceCard from "@/components/design/SurfaceCard";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
+import PlatformLogo from "@/components/PlatformLogo";
+import { ArrowLeft } from "lucide-react";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -55,8 +56,8 @@ export default function AdminLogin() {
         </Link>
         <SurfaceCard padding="lg" className="shadow-md">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <LockKeyhole className="size-6" aria-hidden />
+            <div className="mx-auto mb-4 flex justify-center">
+              <PlatformLogo size="lg" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Acceso administrador

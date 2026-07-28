@@ -7,8 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import AdminInitializer from "@/components/AdminInitializer";
 import AppHeader from "@/components/AppHeader";
 import PwaProvider from "@/components/PwaProvider";
-
-const APP_NAME = "ReservaSalón";
+import { PLATFORM_LOGO } from "@/lib/platform-brand";
 
 const displayFont = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -22,8 +21,14 @@ const bodyFont = IBM_Plex_Sans({
   weight: ["400", "500", "600"],
 });
 
+const APP_NAME = "ReservaSalón";
+
 export const metadata: Metadata = {
   applicationName: APP_NAME,
+  icons: {
+    icon: [{ url: PLATFORM_LOGO.mark, type: "image/svg+xml" }],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   title: "ReservaSalón — Reservas online para tu salón",
   description:
     "Crea la página web de tu salón, gestiona citas en línea y comparte un enlace único con tus clientes. 14 días de prueba gratis.",

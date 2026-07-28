@@ -5,6 +5,7 @@ import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import HamburgerButton from "./HamburgerButton";
 import MobileNavDrawer, { MobileNavLink } from "./MobileNavDrawer";
+import PlatformLogo from "./PlatformLogo";
 
 const navLinks = [
   { href: "/#salones", label: "Salones" },
@@ -24,17 +25,7 @@ export default function PlatformHeader() {
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between sm:h-[4.5rem]">
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
-            >
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-                R
-              </div>
-              <span className="text-lg font-semibold tracking-tight">
-                ReservaSalón
-              </span>
-            </Link>
+            <PlatformLogo variant="full" size="md" href="/" />
 
             <nav
               className="hidden items-center gap-7 md:flex"

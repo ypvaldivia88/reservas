@@ -1,4 +1,6 @@
 import Link from "next/link";
+import PlatformLogo from "@/components/PlatformLogo";
+import { PLATFORM_TAGLINE } from "@/lib/platform-brand";
 
 export default function PlatformFooter() {
   const year = new Date().getFullYear();
@@ -7,20 +9,18 @@ export default function PlatformFooter() {
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-              R
-            </div>
-            <div>
-              <p className="font-semibold">ReservaSalón</p>
-              <p className="text-sm text-muted-foreground">
-                Reservas online para salones
+          <div className="flex min-w-0 items-center gap-3">
+            <PlatformLogo variant="full" size="md" />
+            <div className="min-w-0">
+              <p className="truncate font-semibold">ReservaSalón</p>
+              <p className="truncate text-sm text-muted-foreground">
+                {PLATFORM_TAGLINE}
               </p>
             </div>
           </div>
 
           <nav
-            className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground"
+            className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground sm:gap-6"
             aria-label="Enlaces del pie de página"
           >
             <Link href="/registro" className="hover:text-foreground">

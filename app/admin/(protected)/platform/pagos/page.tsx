@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { CreditCard, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import PlatformNav from "@/components/PlatformNav";
 import SurfaceCard from "@/components/design/SurfaceCard";
 import CertificateIssuedDialog, {
   IssuedCertificate,
@@ -82,7 +81,6 @@ export default function PlatformPagosPage() {
 
   return (
     <>
-      <PlatformNav />
       <CertificateIssuedDialog
         certificate={issuedCertificate}
         onClose={() => setIssuedCertificate(null)}
@@ -141,8 +139,8 @@ export default function PlatformPagosPage() {
               <SurfaceCard key={p._id} padding="default">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="font-semibold">
-                      {p.salonNombre ?? "Salón"} — {p.planNombre ?? "Plan"}
+                    <p className="font-semibold truncate">
+                      {p.salonNombre ?? "Salón"}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {getBillingCycleLabel(p.ciclo as BillingCycle)} ·{" "}

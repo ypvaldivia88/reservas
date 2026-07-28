@@ -15,6 +15,12 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["business", "productivity"],
     icons: [
       {
+        src: "/brand/logo-mark.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+      {
         src: "/pwa/icon-192.png",
         sizes: "192x192",
         type: "image/png",

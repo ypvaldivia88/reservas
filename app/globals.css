@@ -500,3 +500,12 @@
 .footer-heading {
   @apply text-xs font-semibold uppercase tracking-[0.14em] text-white/45;
 }
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

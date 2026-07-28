@@ -9,7 +9,6 @@ import {
   KeyRound,
   CreditCard,
 } from "lucide-react";
-import PlatformNav from "@/components/PlatformNav";
 import SurfaceCard from "@/components/design/SurfaceCard";
 import { MetricDashboardCard } from "@/components/design/dashboard";
 import { getAccessStateLabel } from "@/lib/subscription";
@@ -65,13 +64,11 @@ export default function PlatformDashboardPage() {
   }, []);
 
   return (
-    <>
-      <PlatformNav />
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Resumen de plataforma</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Vista general de tenants, suscripciones y alertas
+            Vista general de salones, suscripciones y alertas
           </p>
         </div>
 
@@ -135,7 +132,7 @@ export default function PlatformDashboardPage() {
                 href="/admin/platform/tenants"
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
               >
-                Ver todos los tenants
+                Ver todos los salones
               </Link>
               <Link
                 href="/admin/platform/pagos"
@@ -156,10 +153,10 @@ export default function PlatformDashboardPage() {
                     <Link
                       key={s.salonId}
                       href={`/admin/platform/tenants/${s.salonId}`}
-                      className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/50"
+                      className="flex flex-col gap-1 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <span className="font-medium">{s.nombre}</span>
-                      <span className="text-muted-foreground">
+                      <span className="min-w-0 truncate font-medium">{s.nombre}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground sm:text-sm">
                         {getAccessStateLabel(s.accessState)}
                         {s.pendingPayments > 0 && " · Pago pendiente"}
                         {s.hasPendingCertificate && " · Cert. pendiente"}
@@ -174,13 +171,12 @@ export default function PlatformDashboardPage() {
               <SurfaceCard padding="lg" className="text-center">
                 <CheckCircle2 className="mx-auto size-8 text-green-600 mb-2" />
                 <p className="text-muted-foreground">
-                  No hay tenants en gracia ni expirados
+                  No hay salones en gracia ni expirados
                 </p>
               </SurfaceCard>
             )}
           </>
         ) : null}
-      </div>
-    </>
+    </div>
   );
 }

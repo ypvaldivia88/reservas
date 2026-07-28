@@ -191,17 +191,24 @@ export class SalonService {
             .find({
               salonId: { $in: salonIds },
               role: { $in: ["salon_admin", "admin"] },
-              telefono: { $exists: true, $nin: [null, ""] },
             })
-            .project({ salonId: 1, telefono: 1 })
+            .sort({ fechaCreacion: 1 })
+            .project({ salonId: 1, telefono: 1, nombre: 1, username: 1 })
             .toArray()
         : [];
 
-    const adminPhoneBySalon = new Map<string, string>();
+    const adminBySalon = new Map<
+      string,
+      { nombre: string; username?: string; telefono?: string }
+    >();
     for (const user of adminUsers) {
-      const phone = String(user.telefono ?? "").trim();
-      if (phone && !adminPhoneBySalon.has(user.salonId)) {
-        adminPhoneBySalon.set(user.salonId, phone);
+      const sid = String(user.salonId);
+      if (!adminBySalon.has(sid)) {
+        adminBySalon.set(sid, {
+          nombre: String(user.nombre ?? ""),
+          username: user.username ? String(user.username) : undefined,
+          telefono: user.telefono ? String(user.telefono).trim() : undefined,
+        });
       }
     }
 
@@ -239,11 +246,15 @@ export class SalonService {
             expiresAt: { $gt: new Date() },
           });
 
+        const admin = adminBySalon.get(salon.salonId);
+
         return {
           ...salon,
           _id: salon._id?.toString(),
+          adminNombre: admin?.nombre,
+          adminUsername: admin?.username,
           contactPhone:
-            adminPhoneBySalon.get(salon.salonId) ||
+            admin?.telefono ||
             salon.whatsappNumber?.trim() ||
             salon.contact?.phone?.trim() ||
             salon.social?.whatsapp?.trim() ||

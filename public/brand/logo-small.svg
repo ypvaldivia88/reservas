@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" fill="none" role="img" aria-label="ReservaSalón">
+  <rect width="32" height="32" rx="8" fill="#1a9e8f"/>
+  <rect x="2" y="2" width="28" height="28" rx="7" fill="#22b8a5"/>
+  <rect x="8" y="9" width="16" height="14" rx="3" stroke="#f8fffe" stroke-width="1.5"/>
+  <path stroke="#f8fffe" stroke-width="1.5" stroke-linecap="round" d="M8 13h16"/>
+  <path fill="#fbbf24" d="m21 17 3 5 1.5-2.5 2.5-1.5-5-3-2 2z"/>
+  <text x="40" y="22" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#0f172a">ReservaSalón</text>
+</svg>

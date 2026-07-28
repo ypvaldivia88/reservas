@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import PlatformNav from "@/components/PlatformNav";
 import SurfaceCard from "@/components/design/SurfaceCard";
+import { SegmentedControl } from "@/components/design/dashboard";
 import { StatusPill } from "@/components/design/dashboard";
 import { Button } from "@/components/ui/Button";
+import SalonAdminsManager, {
+  type SalonAdminRecord,
+} from "@/components/platform/SalonAdminsManager";
 import { getAccessStateLabel } from "@/lib/subscription";
 import type { SubscriptionAccessState } from "@/lib/subscription";
 
@@ -20,11 +23,6 @@ export default function PlatformTenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [confirmSlug, setConfirmSlug] = useState("");
   const [extendDays, setExtendDays] = useState("7");
-  const [newAdmin, setNewAdmin] = useState({
-    nombre: "",
-    username: "",
-    password: "",
-  });
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -73,20 +71,6 @@ export default function PlatformTenantDetailPage() {
     }
   };
 
-  const createAdmin = async () => {
-    const res = await fetch(`/api/platform/salons/${salonId}/admins`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newAdmin),
-    });
-    const data = await res.json();
-    setMessage(data.message ?? data.error);
-    if (data.success) {
-      setNewAdmin({ nombre: "", username: "", password: "" });
-      load();
-    }
-  };
-
   const revokeCert = async (certId: string) => {
     const res = await fetch(`/api/platform/certificates/${certId}`, {
       method: "PATCH",
@@ -102,43 +86,31 @@ export default function PlatformTenantDetailPage() {
     { id: "general", label: "General" },
     { id: "subscription", label: "Suscripción" },
     { id: "certificates", label: "Certificados" },
-    { id: "users", label: "Usuarios" },
+    { id: "users", label: "Admins" },
     { id: "danger", label: "Peligro" },
   ];
 
   if (loading) {
-    return (
-      <>
-        <PlatformNav />
-        <p className="text-muted-foreground">Cargando...</p>
-      </>
-    );
+    return <p className="text-muted-foreground">Cargando...</p>;
   }
 
   if (!detail || !salon) {
-    return (
-      <>
-        <PlatformNav />
-        <p className="text-muted-foreground">Salón no encontrado</p>
-      </>
-    );
+    return <p className="text-muted-foreground">Salón no encontrado</p>;
   }
 
   const certificates = (detail.certificates as Array<Record<string, unknown>>) ?? [];
-  const admins = (detail.admins as Array<Record<string, unknown>>) ?? [];
+  const admins = (detail.admins as SalonAdminRecord[]) ?? [];
   const subscription = detail.subscription as Record<string, unknown> | null;
   const auditLog = (detail.auditLog as Array<Record<string, unknown>>) ?? [];
 
   return (
-    <>
-      <PlatformNav />
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <Link
             href="/admin/platform/tenants"
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Tenants
+            ← Salones
           </Link>
           <h2 className="mt-2 text-2xl font-bold">{String(salon.nombre)}</h2>
           <p className="font-mono text-sm text-muted-foreground">
@@ -163,22 +135,11 @@ export default function PlatformTenantDetailPage() {
           </p>
         )}
 
-        <div className="flex flex-wrap gap-2 border-b border-border pb-2">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                tab === t.id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          value={tab}
+          options={tabs.map((t) => ({ value: t.id, label: t.label }))}
+          onChange={setTab}
+        />
 
         {tab === "general" && (
           <SurfaceCard padding="default" className="space-y-4">
@@ -305,45 +266,13 @@ export default function PlatformTenantDetailPage() {
         )}
 
         {tab === "users" && (
-          <SurfaceCard padding="default" className="space-y-4">
-            <ul className="text-sm space-y-1">
-              {admins.map((a) => (
-                <li key={String(a._id)}>
-                  {String(a.nombre)} (@{String(a.username)})
-                </li>
-              ))}
-            </ul>
-            <div className="border-t border-border pt-4 space-y-2">
-              <h4 className="font-semibold text-sm">Crear administrador</h4>
-              <input
-                placeholder="Nombre"
-                value={newAdmin.nombre}
-                onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, nombre: e.target.value })
-                }
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-              />
-              <input
-                placeholder="Usuario"
-                value={newAdmin.username}
-                onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, username: e.target.value })
-                }
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Contraseña (mín. 8)"
-                value={newAdmin.password}
-                onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, password: e.target.value })
-                }
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-              />
-              <Button size="sm" onClick={createAdmin}>
-                Crear admin
-              </Button>
-            </div>
+          <SurfaceCard padding="default">
+            <SalonAdminsManager
+              salonId={salonId}
+              admins={admins}
+              onChanged={load}
+              onMessage={setMessage}
+            />
           </SurfaceCard>
         )}
 
@@ -373,7 +302,6 @@ export default function PlatformTenantDetailPage() {
             </Button>
           </SurfaceCard>
         )}
-      </div>
-    </>
+    </div>
   );
 }
