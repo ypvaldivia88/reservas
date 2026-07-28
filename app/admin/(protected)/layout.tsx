@@ -77,7 +77,7 @@ export default function AdminProtectedLayout({
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
               {isPlatformRoute ? (
-                <PlatformLogo size="sm" href="/admin/platform" />
+                <PlatformLogo variant="mark" size="sm" href="/admin/platform" />
               ) : (
                 <BrandMark
                   name={tenantBrand?.nombre ?? "Salón"}

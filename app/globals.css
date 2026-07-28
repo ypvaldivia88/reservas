@@ -390,7 +390,7 @@
 }
 
 .admin-dock {
-  @apply z-40 mx-auto w-full max-w-lg rounded-2xl shadow-lg;
+  @apply z-40 rounded-2xl shadow-lg;
   isolation: isolate;
   border: 1px solid var(--admin-dock-border);
   background-color: color-mix(in oklch, var(--card) 90%, transparent);
@@ -405,13 +405,20 @@
 
 @media (max-width: 767px) {
   .admin-dock {
-    @apply fixed inset-x-5 bottom-3 sm:inset-x-6;
+    position: fixed;
+    z-index: 40;
+    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    left: max(1rem, env(safe-area-inset-left, 0px));
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    width: auto;
+    max-width: 28rem;
+    margin-inline: auto;
   }
 }
 
 @media (min-width: 768px) {
   .admin-dock {
-    @apply static mb-6 max-w-none rounded-none border-x-0 border-b border-t shadow-none;
+    @apply static mx-auto mb-6 w-full max-w-none rounded-none border-x-0 border-b border-t shadow-none;
     background-image: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
