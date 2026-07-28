@@ -1,0 +1,46 @@
+# Notifica deploys de producción en el foro PalmApps (@palmapps), topic Reservas.
+# El historial consolidado se sincroniza aparte con palmapps-notify:
+#   .\scripts\post-forum-history.ps1  (APP=reservas)
+
+name: Notify PalmApps Telegram
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/**'
+      - '!.github/workflows/notify-telegram.yml'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build changelog from push commits
+        id: meta
+        run: |
+          changelog=$(jq -r '
+            [.commits[]? | select(.message | test("^Merge pull request") | not) | .message | split("\n")[0]]
+            | unique
+            | .[:8]
+            | if length == 0 then "Actualización en la web" else join("\n") end
+          ' <<< '${{ toJson(github.event) }}')
+          {
+            echo "changelog<<EOF"
+            echo "$changelog"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          short_sha=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Notify PalmApps Telegram
+        uses: PalmApps/palmapps-notify@v2
+        with:
+          telegram_bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          telegram_forum_chat_id: ${{ secrets.TELEGRAM_FORUM_CHAT_ID }}
+          app: reservas
+          version: ${{ steps.meta.outputs.short_sha }}
+          template: web-deploy
+          changelog: ${{ steps.meta.outputs.changelog }}
+          commit: ${{ github.sha }}
