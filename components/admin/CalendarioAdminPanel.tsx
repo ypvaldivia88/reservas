@@ -47,6 +47,28 @@ function getSwappableReservas(
     });
 }
 
+function formatReservaFecha(fechaCita: string): string {
+  const fecha = new Date(`${fechaCita}T00:00:00`);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const manana = new Date(hoy);
+  manana.setDate(manana.getDate() + 1);
+  fecha.setHours(0, 0, 0, 0);
+
+  if (fecha.getTime() === hoy.getTime()) return "Hoy";
+  if (fecha.getTime() === manana.getTime()) return "Mañana";
+
+  return fecha.toLocaleDateString("es-ES", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function formatReservaSlot(reserva: Reserva): string {
+  return `${formatReservaFecha(reserva.fechaCita)} • ${reserva.horaCita}`;
+}
+
 function getReservaServicioIds(reserva: Reserva): string[] {
   if (reserva.servicioIds && reserva.servicioIds.length > 0) {
     return reserva.servicioIds;
@@ -102,6 +124,7 @@ function CalendarioAdminPanel() {
   const [editError, setEditError] = useState("");
   const [swapMode, setSwapMode] = useState(false);
   const [swapTarget, setSwapTarget] = useState<Reserva | null>(null);
+  const [swapSearchQuery, setSwapSearchQuery] = useState("");
   const [businessTemplate, setBusinessTemplate] = useState<BusinessTemplate | null>(
     null
   );
@@ -293,6 +316,7 @@ function CalendarioAdminPanel() {
     setEditError("");
     setSwapMode(false);
     setSwapTarget(null);
+    setSwapSearchQuery("");
   };
 
   const openEditModal = (reserva: Reserva) => {
@@ -302,20 +326,23 @@ function CalendarioAdminPanel() {
     setEditError("");
     setSwapMode(false);
     setSwapTarget(null);
+    setSwapSearchQuery("");
   };
 
   const swappableReservas = editingReserva
     ? getSwappableReservas(reservas, editingReserva)
     : [];
-  const sameDaySwappableReservas = editingReserva
-    ? swappableReservas.filter(
-        (reserva) => reserva.fechaCita === editingReserva.fechaCita
-      )
-    : [];
-  const swapCandidates =
-    sameDaySwappableReservas.length > 0
-      ? sameDaySwappableReservas
-      : swappableReservas;
+  const swapCandidates = swappableReservas;
+  const filteredSwapCandidates = swapCandidates.filter((reserva) => {
+    if (!swapSearchQuery.trim()) return true;
+    const query = swapSearchQuery.trim().toLowerCase();
+    return (
+      reserva.nombre.toLowerCase().includes(query) ||
+      reserva.telefono?.includes(query) ||
+      reserva.fechaCita.includes(query) ||
+      reserva.horaCita.includes(query)
+    );
+  });
 
   const handleSwapReservas = async () => {
     if (!editingReserva || !swapTarget) return;
@@ -344,7 +371,7 @@ function CalendarioAdminPanel() {
 
       if (data.success) {
         setActionMessage(
-          `✅ Horarios intercambiados: ${editingReserva.nombre} (${editingReserva.horaCita}) ↔ ${swapTarget.nombre} (${swapTarget.horaCita})`
+          `✅ Citas intercambiadas: ${editingReserva.nombre} (${formatReservaSlot(editingReserva)}) ↔ ${swapTarget.nombre} (${formatReservaSlot(swapTarget)})`
         );
         closeEditModal();
         loadData();
@@ -879,7 +906,7 @@ function CalendarioAdminPanel() {
                         </h4>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           Cambia el turno de dos clientes sin modificar sus datos.
-                          Ideal para intercambiar horarios en el mismo día.
+                          Puedes elegir cualquier otra cita activa ya programada.
                         </p>
                       </div>
                     </div>
@@ -890,6 +917,7 @@ function CalendarioAdminPanel() {
                         onClick={() => {
                           setSwapMode(true);
                           setSwapTarget(null);
+                          setSwapSearchQuery("");
                           setEditError("");
                         }}
                         disabled={saving || swapCandidates.length === 0}
@@ -906,8 +934,22 @@ function CalendarioAdminPanel() {
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Selecciona la cita con la que quieres intercambiar:
                         </p>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {swapCandidates.map((reserva) => (
+                        {swapCandidates.length > 5 && (
+                          <input
+                            type="search"
+                            value={swapSearchQuery}
+                            onChange={(e) => setSwapSearchQuery(e.target.value)}
+                            placeholder="Buscar por nombre, teléfono o fecha..."
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                          />
+                        )}
+                        <div className="space-y-2 max-h-56 overflow-y-auto">
+                          {filteredSwapCandidates.length === 0 ? (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                              No se encontraron citas con esa búsqueda.
+                            </p>
+                          ) : (
+                            filteredSwapCandidates.map((reserva) => (
                             <button
                               key={reserva._id}
                               type="button"
@@ -920,13 +962,13 @@ function CalendarioAdminPanel() {
                                     {reserva.nombre}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {reserva.fechaCita} • {reserva.horaCita}
+                                    {formatReservaSlot(reserva)}
                                   </p>
                                 </div>
                                 <SwapIcon className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                               </div>
                             </button>
-                          ))}
+                          )))}
                         </div>
                         <Button
                           type="button"
@@ -944,7 +986,7 @@ function CalendarioAdminPanel() {
                           <div className="flex items-start gap-2 mb-3">
                             <InfoIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                             <p className="text-sm text-blue-900 dark:text-blue-100">
-                              Confirma el intercambio de horarios:
+                              Confirma el intercambio de citas:
                             </p>
                           </div>
                           <div className="space-y-2 text-sm">
@@ -952,8 +994,8 @@ function CalendarioAdminPanel() {
                               <span className="font-medium text-gray-900 dark:text-white truncate">
                                 {editingReserva.nombre}
                               </span>
-                              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                {editingReserva.horaCita}
+                              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap text-right">
+                                {formatReservaSlot(editingReserva)}
                               </span>
                             </div>
                             <div className="flex justify-center">
@@ -963,14 +1005,16 @@ function CalendarioAdminPanel() {
                               <span className="font-medium text-gray-900 dark:text-white truncate">
                                 {swapTarget.nombre}
                               </span>
-                              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                {swapTarget.horaCita}
+                              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap text-right">
+                                {formatReservaSlot(swapTarget)}
                               </span>
                             </div>
                           </div>
                           <p className="mt-3 text-xs text-blue-800 dark:text-blue-200">
                             Después del intercambio, {editingReserva.nombre} quedará
-                            a las {swapTarget.horaCita} y {swapTarget.nombre} a las{" "}
+                            el {formatReservaFecha(swapTarget.fechaCita)} a las{" "}
+                            {swapTarget.horaCita} y {swapTarget.nombre} el{" "}
+                            {formatReservaFecha(editingReserva.fechaCita)} a las{" "}
                             {editingReserva.horaCita}.
                           </p>
                         </div>
