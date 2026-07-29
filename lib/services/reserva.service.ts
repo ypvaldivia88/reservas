@@ -8,7 +8,10 @@ import {
   validateReservaInput,
   findActiveSlotConflict,
   findClientDayConflict,
+  findClientDayConflictForSwap,
   clientDayConflictMessage,
+  adminClientDayConflictMessage,
+  validateSwapReservas,
   isMongoDuplicateKeyError,
 } from "@/lib/reservaValidation";
 import { createIncomeFromReserva } from "@/lib/finances";
@@ -237,7 +240,10 @@ export class ReservaService {
         salonId: effectiveSalonId,
       });
       if (dayConflict) {
-        throw new AppError(clientDayConflictMessage(dayConflict.horaCita), 400);
+        throw new AppError(
+          adminClientDayConflictMessage(dayConflict.horaCita, dayConflict.nombre),
+          400
+        );
       }
     }
 
@@ -340,6 +346,90 @@ export class ReservaService {
     const effectiveSalonId = existing.salonId || salonId || DEFAULT_SALON_ID;
     const deleted = await reservaRepository.remove(effectiveSalonId, id);
     if (!deleted) throw AppError.notFound("Reserva no encontrada");
+  }
+
+  /**
+   * Intercambia fecha/hora entre dos reservas activas.
+   * Usa un horario temporal para evitar violar índices únicos de slot.
+   */
+  async swap(salonId: string, reservaIdA: string, reservaIdB: string) {
+    const a = await this.getById(salonId, reservaIdA);
+    const b = await this.getById(salonId, reservaIdB);
+    const effectiveSalonId = a.salonId || salonId || DEFAULT_SALON_ID;
+
+    const validation = validateSwapReservas(a, b);
+    if (!validation.ok) {
+      throw new AppError(validation.error, 400);
+    }
+
+    const db = await getDb();
+    const excludeIds = [reservaIdA, reservaIdB];
+
+    if (a.fechaCita !== b.fechaCita) {
+      const conflictA = await findClientDayConflictForSwap(db, b.fechaCita, {
+        clienteId: a.clienteId,
+        telefono: a.telefono,
+        excludeIds,
+        salonId: effectiveSalonId,
+      });
+      if (conflictA) {
+        throw new AppError(
+          `${a.nombre} ya tiene otra cita activa el ${b.fechaCita} a las ${conflictA.horaCita}.`,
+          400
+        );
+      }
+
+      const conflictB = await findClientDayConflictForSwap(db, a.fechaCita, {
+        clienteId: b.clienteId,
+        telefono: b.telefono,
+        excludeIds,
+        salonId: effectiveSalonId,
+      });
+      if (conflictB) {
+        throw new AppError(
+          `${b.nombre} ya tiene otra cita activa el ${a.fechaCita} a las ${conflictB.horaCita}.`,
+          400
+        );
+      }
+    }
+
+    const fechaA = a.fechaCita;
+    const horaA = a.horaCita;
+    const fechaB = b.fechaCita;
+    const horaB = b.horaCita;
+    const tempHora = `__swap_${Date.now()}__`;
+
+    const movedA = await reservaRepository.update(effectiveSalonId, reservaIdA, {
+      horaCita: tempHora,
+    });
+    if (!movedA) throw AppError.notFound("Reserva no encontrada");
+
+    const movedB = await reservaRepository.update(effectiveSalonId, reservaIdB, {
+      fechaCita: fechaA,
+      horaCita: horaA,
+    });
+    if (!movedB) {
+      await reservaRepository.update(effectiveSalonId, reservaIdA, {
+        horaCita: horaA,
+      });
+      throw AppError.notFound("Reserva no encontrada");
+    }
+
+    const finalizedA = await reservaRepository.update(effectiveSalonId, reservaIdA, {
+      fechaCita: fechaB,
+      horaCita: horaB,
+    });
+    if (!finalizedA) {
+      await reservaRepository.update(effectiveSalonId, reservaIdA, {
+        fechaCita: fechaA,
+        horaCita: horaA,
+      });
+      await reservaRepository.update(effectiveSalonId, reservaIdB, {
+        fechaCita: fechaB,
+        horaCita: horaB,
+      });
+      throw AppError.notFound("Reserva no encontrada");
+    }
   }
 }
 

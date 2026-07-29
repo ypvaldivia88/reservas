@@ -22,7 +22,30 @@ import {
   ExclamationIcon,
   SaveIcon,
   CloseIcon,
+  SwapIcon,
+  InfoIcon,
 } from "@/components/ui/Icons";
+
+function isActiveReserva(estado: Reserva["estado"]): boolean {
+  return estado === "pendiente" || estado === "confirmada";
+}
+
+function getSwappableReservas(
+  reservas: Reserva[],
+  current: Reserva
+): Reserva[] {
+  return reservas
+    .filter(
+      (reserva) =>
+        reserva._id !== current._id && isActiveReserva(reserva.estado)
+    )
+    .sort((a, b) => {
+      if (a.fechaCita !== b.fechaCita) {
+        return a.fechaCita.localeCompare(b.fechaCita);
+      }
+      return a.horaCita.localeCompare(b.horaCita);
+    });
+}
 
 function getReservaServicioIds(reserva: Reserva): string[] {
   if (reserva.servicioIds && reserva.servicioIds.length > 0) {
@@ -76,6 +99,9 @@ function CalendarioAdminPanel() {
   >("todos");
 
   const [actionMessage, setActionMessage] = useState("");
+  const [editError, setEditError] = useState("");
+  const [swapMode, setSwapMode] = useState(false);
+  const [swapTarget, setSwapTarget] = useState<Reserva | null>(null);
   const [businessTemplate, setBusinessTemplate] = useState<BusinessTemplate | null>(
     null
   );
@@ -260,17 +286,95 @@ function CalendarioAdminPanel() {
     }
   }, [searchParams, reservas]);
 
+  const closeEditModal = () => {
+    pendingWorkPhotosRef.current = [];
+    pendingCategoriaIdsRef.current = [];
+    setEditingReserva(null);
+    setEditError("");
+    setSwapMode(false);
+    setSwapTarget(null);
+  };
+
+  const openEditModal = (reserva: Reserva) => {
+    pendingWorkPhotosRef.current = [];
+    pendingCategoriaIdsRef.current = [];
+    setEditingReserva(normalizeReservaForEdit(reserva));
+    setEditError("");
+    setSwapMode(false);
+    setSwapTarget(null);
+  };
+
+  const swappableReservas = editingReserva
+    ? getSwappableReservas(reservas, editingReserva)
+    : [];
+  const sameDaySwappableReservas = editingReserva
+    ? swappableReservas.filter(
+        (reserva) => reserva.fechaCita === editingReserva.fechaCita
+      )
+    : [];
+  const swapCandidates =
+    sameDaySwappableReservas.length > 0
+      ? sameDaySwappableReservas
+      : swappableReservas;
+
+  const handleSwapReservas = async () => {
+    if (!editingReserva || !swapTarget) return;
+
+    if (!online) {
+      setEditError(
+        "Sin conexión. El intercambio se aplica cuando vuelvas a estar en línea."
+      );
+      return;
+    }
+
+    setSaving(true);
+    setEditError("");
+
+    try {
+      const res = await fetch("/api/reservas/swap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reservaIdA: editingReserva._id,
+          reservaIdB: swapTarget._id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setActionMessage(
+          `✅ Horarios intercambiados: ${editingReserva.nombre} (${editingReserva.horaCita}) ↔ ${swapTarget.nombre} (${swapTarget.horaCita})`
+        );
+        closeEditModal();
+        loadData();
+        setTimeout(() => setActionMessage(""), 4000);
+      } else {
+        setEditError(data.error || "No se pudo intercambiar los horarios");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setEditError("Error de conexión al intercambiar horarios");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // CRUD Handlers for Reservas
   const handleUpdateReserva = async (
     reserva: Reserva,
     openWhatsApp: boolean = false
   ) => {
     if (!online) {
-      setActionMessage("Sin conexión. Los cambios se aplican cuando vuelvas a estar en línea.");
+      const message =
+        "Sin conexión. Los cambios se aplican cuando vuelvas a estar en línea.";
+      setEditError(message);
+      setActionMessage(message);
       setTimeout(() => setActionMessage(""), 4000);
       return;
     }
     setSaving(true);
+    setEditError("");
     const payload = buildReservaForSave(reserva);
     try {
       const res = await fetch(`/api/reservas/${payload._id}`, {
@@ -310,7 +414,7 @@ function CalendarioAdminPanel() {
         }
 
         setActionMessage(message);
-        setEditingReserva(null);
+        closeEditModal();
         pendingCategoriaIdsRef.current = [];
         loadData();
 
@@ -347,13 +451,17 @@ function CalendarioAdminPanel() {
 
         setTimeout(() => setActionMessage(""), 3000);
       } else {
-        setActionMessage("❌ " + (data.error || "Error al actualizar reserva"));
-        setTimeout(() => setActionMessage(""), 3000);
+        const errorMessage = data.error || "Error al actualizar reserva";
+        setEditError(errorMessage);
+        setActionMessage("❌ " + errorMessage);
+        setTimeout(() => setActionMessage(""), 5000);
       }
     } catch (error) {
       console.error("Error:", error);
-      setActionMessage("❌ Error de conexión");
-      setTimeout(() => setActionMessage(""), 3000);
+      const errorMessage = "Error de conexión";
+      setEditError(errorMessage);
+      setActionMessage("❌ " + errorMessage);
+      setTimeout(() => setActionMessage(""), 5000);
     } finally {
       setSaving(false);
     }
@@ -440,11 +548,7 @@ function CalendarioAdminPanel() {
           reservas={reservas}
           saving={saving}
           businessTemplate={businessTemplate}
-          onEdit={(reserva) => {
-            pendingWorkPhotosRef.current = [];
-            pendingCategoriaIdsRef.current = [];
-            setEditingReserva(normalizeReservaForEdit(reserva));
-          }}
+          onEdit={openEditModal}
           onDelete={setDeletingReserva}
           onUpdateStatus={(reserva, estado, openWhatsApp = false) => {
             handleUpdateReserva({ ...reserva, estado }, openWhatsApp);
@@ -459,11 +563,7 @@ function CalendarioAdminPanel() {
       {editingReserva && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-          onClick={() => {
-            pendingWorkPhotosRef.current = [];
-            pendingCategoriaIdsRef.current = [];
-            setEditingReserva(null);
-          }}
+          onClick={closeEditModal}
         >
           <div
             className="bg-white dark:bg-gray-800 w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto"
@@ -476,11 +576,7 @@ function CalendarioAdminPanel() {
                 Editar Reserva
               </h3>
               <Button
-                onClick={() => {
-            pendingWorkPhotosRef.current = [];
-            pendingCategoriaIdsRef.current = [];
-            setEditingReserva(null);
-          }}
+                onClick={closeEditModal}
                 variant="ghost"
                 size="sm"
                 icon={<CloseIcon className="w-6 h-6" />}
@@ -490,6 +586,17 @@ function CalendarioAdminPanel() {
 
             {/* Content */}
             <div className="px-4 sm:px-6 py-6">
+              {editError && (
+                <div
+                  className="mb-4 p-4 bg-rose-50 dark:bg-rose-900/30 rounded-xl border-l-4 border-rose-500 dark:border-rose-400"
+                  role="alert"
+                >
+                  <p className="text-sm font-medium text-rose-900 dark:text-rose-100">
+                    {editError}
+                  </p>
+                </div>
+              )}
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -505,12 +612,13 @@ function CalendarioAdminPanel() {
                     <input
                       type="text"
                       value={editingReserva.nombre}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setEditError("");
                         setEditingReserva({
                           ...editingReserva,
                           nombre: e.target.value,
-                        })
-                      }
+                        });
+                      }}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                       required
                     />
@@ -522,12 +630,13 @@ function CalendarioAdminPanel() {
                     <input
                       type="tel"
                       value={editingReserva.telefono}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setEditError("");
                         setEditingReserva({
                           ...editingReserva,
                           telefono: e.target.value,
-                        })
-                      }
+                        });
+                      }}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                       required
                     />
@@ -586,12 +695,13 @@ function CalendarioAdminPanel() {
                     <input
                       type="date"
                       value={editingReserva.fechaCita}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setEditError("");
                         setEditingReserva({
                           ...editingReserva,
                           fechaCita: e.target.value,
-                        })
-                      }
+                        });
+                      }}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                       required
                     />
@@ -603,12 +713,13 @@ function CalendarioAdminPanel() {
                     <input
                       type="time"
                       value={editingReserva.horaCita}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setEditError("");
                         setEditingReserva({
                           ...editingReserva,
                           horaCita: e.target.value,
-                        })
-                      }
+                        });
+                      }}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                       required
                     />
@@ -758,6 +869,138 @@ function CalendarioAdminPanel() {
                   )}
                 </div>
 
+                {isActiveReserva(editingReserva.estado) && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-2">
+                    <div className="flex items-start gap-3 mb-4">
+                      <SwapIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                          Intercambiar horario
+                        </h4>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Cambia el turno de dos clientes sin modificar sus datos.
+                          Ideal para intercambiar horarios en el mismo día.
+                        </p>
+                      </div>
+                    </div>
+
+                    {!swapMode ? (
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setSwapMode(true);
+                          setSwapTarget(null);
+                          setEditError("");
+                        }}
+                        disabled={saving || swapCandidates.length === 0}
+                        variant="outlined-primary"
+                        fullWidth
+                        icon={<SwapIcon />}
+                      >
+                        {swapCandidates.length === 0
+                          ? "No hay otras citas activas para intercambiar"
+                          : "Intercambiar con otra cita"}
+                      </Button>
+                    ) : !swapTarget ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Selecciona la cita con la que quieres intercambiar:
+                        </p>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {swapCandidates.map((reserva) => (
+                            <button
+                              key={reserva._id}
+                              type="button"
+                              onClick={() => setSwapTarget(reserva)}
+                              className="w-full text-left p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 bg-gray-50 dark:bg-gray-700/50 transition-colors"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-gray-900 dark:text-white truncate">
+                                    {reserva.nombre}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {reserva.fechaCita} • {reserva.horaCita}
+                                  </p>
+                                </div>
+                                <SwapIcon className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => setSwapMode(false)}
+                          disabled={saving}
+                          variant="ghost"
+                          fullWidth
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
+                          <div className="flex items-start gap-2 mb-3">
+                            <InfoIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <p className="text-sm text-blue-900 dark:text-blue-100">
+                              Confirma el intercambio de horarios:
+                            </p>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white/70 dark:bg-gray-800/70">
+                              <span className="font-medium text-gray-900 dark:text-white truncate">
+                                {editingReserva.nombre}
+                              </span>
+                              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                {editingReserva.horaCita}
+                              </span>
+                            </div>
+                            <div className="flex justify-center">
+                              <SwapIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white/70 dark:bg-gray-800/70">
+                              <span className="font-medium text-gray-900 dark:text-white truncate">
+                                {swapTarget.nombre}
+                              </span>
+                              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                {swapTarget.horaCita}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="mt-3 text-xs text-blue-800 dark:text-blue-200">
+                            Después del intercambio, {editingReserva.nombre} quedará
+                            a las {swapTarget.horaCita} y {swapTarget.nombre} a las{" "}
+                            {editingReserva.horaCita}.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Button
+                            type="button"
+                            onClick={() => setSwapTarget(null)}
+                            disabled={saving}
+                            variant="outlined-secondary"
+                            fullWidth
+                          >
+                            Elegir otra
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleSwapReservas}
+                            disabled={saving}
+                            variant="primary"
+                            loading={saving}
+                            icon={<SwapIcon />}
+                            fullWidth
+                          >
+                            Confirmar intercambio
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Quick Action Buttons */}
                 {editingReserva.estado === "pendiente" && (
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
@@ -813,10 +1056,9 @@ function CalendarioAdminPanel() {
                         type="button"
                         onClick={() => {
                           if (getCobroTotal(editingReserva) <= 0) {
-                            setActionMessage(
-                              "❌ Indica el cobro en efectivo y/o transferencia antes de completar"
+                            setEditError(
+                              "Indica el cobro en efectivo y/o transferencia antes de completar"
                             );
-                            setTimeout(() => setActionMessage(""), 3000);
                             return;
                           }
                           handleUpdateReserva(
@@ -857,11 +1099,7 @@ function CalendarioAdminPanel() {
                 <div className="flex gap-3 justify-end pt-4">
                   <Button
                     type="button"
-                    onClick={() => {
-            pendingWorkPhotosRef.current = [];
-            pendingCategoriaIdsRef.current = [];
-            setEditingReserva(null);
-          }}
+                    onClick={closeEditModal}
                     disabled={saving}
                     variant="outlined-secondary"
                   >
