@@ -102,3 +102,92 @@ export function clientDayConflictMessage(existingHora?: string): string {
   }
   return "Ya tienes una cita activa ese día. Solo puedes tener una cita por día. Cancela la existente o elige otro día.";
 }
+
+export function adminClientDayConflictMessage(
+  existingHora?: string,
+  existingNombre?: string
+): string {
+  const citaInfo =
+    existingHora && existingNombre ?
+      ` a las ${existingHora} (${existingNombre})`
+    : existingHora ? ` a las ${existingHora}`
+    : "";
+  return `Este cliente ya tiene otra cita activa ese día${citaInfo}. No puedes asignarle un segundo turno. Si quieres intercambiar horarios entre dos clientes distintos, usa la opción "Intercambiar horario".`;
+}
+
+function isActiveReservationState(estado: Reserva["estado"]): boolean {
+  return ACTIVE_RESERVATION_STATES.includes(
+    estado as (typeof ACTIVE_RESERVATION_STATES)[number]
+  );
+}
+
+export type SwapValidationResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+/** Valida si dos reservas activas pueden intercambiar fecha/hora. */
+export function validateSwapReservas(a: Reserva, b: Reserva): SwapValidationResult {
+  if (a._id === b._id) {
+    return { ok: false, error: "Selecciona dos reservas distintas." };
+  }
+
+  if (!isActiveReservationState(a.estado)) {
+    return {
+      ok: false,
+      error: `La reserva de ${a.nombre} no está activa (estado: ${a.estado}).`,
+    };
+  }
+
+  if (!isActiveReservationState(b.estado)) {
+    return {
+      ok: false,
+      error: `La reserva de ${b.nombre} no está activa (estado: ${b.estado}).`,
+    };
+  }
+
+  if (
+    a.fechaCita === b.fechaCita &&
+    a.horaCita === b.horaCita
+  ) {
+    return { ok: false, error: "Las dos reservas ya tienen el mismo horario." };
+  }
+
+  return { ok: true };
+}
+
+/** Busca conflicto de día al mover una reserva a otra fecha (excluye ambas del swap). */
+export async function findClientDayConflictForSwap(
+  db: Db,
+  fechaCita: string,
+  options: {
+    clienteId?: string;
+    telefono?: string;
+    excludeIds: string[];
+    salonId?: string;
+  }
+): Promise<Reserva | null> {
+  const { clienteId, telefono, excludeIds, salonId } = options;
+  const clientMatch = buildClientMatchFilter({ clienteId, telefono });
+
+  if (Object.keys(clientMatch).length === 0) return null;
+
+  const excludeObjectIds = excludeIds
+    .filter((id) => ObjectId.isValid(id))
+    .map((id) => new ObjectId(id));
+
+  const baseFilter: Record<string, unknown> = {
+    fechaCita,
+    estado: { $in: ACTIVE_RESERVATION_STATES },
+    ...clientMatch,
+    ...(excludeObjectIds.length > 0 ?
+      { _id: { $nin: excludeObjectIds } }
+    : {}),
+  };
+
+  const filter =
+    salonId ?
+      withTenantScope(baseFilter, salonId)
+    : baseFilter;
+
+  return (await db.collection("reservas").findOne(filter)) as Reserva | null;
+}

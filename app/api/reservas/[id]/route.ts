@@ -5,7 +5,7 @@ import { Reserva, PaymentMethod } from "@/lib/types";
 import { phoneUtils } from "@/lib/utils";
 import { AppError } from "@/lib/api/errors";
 import { isMongoDuplicateKeyError } from "@/lib/reservaValidation";
-import { clientDayConflictMessage } from "@/lib/reservaValidation";
+import { adminClientDayConflictMessage } from "@/lib/reservaValidation";
 import { isPaymentMethod } from "@/lib/paymentMethods";
 import { salonRepository } from "@/lib/repositories/salon.repository";
 import { applyReservaPatchFields } from "@/lib/reserva-payload";
@@ -96,7 +96,7 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
     return ok(undefined, { message: "Reserva actualizada exitosamente" });
   } catch (error) {
     if (isMongoDuplicateKeyError(error)) {
-      throw new AppError(clientDayConflictMessage(), 400);
+      throw new AppError(adminClientDayConflictMessage(), 400);
     }
     throw error;
   }

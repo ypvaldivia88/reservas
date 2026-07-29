@@ -87,3 +87,9 @@ export const MenuIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props 
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
   </svg>
 );
+
+export const SwapIcon: React.FC<IconProps> = ({ className = "w-5 h-5", ...props }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+  </svg>
+);
