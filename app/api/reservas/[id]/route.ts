@@ -96,7 +96,7 @@ export const PATCH = adminHandler(async ({ salonId, params, request }) => {
     return ok(undefined, { message: "Reserva actualizada exitosamente" });
   } catch (error) {
     if (isMongoDuplicateKeyError(error)) {
-      throw new AppError(clientDayConflictMessage(), 400);
+      throw new AppError(adminClientDayConflictMessage(), 400);
     }
     throw error;
   }
