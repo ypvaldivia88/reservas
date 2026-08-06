@@ -356,6 +356,8 @@ export interface User {
   password?: string; // Solo para admin (hasheado)
   role: UserRole;
   fechaCreacion?: Date;
+  bloqueado?: boolean;
+  bloqueadoAt?: Date;
 }
 
 export interface SessionData {

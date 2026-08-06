@@ -25,11 +25,15 @@ export default function ClientesAdminPanel() {
   const [creatingCliente, setCreatingCliente] = useState(false);
   const [editingCliente, setEditingCliente] = useState<User | null>(null);
   const [deletingCliente, setDeletingCliente] = useState<User | null>(null);
+  const [blockingCliente, setBlockingCliente] = useState<User | null>(null);
   const [openMenuClienteId, setOpenMenuClienteId] = useState<string | null>(null);
 
   const [clientesPage, setClientesPage] = useState(1);
   const [clientesPerPage] = useState(10);
   const [clientesSearch, setClientesSearch] = useState("");
+  const [clientesFilter, setClientesFilter] = useState<"all" | "activos" | "bloqueados">(
+    "all"
+  );
 
   const loadClientes = async () => {
     try {
@@ -157,11 +161,55 @@ export default function ClientesAdminPanel() {
     }
   };
 
+  const handleToggleBlock = async (cliente: User, bloqueado: boolean) => {
+    if (!cliente._id) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/clientes/${cliente._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bloqueado }),
+      });
+
+      const data = await parseApiJson(res);
+
+      if (res.ok && data.success) {
+        setActionMessage(
+          bloqueado
+            ? "✅ Cliente bloqueado. Sus reservas pendientes fueron canceladas."
+            : "✅ Cliente desbloqueado exitosamente"
+        );
+        setBlockingCliente(null);
+        setEditingCliente(null);
+        loadClientes();
+        setTimeout(() => setActionMessage(""), 3000);
+      } else {
+        setActionMessage(
+          "❌ " +
+            getApiErrorMessage(res, data, "Error al actualizar el estado del cliente")
+        );
+        setTimeout(() => setActionMessage(""), 3000);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setActionMessage("❌ Error de conexión");
+      setTimeout(() => setActionMessage(""), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const filteredClientes = clientes.filter((cliente) => {
-    return (
+    const matchesSearch =
       cliente.nombre.toLowerCase().includes(clientesSearch.toLowerCase()) ||
-      (cliente.telefono?.includes(clientesSearch) ?? false)
-    );
+      (cliente.telefono?.includes(clientesSearch) ?? false);
+
+    if (!matchesSearch) return false;
+
+    if (clientesFilter === "bloqueados") return cliente.bloqueado === true;
+    if (clientesFilter === "activos") return !cliente.bloqueado;
+    return true;
   });
 
   const totalClientesPages = Math.ceil(filteredClientes.length / clientesPerPage);
@@ -220,6 +268,26 @@ export default function ClientesAdminPanel() {
             }}
             aria-label="Buscar clientes por nombre o teléfono"
           />
+
+          <div className="flex flex-wrap items-center gap-2">
+            {(["all", "activos", "bloqueados"] as const).map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => {
+                  setClientesFilter(filter);
+                  setClientesPage(1);
+                }}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  clientesFilter === filter
+                    ? "bg-blue-600 text-white dark:bg-blue-500"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                {filter === "all" ? "Todos" : filter === "activos" ? "Activos" : "Bloqueados"}
+              </button>
+            ))}
+          </div>
 
           <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>
@@ -298,7 +366,14 @@ export default function ClientesAdminPanel() {
                     }`}
                   >
                     <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {cliente.nombre}
+                      <span className="flex flex-wrap items-center gap-2">
+                        {cliente.nombre}
+                        {cliente.bloqueado && (
+                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                            Bloqueado
+                          </span>
+                        )}
+                      </span>
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-600 dark:text-blue-200">
                       {cliente.telefono}
@@ -346,6 +421,24 @@ export default function ClientesAdminPanel() {
                             </button>
                             <button
                               onClick={() => {
+                                if (cliente.bloqueado) {
+                                  handleToggleBlock(cliente, false);
+                                } else {
+                                  setBlockingCliente(cliente);
+                                }
+                                setOpenMenuClienteId(null);
+                              }}
+                              className={`flex w-full items-center gap-3 px-4 py-3 text-left font-medium transition-colors ${
+                                cliente.bloqueado
+                                  ? "text-green-700 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-900/20"
+                                  : "text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/20"
+                              }`}
+                            >
+                              <ExclamationIcon className="h-5 w-5" />
+                              {cliente.bloqueado ? "Desbloquear" : "Bloquear"}
+                            </button>
+                            <button
+                              onClick={() => {
                                 setDeletingCliente(cliente);
                                 setOpenMenuClienteId(null);
                               }}
@@ -367,6 +460,21 @@ export default function ClientesAdminPanel() {
                           icon={<EditIcon />}
                         >
                           Editar
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (cliente.bloqueado) {
+                              handleToggleBlock(cliente, false);
+                            } else {
+                              setBlockingCliente(cliente);
+                            }
+                          }}
+                          disabled={saving}
+                          variant={cliente.bloqueado ? "outlined-secondary" : "outlined-danger"}
+                          size="sm"
+                          icon={<ExclamationIcon />}
+                        >
+                          {cliente.bloqueado ? "Desbloquear" : "Bloquear"}
                         </Button>
                         <Button
                           onClick={() => setDeletingCliente(cliente)}
@@ -585,13 +693,95 @@ export default function ClientesAdminPanel() {
                     required
                   />
                 </div>
+                {editingCliente.bloqueado && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                    Este cliente está bloqueado y no puede realizar reservas.
+                  </div>
+                )}
               </form>
+            </div>
+
+            <div className="flex flex-col gap-3 bg-gray-50 px-4 py-4 dark:bg-gray-700/50 sm:px-6">
+              <Button
+                type="button"
+                onClick={() => {
+                  if (editingCliente.bloqueado) {
+                    handleToggleBlock(editingCliente, false);
+                  } else {
+                    setBlockingCliente(editingCliente);
+                  }
+                }}
+                disabled={saving}
+                variant={editingCliente.bloqueado ? "outlined-secondary" : "outlined-danger"}
+                fullWidth
+                icon={<ExclamationIcon />}
+              >
+                {editingCliente.bloqueado ? "Desbloquear cliente" : "Bloquear cliente"}
+              </Button>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  onClick={() => setEditingCliente(null)}
+                  disabled={saving}
+                  variant="outlined-secondary"
+                  fullWidth
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleUpdateCliente(editingCliente)}
+                  disabled={saving}
+                  variant="primary"
+                  loading={saving}
+                  icon={<SaveIcon />}
+                  fullWidth
+                >
+                  Guardar Cambios
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {blockingCliente && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={() => setBlockingCliente(null)}
+        >
+          <div
+            className="animate-slide-up w-full rounded-t-2xl bg-white shadow-2xl dark:bg-gray-800 sm:max-w-md sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 dark:border-gray-700 sm:px-6">
+              <h3 className="flex items-center gap-3 text-lg font-bold text-gray-900 dark:text-white">
+                <ExclamationIcon className="h-6 w-6 text-red-500" />
+                Bloquear Cliente
+              </h3>
+              <Button
+                onClick={() => setBlockingCliente(null)}
+                variant="ghost"
+                size="sm"
+                icon={<CloseIcon className="h-6 w-6" />}
+                aria-label="Cerrar"
+              />
+            </div>
+
+            <div className="px-4 py-6 sm:px-6">
+              <p className="text-gray-600 dark:text-gray-300">
+                ¿Bloquear a{" "}
+                <strong className="text-gray-900 dark:text-white">
+                  {blockingCliente.nombre}
+                </strong>
+                ? No podrá realizar nuevas reservas. Se cancelarán sus reservas
+                pendientes para liberar los turnos.
+              </p>
             </div>
 
             <div className="flex gap-3 bg-gray-50 px-4 py-4 dark:bg-gray-700/50 sm:px-6">
               <Button
-                type="button"
-                onClick={() => setEditingCliente(null)}
+                onClick={() => setBlockingCliente(null)}
                 disabled={saving}
                 variant="outlined-secondary"
                 fullWidth
@@ -599,15 +789,13 @@ export default function ClientesAdminPanel() {
                 Cancelar
               </Button>
               <Button
-                type="button"
-                onClick={() => handleUpdateCliente(editingCliente)}
+                onClick={() => handleToggleBlock(blockingCliente, true)}
                 disabled={saving}
-                variant="primary"
+                variant="danger"
                 loading={saving}
-                icon={<SaveIcon />}
                 fullWidth
               >
-                Guardar Cambios
+                Bloquear
               </Button>
             </div>
           </div>

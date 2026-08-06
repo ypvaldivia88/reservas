@@ -88,6 +88,12 @@ export class ReservaService {
     let cliente = await userRepository.findClienteByPhone(salonId, telefonoNormalizado);
 
     if (cliente) {
+      if (cliente.bloqueado) {
+        throw new AppError(
+          "No puedes realizar reservas en este salón. Contacta al administrador si crees que es un error.",
+          403
+        );
+      }
       if (cliente.nombre !== nombreNormalizado) {
         throw new AppError(
           `Este teléfono está registrado con el nombre: ${cliente.nombre}. Por favor verifica tus datos.`,
@@ -109,6 +115,12 @@ export class ReservaService {
           if (!cliente) {
             throw AppError.conflict(
               "Este teléfono ya está registrado en otro salón. Contacta al administrador."
+            );
+          }
+          if (cliente.bloqueado) {
+            throw new AppError(
+              "No puedes realizar reservas en este salón. Contacta al administrador si crees que es un error.",
+              403
             );
           }
         } else {

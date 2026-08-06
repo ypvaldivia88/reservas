@@ -12,6 +12,7 @@ import OfflineBanner from "@/components/admin/OfflineBanner";
 import { ReservationMetricsSection } from "@/components/admin/TenantMetricSections";
 import { useOnlineStatus } from "@/lib/hooks/useOnlineStatus";
 import { loadCalendarBundle } from "@/lib/offline/calendar-sync";
+import { getApiErrorMessage, parseApiJson } from "@/lib/api/fetch-utils";
 import {
   getReservaTemplateConfig,
   isManicureReservation,
@@ -125,6 +126,7 @@ function CalendarioAdminPanel() {
   const [swapMode, setSwapMode] = useState(false);
   const [swapTarget, setSwapTarget] = useState<Reserva | null>(null);
   const [swapSearchQuery, setSwapSearchQuery] = useState("");
+  const [confirmBlockCliente, setConfirmBlockCliente] = useState(false);
   const [businessTemplate, setBusinessTemplate] = useState<BusinessTemplate | null>(
     null
   );
@@ -317,6 +319,7 @@ function CalendarioAdminPanel() {
     setSwapMode(false);
     setSwapTarget(null);
     setSwapSearchQuery("");
+    setConfirmBlockCliente(false);
   };
 
   const openEditModal = (reserva: Reserva) => {
@@ -327,6 +330,51 @@ function CalendarioAdminPanel() {
     setSwapMode(false);
     setSwapTarget(null);
     setSwapSearchQuery("");
+    setConfirmBlockCliente(false);
+  };
+
+  const handleBlockClienteFromReserva = async () => {
+    if (!editingReserva?.clienteId) {
+      setEditError("No se encontró el cliente vinculado a esta reserva.");
+      return;
+    }
+
+    if (!online) {
+      setEditError("Sin conexión. El bloqueo se aplica cuando vuelvas a estar en línea.");
+      return;
+    }
+
+    setSaving(true);
+    setEditError("");
+
+    try {
+      const res = await fetch(`/api/clientes/${editingReserva.clienteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bloqueado: true }),
+      });
+
+      const data = await parseApiJson(res);
+
+      if (res.ok && data.success) {
+        setActionMessage(
+          `✅ ${editingReserva.nombre} bloqueado. Sus reservas pendientes fueron canceladas.`
+        );
+        setConfirmBlockCliente(false);
+        closeEditModal();
+        loadData();
+        setTimeout(() => setActionMessage(""), 4000);
+      } else {
+        setEditError(
+          getApiErrorMessage(res, data, "Error al bloquear el cliente")
+        );
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setEditError("Error de conexión al bloquear el cliente");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const swappableReservas = editingReserva
@@ -1141,6 +1189,47 @@ function CalendarioAdminPanel() {
                 )}
 
                 <div className="flex gap-3 justify-end pt-4">
+                  {editingReserva.clienteId && (
+                    <div className="mr-auto flex flex-col gap-2 sm:flex-row sm:items-center">
+                      {confirmBlockCliente ? (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Se cancelarán las reservas pendientes de este cliente.
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={() => setConfirmBlockCliente(false)}
+                            disabled={saving}
+                            variant="outlined-secondary"
+                            size="sm"
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleBlockClienteFromReserva}
+                            disabled={saving}
+                            variant="danger"
+                            size="sm"
+                            loading={saving}
+                          >
+                            Confirmar bloqueo
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          onClick={() => setConfirmBlockCliente(true)}
+                          disabled={saving}
+                          variant="outlined-danger"
+                          size="sm"
+                          icon={<ExclamationIcon />}
+                        >
+                          Bloquear {editingReserva.nombre}
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   <Button
                     type="button"
                     onClick={closeEditModal}

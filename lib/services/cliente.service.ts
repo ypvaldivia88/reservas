@@ -1,7 +1,6 @@
 import { getDb } from "@/lib/mongodb";
 import { Collections } from "@/lib/db/collections";
 import { tenantQuery } from "@/lib/tenant";
-import { adminHandler } from "@/lib/api/handlers";
 import { AppError } from "@/lib/api/errors";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types";
@@ -23,6 +22,13 @@ export class ClienteDetailService {
 
   async update(salonId: string, id: string, data: Partial<User>) {
     if (!ObjectId.isValid(id)) throw new AppError("ID de cliente inválido", 400);
+
+    if (data.bloqueado !== undefined) {
+      if (typeof data.bloqueado !== "boolean") {
+        throw new AppError("El campo bloqueado debe ser un booleano", 400);
+      }
+      await this.setBlocked(salonId, id, data.bloqueado);
+    }
 
     const updateData: Partial<User> = {};
 
@@ -53,6 +59,7 @@ export class ClienteDetailService {
     }
 
     if (Object.keys(updateData).length === 0) {
+      if (data.bloqueado !== undefined) return;
       throw new AppError("No se proporcionaron campos para actualizar", 400);
     }
 
@@ -64,6 +71,45 @@ export class ClienteDetailService {
 
     if (result.matchedCount === 0) {
       throw AppError.notFound("Cliente no encontrado");
+    }
+  }
+
+  async setBlocked(salonId: string, id: string, blocked: boolean) {
+    if (!ObjectId.isValid(id)) throw new AppError("ID de cliente inválido", 400);
+
+    const db = await getDb();
+    const filter = {
+      _id: new ObjectId(id),
+      role: "cliente",
+      ...tenantQuery(salonId),
+    };
+
+    if (blocked) {
+      const result = await db.collection(Collections.USERS).updateOne(filter, {
+        $set: { bloqueado: true, bloqueadoAt: new Date() },
+      });
+
+      if (result.matchedCount === 0) {
+        throw AppError.notFound("Cliente no encontrado");
+      }
+
+      await db.collection(Collections.RESERVAS).updateMany(
+        {
+          clienteId: id,
+          estado: "pendiente",
+          ...tenantQuery(salonId),
+        },
+        { $set: { estado: "cancelada" } }
+      );
+    } else {
+      const result = await db.collection(Collections.USERS).updateOne(filter, {
+        $set: { bloqueado: false },
+        $unset: { bloqueadoAt: "" },
+      });
+
+      if (result.matchedCount === 0) {
+        throw AppError.notFound("Cliente no encontrado");
+      }
     }
   }
 

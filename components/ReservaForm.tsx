@@ -172,6 +172,7 @@ export default function ReservaForm({
     reservasActivas: Reserva[];
   } | null>(null);
   const [showClientInfo, setShowClientInfo] = useState(false);
+  const isClientBlocked = clientInfo?.cliente.bloqueado === true;
 
   // Cancellation modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -436,6 +437,8 @@ export default function ReservaForm({
     .map((servicio) => servicio.nombre);
 
   const handleNext = useCallback(() => {
+    if (isClientBlocked) return;
+
     const steppedForm =
       currentStep === 3
         ? applyTemplateFormDefaults(form, businessTemplate)
@@ -449,7 +452,7 @@ export default function ReservaForm({
 
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     window.scrollTo({ top: 400, behavior: "smooth" });
-  }, [currentStep, validateStep, businessTemplate, form]);
+  }, [currentStep, validateStep, businessTemplate, form, isClientBlocked]);
 
   const handlePrevious = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -477,6 +480,13 @@ export default function ReservaForm({
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
+    }
+
+    if (isClientBlocked) {
+      setMensaje(
+        "No puedes realizar reservas en este salón. Contacta al administrador si crees que es un error."
+      );
+      return;
     }
 
     setIsSubmitting(true);
@@ -1055,7 +1065,19 @@ export default function ReservaForm({
               </div>
 
               {/* Client info display */}
-              {showClientInfo && clientInfo && (
+              {showClientInfo && clientInfo && isClientBlocked && (
+                <div className="mt-3 rounded-lg border-2 border-red-300 bg-red-50 p-3 sm:p-4 dark:border-red-800 dark:bg-red-900/20">
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-300 sm:text-base">
+                    No puedes realizar reservas en este salón.
+                  </p>
+                  <p className="mt-1 text-xs text-red-700 dark:text-red-400 sm:text-sm">
+                    Tu cuenta está bloqueada. Contacta al administrador del salón
+                    si crees que es un error.
+                  </p>
+                </div>
+              )}
+
+              {showClientInfo && clientInfo && !isClientBlocked && (
                 <div className="mt-3 p-3 sm:p-4 bg-primary/10 border-2 border-primary/30 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -1418,6 +1440,7 @@ export default function ReservaForm({
                 variant="primary"
                 fullWidth
                 size="lg"
+                disabled={isClientBlocked}
               >
                 {currentStep === 3
                   ? isManicure
@@ -1428,7 +1451,7 @@ export default function ReservaForm({
             : <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isClientBlocked}
                 variant="primary"
                 loading={isSubmitting}
                 fullWidth
