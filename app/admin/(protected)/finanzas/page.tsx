@@ -66,6 +66,9 @@ export default function FinanzasPage() {
   const [formError, setFormError] = useState("");
   const syncInFlightRef = useRef(false);
   const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
+  const [transactionsExpanded, setTransactionsExpanded] = useState(false);
   const [filterTipo, setFilterTipo] = useState<"" | TransactionType>("");
   const [filterMetodoPago, setFilterMetodoPago] = useState<"" | PaymentMethod>(
     ""
@@ -180,6 +183,7 @@ export default function FinanzasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setFormError("");
 
     const cobroEfectivo = form.cobroEfectivo
@@ -198,35 +202,48 @@ export default function FinanzasPage() {
       return;
     }
 
-    const res = await fetch("/api/finanzas/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tipo: form.tipo,
-        fecha: form.fecha,
-        descripcion: form.descripcion,
-        categoriaId: form.categoriaId || undefined,
-        cobroEfectivo,
-        cobroTransferencia,
-      }),
-    });
-    const data = await parseApiJson(res);
-    if (res.ok && data.success) {
-      setShowForm(false);
-      setFormError("");
-      setForm({
-        tipo: "income",
-        cobroEfectivo: "",
-        cobroTransferencia: "",
-        fecha: new Date().toISOString().split("T")[0],
-        descripcion: "",
-        categoriaId: "",
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/finanzas/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo: form.tipo,
+          fecha: form.fecha,
+          descripcion: form.descripcion,
+          categoriaId: form.categoriaId || undefined,
+          cobroEfectivo,
+          cobroTransferencia,
+        }),
       });
-      await fetchDashboard();
-    } else {
+      const data = await parseApiJson(res);
+      if (res.ok && data.success) {
+        setShowForm(false);
+        setFormError("");
+        setForm({
+          tipo: "income",
+          cobroEfectivo: "",
+          cobroTransferencia: "",
+          fecha: new Date().toISOString().split("T")[0],
+          descripcion: "",
+          categoriaId: "",
+        });
+        setTransactionsExpanded(true);
+        setActionMessage("✅ Transacción registrada correctamente");
+        setTimeout(() => setActionMessage(""), 5000);
+        await fetchDashboard();
+      } else {
+        setFormError(
+          getApiErrorMessage(res, data, "No se pudo registrar la transacción")
+        );
+      }
+    } catch (e) {
+      console.error(e);
       setFormError(
-        getApiErrorMessage(res, data, "No se pudo registrar la transacción")
+        "Error de conexión. Verifica tu internet e intenta de nuevo sin duplicar el gasto."
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -266,6 +283,15 @@ export default function FinanzasPage() {
         <p className="text-sm text-primary">Sincronizando ingresos de reservas...</p>
       )}
 
+      {actionMessage && (
+        <div
+          className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm font-medium text-green-800 dark:text-green-300"
+          role="status"
+        >
+          {actionMessage}
+        </div>
+      )}
+
       {error && (
         <div
           className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
@@ -299,6 +325,8 @@ export default function FinanzasPage() {
           <FinanzasTransactionsPanel
             transactions={transactions}
             onDelete={handleDelete}
+            expanded={transactionsExpanded}
+            onExpandedChange={setTransactionsExpanded}
           />
         </>
       )}
@@ -320,13 +348,17 @@ export default function FinanzasPage() {
                 <label className="mb-1 block text-sm font-medium">Tipo</label>
                 <select
                   value={form.tipo}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const tipo = e.target.value as TransactionType;
                     setForm({
-                      ...form,
-                      tipo: e.target.value as TransactionType,
+                      tipo,
+                      cobroEfectivo: "",
+                      cobroTransferencia: "",
+                      fecha: form.fecha,
+                      descripcion: form.descripcion,
                       categoriaId: "",
-                    })
-                  }
+                    });
+                  }}
                   className="input-field w-full"
                 >
                   <option value="income">Ingreso</option>
@@ -397,6 +429,11 @@ export default function FinanzasPage() {
                   </span>
                 </p>
               )}
+              <p className="text-xs text-muted-foreground">
+                {form.tipo === "expense"
+                  ? "Si pagaste en dos métodos, indica cada parte. Se registrarán dos líneas con la misma descripción."
+                  : "Si el cobro fue solo en un método, usa un solo campo. Si fue mixto, indica cada parte."}
+              </p>
               <div>
                 <label className="mb-1 block text-sm font-medium">Fecha</label>
                 <input
@@ -427,10 +464,16 @@ export default function FinanzasPage() {
                     setFormError("");
                     setShowForm(false);
                   }}
+                  disabled={submitting}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" variant="primary">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={submitting}
+                  loading={submitting}
+                >
                   Guardar
                 </Button>
               </div>

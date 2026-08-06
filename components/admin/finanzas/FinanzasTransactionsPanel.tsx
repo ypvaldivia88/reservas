@@ -18,13 +18,19 @@ type SortDir = "asc" | "desc";
 interface FinanzasTransactionsPanelProps {
   transactions: FinancialTransaction[];
   onDelete: (id: string) => void;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export default function FinanzasTransactionsPanel({
   transactions,
   onDelete,
+  expanded: expandedProp,
+  onExpandedChange,
 }: FinanzasTransactionsPanelProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = expandedProp ?? internalExpanded;
+  const setExpanded = onExpandedChange ?? setInternalExpanded;
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState<SortField>("fecha");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -86,7 +92,7 @@ export default function FinanzasTransactionsPanel({
     <section className="dashboard-card overflow-hidden rounded-2xl">
       <button
         type="button"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/30 sm:px-5"
         aria-expanded={expanded}
       >
